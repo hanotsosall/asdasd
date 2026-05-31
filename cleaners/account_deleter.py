@@ -9,7 +9,7 @@ if OPENAI_API_KEY:
 
 def generate_deletion_letter(service_name: str, email: str) -> str:
     if not OPENAI_API_KEY:
-        return "🔐 OpenAI API ключ не задан. Письмо не сгенерировано."
+        return "🔐 OpenAI API ключ не задан."
     prompt = f"Напиши официальный запрос на удаление аккаунта с сайта {service_name} для email {email}. Ссылайся на GDPR, требуй удалить все персональные данные. Будь вежлив, но настойчив."
     try:
         response = openai.ChatCompletion.create(
