@@ -1,7 +1,8 @@
 import os
 import pickle
+import io
 import requests
-from datetime import datetime, timedelta
+import pandas as pd
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -23,7 +24,6 @@ def load_creds(user_id: int, service: str):
     return None
 
 def check_hibp(email: str) -> str:
-    """Проверка email в Have I Been Pwned"""
     api_key = os.getenv("HIBP_API_KEY")
     url = f"https://haveibeenpwned.com/api/v3/breachedaccount/{email}"
     headers = {'hibp-api-key': api_key} if api_key else {}
@@ -41,11 +41,8 @@ def check_hibp(email: str) -> str:
         return f"🔐 Не удалось проверить утечки: {e}"
 
 def parse_bank_statement(file_content: bytes, filename: str) -> str:
-    """Парсит CSV выписку, ищет регулярные платежи"""
     try:
-        import pandas as pd
         df = pd.read_csv(io.BytesIO(file_content))
-        # Пытаемся угадать столбцы
         desc_col = None
         amount_col = None
         for col in df.columns:
@@ -54,8 +51,7 @@ def parse_bank_statement(file_content: bytes, filename: str) -> str:
             if 'amount' in col.lower() or 'сумма' in col.lower():
                 amount_col = col
         if desc_col is None or amount_col is None:
-            return "❌ Не найдены столбцы с описанием и суммой. Убедитесь, что CSV содержит такие столбцы."
-        # Группируем по описанию
+            return "❌ Не найдены столбцы с описанием и суммой."
         subs = df.groupby(desc_col).size().reset_index(name='count')
         subs = subs[subs['count'] >= 2]
         if subs.empty:
