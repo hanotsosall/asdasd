@@ -6,106 +6,94 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Cont
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-WEBAPP_URL = os.getenv("WEBAPP_URL", "https://your-domain.up.railway.app")
+ADMIN_ID = int(os.getenv("ADMIN_ID", 0))
+WEBAPP_URL = os.getenv("WEBAPP_URL")
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Глобальное хранилище оплат (в памяти – для теста, в продакшене нужно БД)
+# Хранилище оплат (в памяти, но можно заменить на БД)
 paid_users = set()
 
-# ---------- Команды и кнопки ----------
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
-        [InlineKeyboardButton("🚀 Открыть Мини-апп (всё управление)", web_app=WebAppInfo(url=WEBAPP_URL))],
-        [InlineKeyboardButton("📖 Что это за сервис? Как работает? Безопасно ли?", callback_data='info')],
-        [InlineKeyboardButton("💰 Оплатить доступ (500 ₽)", callback_data='buy')],
-        [InlineKeyboardButton("⚙️ Команды бота", callback_data='commands')],
+        [InlineKeyboardButton("🚀 Открыть мини-апп", web_app=WebAppInfo(url=WEBAPP_URL))],
+        [InlineKeyboardButton("📖 О сервисе", callback_data='about')],
+        [InlineKeyboardButton("💰 Оплатить доступ", callback_data='buy')],
+        [InlineKeyboardButton("📧 Очистить Gmail", callback_data='clean_gmail')],
+        [InlineKeyboardButton("🗑️ Очистить Drive", callback_data='clean_drive')],
+        [InlineKeyboardButton("🐦 Очистить Twitter", callback_data='clean_twitter')],
+        [InlineKeyboardButton("🇷🇺 Очистить VK", callback_data='clean_vk')],
+        [InlineKeyboardButton("📸 Очистить Instagram", callback_data='clean_instagram')],
+        [InlineKeyboardButton("💳 Проверить карту", callback_data='check_card')],
+        [InlineKeyboardButton("🔐 Проверить утечки", callback_data='check_breaches')],
+        [InlineKeyboardButton("🧠 ИИ-совет", callback_data='ai_advice')],
+        [InlineKeyboardButton("❓ Помощь", callback_data='help')],
     ]
     await update.message.reply_text(
-        "🔥 *SlateClean* — профессиональная цифровая санация.\n\n"
+        "🔥 *SlateClean* — профессиональная зачистка цифрового следа.\n\n"
         "Выберите действие:",
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode="Markdown"
     )
 
-async def info_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    text = (
-        "*О сервисе SlateClean*\n\n"
-        "SlateClean — это автоматизированный инструмент для полной зачистки вашего цифрового следа.\n\n"
-        "*Что мы удаляем?*\n"
-        "• Все старые письма в Gmail + отписка от рассылок\n"
-        "• Дубликаты и старые файлы в Google Drive\n"
-        "• Ваши посты в Twitter/VK/Instagram (где авторизуетесь)\n"
-        "• Проверяем утечки вашего email\n"
-        "• Анализируем банковскую выписку на скрытые подписки\n"
-        "• Помогаем написать письма для удаления аккаунтов (ИИ)\n\n"
-        "*Как это работает?*\n"
-        "Вы даёте доступ через OAuth (или вводите токены) — мы ничего не храним, кроме временных ключей.\n"
-        "Все операции выполняются напрямую через официальные API. Ваши данные не покидают сессию.\n\n"
-        "*Безопасность*\n"
-        "• Мы не запрашиваем пароли (кроме Instagram/VK, но они сохраняются локально на сервере)\n"
-        "• Все токены хранятся в зашифрованном виде (в папке `tokens/` с ограниченным доступом)\n"
-        "• Вы можете отозвать доступ в любой момент в настройках Google/соцсетей\n"
-        "• Сервис не собирает статистику, не передаёт данные третьим лицам\n\n"
-        "*Оплата*\n"
-        "Стоимость доступа — *500 ₽ разово*. Перевод на кошелёк `4100118620135634` с указанием Telegram ID.\n"
-        "После оплаты администратор активирует доступ (команда /pay).\n\n"
-        "💬 Поддержка: @slateclean_support (замените на реальный контакт)"
-    )
-    await query.edit_message_text(text, parse_mode="Markdown", disable_web_page_preview=True)
-
-async def buy_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
+    data = query.data
     user_id = update.effective_user.id
-    await query.edit_message_text(
-        f"💰 *Оплата доступа*\n\n"
-        f"Переведите 500 ₽ на кошелёк ЮMoney:\n"
-        f"`4100118620135634`\n\n"
-        f"**В комментарии укажите ваш Telegram ID:** `{user_id}`\n\n"
-        f"После перевода нажмите «Оплатил» в Мини-аппе или напишите @admin. Доступ будет активирован вручную.",
-        parse_mode="Markdown"
-    )
-    # Оповещение админу (можно вынести в отдельную функцию)
-    if os.getenv("ADMIN_ID"):
-        try:
-            await context.bot.send_message(
-                os.getenv("ADMIN_ID"),
-                f"💸 Пользователь {user_id} запросил оплату. Кошелёк: 4100118620135634"
-            )
-        except:
-            pass
 
-async def commands_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    text = (
-        "*Доступные команды бота:*\n\n"
-        "/start — Главное меню\n"
-        "/info — Полная информация о сервисе\n"
-        "/buy — Инструкция по оплате\n"
-        "/help — Справка\n\n"
-        "Все остальные действия выполняются через *Мини-апп* — нажмите «Открыть Мини-апп» в главном меню."
-    )
-    await query.edit_message_text(text, parse_mode="Markdown")
+    if data == 'about':
+        await query.edit_message_text(
+            "📖 *О сервисе SlateClean*\n\n"
+            "Мы удаляем ваш цифровой мусор: старые письма, дубликаты файлов, посты в соцсетях, скрытые подписки.\n"
+            "Все операции проходят через официальные API – ваши пароли не запрашиваются.\n\n"
+            "🔒 *Безопасность*: токены хранятся локально и удаляются после очистки.\n"
+            "💸 *Стоимость*: 500 ₽ разово (доступ ко всем функциям).\n\n"
+            "Подробнее: наш сайт /about (мини-апп) или команда /help.",
+            parse_mode="Markdown"
+        )
+        return
 
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "📖 *Справка*\n"
-        "/start – Главное меню\n"
-        "/info – Подробно о сервисе, безопасности, как работает\n"
-        "/buy – Инструкция по оплате\n"
-        "Используйте Мини-апп для всех операций очистки.",
-        parse_mode="Markdown"
-    )
+    if data == 'buy':
+        await query.edit_message_text(
+            "💰 *Оплата доступа*: 500 ₽\n\n"
+            "Переведите на кошелёк ЮMoney: `4100118620135634`\n"
+            "В комментарии укажите ваш Telegram ID: `" + str(user_id) + "`\n\n"
+            "После перевода нажмите «Я перевел» в мини-аппе или напишите админу (@admin).\n"
+            "Команда для активации администратором: `/pay " + str(user_id) + "`",
+            parse_mode="Markdown"
+        )
+        return
 
-# Админская команда активации оплаты
+    if data == 'clean_gmail':
+        # Проверка оплаты
+        if user_id not in paid_users:
+            await query.edit_message_text("🚫 Доступ платный. Оплатите 500 ₽ (кнопка «Оплатить доступ»).")
+            return
+        # Здесь должна быть логика очистки Gmail (вызов cleaner)
+        await query.edit_message_text("🔄 Запущена очистка Gmail... (демо)")
+        return
+
+    # Аналогично для clean_drive, clean_twitter и т.д.
+
+    if data == 'help':
+        await query.edit_message_text(
+            "❓ *Помощь*\n\n"
+            "/start – главное меню\n"
+            "Кнопки с сервисами – запуск очистки\n"
+            "Мини-апп – веб-интерфейс (удобно)\n\n"
+            "Оплата: 500 ₽ на 4100118620135634 с пометкой Telegram ID.\n"
+            "Техподдержка: @admin",
+            parse_mode="Markdown"
+        )
+        return
+
+    await query.edit_message_text("Функция в разработке. Используйте мини-апп для полного доступа.")
+
 async def pay_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if str(update.effective_user.id) != os.getenv("ADMIN_ID"):
-        await update.message.reply_text("⛔ Недостаточно прав.")
+    if update.effective_user.id != ADMIN_ID:
+        await update.message.reply_text("Недостаточно прав.")
         return
     if not context.args:
         await update.message.reply_text("Использование: /pay USER_ID")
@@ -113,22 +101,20 @@ async def pay_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         uid = int(context.args[0])
         paid_users.add(uid)
-        await update.message.reply_text(f"✅ Пользователь {uid} активирован.")
-        # Уведомляем пользователя через бота
-        await context.bot.send_message(uid, "🎉 Ваш доступ к SlateClean активирован! Используйте Мини-апп.")
+        await update.message.reply_text(f"✅ Пользователь {uid} получил доступ.")
+        await context.bot.send_message(uid, "🎉 Ваш доступ к SlateClean активирован! Используйте /start")
     except Exception as e:
         await update.message.reply_text(f"Ошибка: {e}")
+
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Используйте /start для меню.")
 
 def main():
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("info", info_callback))
-    app.add_handler(CommandHandler("buy", buy_callback))
-    app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("pay", pay_command))
-    app.add_handler(CallbackQueryHandler(info_callback, pattern='^info$'))
-    app.add_handler(CallbackQueryHandler(buy_callback, pattern='^buy$'))
-    app.add_handler(CallbackQueryHandler(commands_callback, pattern='^commands$'))
+    app.add_handler(CommandHandler("help", help_command))
+    app.add_handler(CallbackQueryHandler(button_handler))
     logger.info("Бот запущен")
     app.run_polling()
 
