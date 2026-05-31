@@ -2,99 +2,77 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SlateClean — О сервисе</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background: #0A0D12;
+            background: #0B0E14;
             font-family: 'Inter', system-ui, sans-serif;
-            color: #EFF3F8;
+            color: #EDF2F7;
             padding: 2rem;
             line-height: 1.5;
         }
         .container {
             max-width: 800px;
             margin: 0 auto;
-            background: #11161C;
-            border-radius: 28px;
+            background: #11161F;
+            border-radius: 24px;
             padding: 2rem;
-            border: 1px solid #1E242C;
+            border: 1px solid #1E293B;
         }
-        h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; background: linear-gradient(135deg, #FFF, #B0C4DE); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        h2 { font-size: 1.3rem; margin: 1.5rem 0 0.5rem; color: #2ECC71; font-weight: 600; }
+        h1 { font-size: 1.8rem; margin-bottom: 1rem; }
+        h2 { font-size: 1.3rem; margin-top: 1.5rem; color: #6EE7B7; }
         p, li { color: #B0C4DE; }
-        .badge-group { margin: 1rem 0; }
         .badge {
-            background: #2A6B4E;
+            background: #1E293B;
             display: inline-block;
-            padding: 0.2rem 0.8rem;
-            border-radius: 40px;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
             font-size: 0.8rem;
-            margin-right: 0.6rem;
-            font-weight: 500;
+            margin-right: 0.5rem;
         }
-        hr { border-color: #1E242C; margin: 1.5rem 0; }
-        .btn {
+        hr { border-color: #1E293B; margin: 1.5rem 0; }
+        .button {
             display: inline-block;
-            background: #2A6B4E;
+            background: #3B82F6;
             color: white;
-            padding: 0.7rem 1.4rem;
-            border-radius: 14px;
+            padding: 0.6rem 1.2rem;
+            border-radius: 12px;
             text-decoration: none;
             margin-top: 1rem;
-            font-weight: 500;
-            transition: background 0.2s;
         }
-        .btn:hover { background: #347E5C; }
-        .footer { margin-top: 2rem; text-align: center; font-size: 0.8rem; color: #5A6A7A; }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>🧼 SlateClean</h1>
-    <p>Профессиональная платформа для полного удаления цифрового следа</p>
-
-    <div class="badge-group">
-        <span class="badge">Enterprise‑level security</span>
-        <span class="badge">GDPR compliant</span>
-        <span class="badge">No logs</span>
-    </div>
-
+    <p><span class="badge">Профессиональная цифровая санация</span> <span class="badge">Безопасно</span> <span class="badge">Анонимно</span></p>
+    <p>SlateClean — сервис для полного удаления вашего цифрового следа. Помогаем избавиться от старых писем, дубликатов файлов, постов в соцсетях и скрытых подписок.</p>
     <h2>🔐 Как это работает?</h2>
-    <p>SlateClean использует официальные OAuth-протоколы Google, Twitter, VK, Instagram. Мы никогда не запрашиваем пароли. Все токены доступа хранятся временно и удаляются после завершения сессии или через 30 дней неактивности.</p>
-
+    <p>Вы авторизуетесь через официальные API сервисов (Google, Twitter, VK, Instagram). Никаких паролей — только OAuth-токены. Бот получает доступ только к тем данным, которые вы разрешили, и выполняет очистку, не сохраняя информацию.</p>
     <h2>🛡️ Репутация и безопасность</h2>
     <ul>
-        <li>✅ <strong>5000+ успешных очисток</strong> с 2024 года</li>
-        <li>✅ <strong>Ноль утечек данных</strong> – сертифицированная инфраструктура</li>
-        <li>✅ <strong>Открытый код</strong> – аудит безопасности доступен на GitHub</li>
-        <li>✅ <strong>Политика конфиденциальности</strong> – мы не храним и не передаём ваши данные третьим лицам</li>
+        <li>✅ Более 5000 довольных пользователей (с 2024 года).</li>
+        <li>✅ Ни одного инцидента с утечкой данных — серверы используют шифрование.</li>
+        <li>✅ Не храним пароли — только временные токены доступа.</li>
     </ul>
-
-    <h2>💸 Что входит в стоимость (500 ₽ разово)?</h2>
+    <h2>💸 Что вы получаете за 500 ₽?</h2>
     <ul>
-        <li>📧 Gmail: удаление всех писем старше 30 дней + массовая отписка от рассылок</li>
-        <li>🗂️ Google Drive: удаление дубликатов (по MD5) + файлов старше 180 дней</li>
-        <li>🐦 Twitter: удаление всех твитов, лайков, ретвитов</li>
-        <li>🇷🇺 VK: удаление всех записей со стены</li>
-        <li>📸 Instagram: удаление всех постов (до 50)</li>
-        <li>💳 Анализ банковской выписки (CSV) на скрытые подписки</li>
-        <li>🔍 Проверка email в Have I Been Pwned</li>
-        <li>✉️ Генерация юридических писем для удаления аккаунтов (ChatGPT)</li>
-        <li>🧠 ИИ-советы по сокращению цифрового следа</li>
+        <li>📧 Полная очистка Gmail (удаление старых писем + отписка от рассылок).</li>
+        <li>🗂️ Удаление дубликатов и старых файлов в Google Drive.</li>
+        <li>🐦 Очистка Twitter (твиты, лайки, ретвиты).</li>
+        <li>🇷🇺 Очистка VK (стена, записи).</li>
+        <li>📸 Удаление всех постов в Instagram.</li>
+        <li>💳 Анализ банковской выписки на скрытые подписки.</li>
+        <li>🔍 Проверка email в Have I Been Pwned (утечки).</li>
+        <li>✉️ ИИ-генерация писем для удаления аккаунтов.</li>
+        <li>🧠 ИИ-советы по сокращению цифрового следа.</li>
     </ul>
-
     <h2>📞 Как оплатить?</h2>
-    <p>Переведите 500 ₽ на кошелёк ЮMoney <strong>4100118620135634</strong>. В комментарии обязательно укажите ваш Telegram ID. После оплаты нажмите «Я перевел» в мини-аппе — администратор активирует доступ в течение 24 часов.</p>
-
+    <p>Переведите 500 ₽ на кошелёк ЮMoney <strong>4100118620135634</strong> с комментарием, содержащим ваш Telegram ID. После оплаты нажмите «Я перевел» в мини-аппе – администратор активирует доступ.</p>
     <hr>
     <div style="text-align: center;">
-        <a href="{{ webapp_url }}" class="btn">🚀 Открыть мини-апп</a>
-        <a href="https://t.me/ваш_бот" class="btn" style="background: #1E242C; margin-left: 12px;">📱 Бот</a>
+        <a href="{{ webapp_url }}" class="button">🚀 Открыть мини-апп</a>
     </div>
-    <div class="footer">SlateClean — цифровая гигиена нового поколения</div>
 </div>
 </body>
 </html>
