@@ -203,5 +203,9 @@ document.getElementById('buyButton')?.addEventListener('click', () => {
     });
 });
 
+document.getElementById('infoBtn')?.addEventListener('click', () => {
+    tg.openLink('/static/help.html');
+});
+
 // Старт
 loadProfile();
