@@ -36,7 +36,6 @@
             font-weight: 600;
         }
         .service-icon { font-size: 24px; margin-right: 12px; }
-        .service-title { font-size: 18px; }
         .badge {
             background: #1E293B;
             padding: 4px 10px;
@@ -70,7 +69,7 @@
         .btn-primary:hover { background: #2563EB; }
         .btn-secondary { background: #2D3748; }
         .btn-secondary:hover { background: #374151; }
-        .result { margin-top: 16px; font-size: 13px; background: #0A0F16; padding: 12px; border-radius: 12px; color: #94A3B8; }
+        .result { margin-top: 16px; font-size: 13px; background: #0A0F16; padding: 12px; border-radius: 12px; color: #94A3B8; white-space: pre-wrap; }
         input, textarea {
             background: #0F172A;
             border: 1px solid #1E293B;
@@ -82,8 +81,16 @@
         }
         .flex-between { display: flex; justify-content: space-between; align-items: center; }
         hr { border-color: #1E293B; margin: 20px 0; }
-        .tab { display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid #1E293B; }
-        .tab-btn { background: none; border: none; padding: 8px 16px; color: #94A3B8; cursor: pointer; font-weight: 500; }
+        .tab { display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid #1E293B; flex-wrap: wrap; }
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 8px 16px;
+            color: #94A3B8;
+            cursor: pointer;
+            font-weight: 500;
+            transition: 0.1s;
+        }
         .tab-btn.active { color: #3B82F6; border-bottom: 2px solid #3B82F6; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
@@ -113,6 +120,7 @@
         <button class="tab-btn active" data-tab="services">Сервисы</button>
         <button class="tab-btn" data-tab="tools">Инструменты</button>
         <button class="tab-btn" data-tab="ai">AI</button>
+        <button class="tab-btn" data-tab="auth">📘 Инструкция</button>
     </div>
 
     <!-- Вкладка Сервисы -->
@@ -225,45 +233,45 @@
             </div>
         </div>
     </div>
-</div>
 
-<!-- Вкладка Инструкция -->
-<div id="tab-auth" class="tab-content">
-    <div class="card">
-        <div class="card-header" onclick="togglePanel(this)">
-            <span>🔐 Как авторизоваться в сервисах?</span>
-            <span class="badge badge-neutral">Гайд</span>
-        </div>
-        <div class="panel open" style="max-height: none; padding: 20px;">
-            <div class="result" style="background: #0F172A; color: #E2E8F0; font-size: 14px; line-height: 1.5;">
-                <h3 style="color: #6EE7B7; margin-bottom: 12px;">📧 Gmail / Google Drive</h3>
-                <ol style="margin-left: 20px; margin-bottom: 20px;">
-                    <li>Нажмите «Запустить очистку» (кнопка станет активной после оплаты).</li>
-                    <li>Перейдите по ссылке, выберите аккаунт Google.</li>
-                    <li>Разрешите доступ SlateClean (права на чтение/удаление писем и файлов).</li>
-                    <li>Скопируйте код из адресной строки (часть после <code>code=</code>) и вставьте в поле, которое появится.</li>
-                    <li>Готово! Статус изменится на «авторизован».</li>
-                </ol>
-                <h3 style="color: #6EE7B7; margin-bottom: 12px;">🐦 Twitter</h3>
-                <ol style="margin-left: 20px; margin-bottom: 20px;">
-                    <li>Нажмите «Очистить Twitter».</li>
-                    <li>Перейдите по ссылке, авторизуйтесь в Twitter.</li>
-                    <li>Разрешите доступ приложению.</li>
-                    <li>Скопируйте полученный PIN-код и отправьте боту (или вставьте в мини-апп).</li>
-                </ol>
-                <h3 style="color: #6EE7B7; margin-bottom: 12px;">🇷🇺 VK</h3>
-                <ol style="margin-left: 20px; margin-bottom: 20px;">
-                    <li>Получите Access Token на <a href="https://vkhost.github.io" target="_blank" style="color: #3B82F6;">vkhost.github.io</a> (выберите права <code>wall</code>).</li>
-                    <li>Скопируйте токен и вставьте в поле «VK Access Token» в мини-аппе.</li>
-                    <li>Нажмите «Сохранить токен».</li>
-                </ol>
-                <h3 style="color: #6EE7B7; margin-bottom: 12px;">📸 Instagram</h3>
-                <ol style="margin-left: 20px;">
-                    <li>Введите логин и пароль от Instagram.</li>
-                    <li>Нажмите «Сохранить данные».</li>
-                    <li>Если Instagram запросит подтверждение – подтвердите вход в приложении.</li>
-                    <li>После этого можно нажать «Удалить посты».</li>
-                </ol>
+    <!-- Вкладка Инструкция -->
+    <div id="tab-auth" class="tab-content">
+        <div class="card">
+            <div class="card-header">
+                <span>🔐 Как авторизоваться в сервисах?</span>
+                <span class="badge badge-neutral">Гайд</span>
+            </div>
+            <div class="panel open" style="max-height: none; padding: 20px;">
+                <div class="result" style="background: #0F172A; color: #E2E8F0; font-size: 14px; line-height: 1.5;">
+                    <h3 style="color: #6EE7B7; margin-bottom: 12px;">📧 Gmail / Google Drive</h3>
+                    <ol style="margin-left: 20px; margin-bottom: 20px;">
+                        <li>Нажмите «Запустить очистку» (кнопка станет активной после оплаты).</li>
+                        <li>Перейдите по ссылке, выберите аккаунт Google.</li>
+                        <li>Разрешите доступ SlateClean (права на чтение/удаление).</li>
+                        <li>Скопируйте код из адресной строки (часть после <code>code=</code>) и вставьте в поле.</li>
+                        <li>Готово! Статус изменится на «авторизован».</li>
+                    </ol>
+                    <h3 style="color: #6EE7B7; margin-bottom: 12px;">🐦 Twitter</h3>
+                    <ol style="margin-left: 20px; margin-bottom: 20px;">
+                        <li>Нажмите «Очистить Twitter».</li>
+                        <li>Перейдите по ссылке, авторизуйтесь в Twitter.</li>
+                        <li>Разрешите доступ приложению.</li>
+                        <li>Скопируйте полученный PIN-код и отправьте боту.</li>
+                    </ol>
+                    <h3 style="color: #6EE7B7; margin-bottom: 12px;">🇷🇺 VK</h3>
+                    <ol style="margin-left: 20px; margin-bottom: 20px;">
+                        <li>Получите Access Token на <a href="https://vkhost.github.io" target="_blank" style="color: #3B82F6;">vkhost.github.io</a> (права <code>wall</code>).</li>
+                        <li>Скопируйте токен и вставьте в поле «VK Access Token».</li>
+                        <li>Нажмите «Сохранить токен».</li>
+                    </ol>
+                    <h3 style="color: #6EE7B7; margin-bottom: 12px;">📸 Instagram</h3>
+                    <ol style="margin-left: 20px;">
+                        <li>Введите логин и пароль от Instagram.</li>
+                        <li>Нажмите «Сохранить данные».</li>
+                        <li>Если Instagram запросит подтверждение – подтвердите вход в приложении.</li>
+                        <li>После этого можно нажать «Удалить посты».</li>
+                    </ol>
+                </div>
             </div>
         </div>
     </div>
