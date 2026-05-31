@@ -45,7 +45,7 @@ async function apiCall(endpoint, method = 'POST', body = null) {
 }
 
 function showResult(elementId, message, isError = false) {
-    const el = document.getElementById(elementId);
+    const el = document.getElementById(elementId);F
     if (!el) return;
     el.innerText = message;
     if (isError) el.style.borderLeftColor = '#E74C3C';
@@ -88,6 +88,10 @@ async function loadProfile() {
     } catch(e) {
         console.error(e);
         document.getElementById('skeleton').innerHTML = '<div style="color:red;">Ошибка загрузки профиля</div>';
+        // После загрузки профиля добавить обработчик
+        document.getElementById('infoBtn')?.addEventListener('click', () => {
+            tg.openLink('/help');  // или /static/help.html
+});
     }
 }
 
