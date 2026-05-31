@@ -105,9 +105,18 @@ async def auth_help_page():
 # ---------- Админ-панель ----------
 @app.get("/admin")
 async def admin_panel(request: Request, token: str = Query(...)):
-    if token != get_admin_token():
-        raise HTTPException(status_code=403, detail="Invalid admin token")
-    return templates.TemplateResponse("admin.html", {"request": request})
+    try:
+        admin_token = get_admin_token()
+        if token != admin_token:
+            return HTMLResponse(content=f"Invalid token: {token}", status_code=403)
+        # Принудительно проверяем наличие шаблона
+        if not os.path.exists("templates/admin.html"):
+            return HTMLResponse(content="<h1>Ошибка: файл templates/admin.html не найден</h1>", status_code=500)
+        return templates.TemplateResponse("admin.html", {"request": request})
+    except Exception as e:
+        import traceback
+        error_text = traceback.format_exc()
+        return HTMLResponse(content=f"<pre>{error_text}</pre>", status_code=500)
 
 @app.get("/admin/api/users")
 async def admin_users(token: str = Query(...)):
