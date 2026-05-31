@@ -16,20 +16,28 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Красивое меню с группировкой кнопок
     keyboard = [
+        # Ряд 1: основные
         [InlineKeyboardButton("🚀 Открыть мини-апп", web_app=WebAppInfo(url=WEBAPP_URL))],
-        [InlineKeyboardButton("📖 О сервисе", callback_data='about')],
-        [InlineKeyboardButton("💰 Оплатить", callback_data='buy')],
-        [InlineKeyboardButton("📧 Очистить Gmail", callback_data='clean_gmail')],
-        [InlineKeyboardButton("🗑️ Очистить Drive", callback_data='clean_drive')],
-        [InlineKeyboardButton("🐦 Очистить Twitter", callback_data='clean_twitter')],
-        [InlineKeyboardButton("🇷🇺 Очистить VK", callback_data='clean_vk')],
-        [InlineKeyboardButton("📸 Очистить Instagram", callback_data='clean_instagram')],
-        [InlineKeyboardButton("❓ Помощь", callback_data='help')],
-        [InlineKeyboardButton("📘 Инструкция", callback_data='auth_help')],
+        # Ряд 2: информация и оплата
+        [InlineKeyboardButton("📖 О сервисе", callback_data='about'),
+         InlineKeyboardButton("💰 Оплатить доступ", callback_data='buy')],
+        # Ряд 3: очистка сервисов (Gmail, Drive)
+        [InlineKeyboardButton("📧 Очистить Gmail", callback_data='clean_gmail'),
+         InlineKeyboardButton("🗑️ Очистить Drive", callback_data='clean_drive')],
+        # Ряд 4: Twitter и VK
+        [InlineKeyboardButton("🐦 Очистить Twitter", callback_data='clean_twitter'),
+         InlineKeyboardButton("🇷🇺 Очистить VK", callback_data='clean_vk')],
+        # Ряд 5: Instagram и дополнительные
+        [InlineKeyboardButton("📸 Очистить Instagram", callback_data='clean_instagram'),
+         InlineKeyboardButton("❓ Помощь / Инструкция", callback_data='help')],
+        # Ряд 6: отдельно кнопка инструкции по авторизации
+        [InlineKeyboardButton("📘 Инструкция по авторизации", callback_data='auth_help')],
     ]
     await update.message.reply_text(
-        "🔥 *SlateClean* — профессиональная зачистка цифрового следа.\n\nВыберите действие:",
+        "🔥 *SlateClean* — профессиональная зачистка цифрового следа.\n\n"
+        "Выберите действие:",
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode="Markdown"
     )
