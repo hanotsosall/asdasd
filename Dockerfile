@@ -14,4 +14,4 @@ COPY . .
 
 ENV PORT=8000
 
-CMD ["sh", "-c", "python bot.py & uvicorn main:app --host 0.0.0.0 --port $PORT"]
+CMD ["sh", "-c", "python bot.py & python main.py"]
