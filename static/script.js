@@ -1,150 +1,207 @@
-// Получаем user_id из Telegram WebApp
-let tg = window.Telegram.WebApp;
+const tg = window.Telegram.WebApp;
 tg.ready();
+tg.expand();
+
 let userId = tg.initDataUnsafe.user?.id;
-if (!userId) {
-    // fallback: можно запросить ввод
-    userId = prompt("Введите ваш Telegram ID");
+if (!userId) userId = prompt('Введите ваш Telegram ID');
+document.getElementById('userIdDisplay').innerText = userId;
+let paid = false;
+
+// Вспомогательные функции UI
+function setBadge(elementId, text, type) {
+    const badge = document.getElementById(elementId);
+    if (!badge) return;
+    badge.innerText = text;
+    badge.className = 'badge ';
+    if (type === 'success') badge.classList.add('badge-success');
+    else if (type === 'error') badge.classList.add('badge-error');
+    else if (type === 'warning') badge.classList.add('badge-warning');
+    else badge.classList.add('badge-neutral');
 }
 
-// Все запросы будут добавлять заголовок X-User-Id
-function apiCall(endpoint, method = 'POST', body = null) {
-    let headers = {
-        'X-User-Id': userId,
-        'Content-Type': 'application/json'
-    };
-    let options = { method, headers };
+function updateUI() {
+    if (paid) {
+        setBadge('paidBadge', '✅ Активен', 'success');
+        document.getElementById('buyButton').style.display = 'none';
+    } else {
+        setBadge('paidBadge', '❌ Не оплачен', 'error');
+        document.getElementById('buyButton').style.display = 'block';
+    }
+}
+
+async function apiCall(endpoint, method = 'POST', body = null) {
+    const headers = { 'X-User-Id': userId };
+    const options = { method, headers };
     if (body) {
         if (body instanceof FormData) {
-            delete headers['Content-Type'];
             options.body = body;
         } else {
+            headers['Content-Type'] = 'application/json';
             options.body = JSON.stringify(body);
         }
     }
-    return fetch(endpoint, options).then(r => r.json());
+    const response = await fetch(endpoint, options);
+    return response.json();
 }
 
-// Загрузка профиля
+function showResult(elementId, message, isError = false) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    el.innerText = message;
+    if (isError) el.style.borderLeftColor = '#E74C3C';
+    else el.style.borderLeftColor = '#2A6B4E';
+    el.classList.add('visible');
+    setTimeout(() => {
+        el.classList.remove('visible');
+    }, 5000);
+}
+
 async function loadProfile() {
     try {
-        let data = await apiCall('/api/profile', 'GET');
-        if (data.paid) {
-            document.getElementById('paidStatus').innerHTML = '✅ Оплачен';
-            document.getElementById('paidStatus').classList.remove('bg-red-600');
-            document.getElementById('paidStatus').classList.add('bg-green-600');
+        const data = await apiCall('/api/profile', 'GET');
+        paid = data.paid;
+        updateUI();
+        const services = data.services;
+        for (const [srv, ok] of Object.entries(services)) {
+            const badge = document.getElementById(`${srv}StatusBadge`);
+            const cleanBtn = document.getElementById(`${srv}CleanBtn`);
+            if (badge) {
+                badge.innerText = ok ? 'авторизован' : 'не авторизован';
+                badge.className = ok ? 'badge badge-success' : 'badge badge-neutral';
+            }
+            if (cleanBtn) {
+                if (ok && paid) {
+                    cleanBtn.innerText = '▶ Запустить очистку';
+                    cleanBtn.disabled = false;
+                    cleanBtn.classList.remove('btn-disabled');
+                    cleanBtn.classList.add('btn-primary');
+                } else {
+                    cleanBtn.innerText = ok ? '⏳ Оплатите доступ' : '🔐 Требуется авторизация';
+                    cleanBtn.disabled = true;
+                    cleanBtn.classList.remove('btn-primary');
+                    cleanBtn.classList.add('btn-disabled');
+                }
+            }
         }
-        let servicesHtml = '';
-        for (let [srv, ok] of Object.entries(data.services)) {
-            servicesHtml += `${srv}: ${ok ? '✅' : '❌'} `;
-            let statusSpan = document.getElementById(`${srv}Status`);
-            if (statusSpan) statusSpan.innerText = ok ? '✅ авторизован' : '⚪ не авторизован';
-        }
-        document.getElementById('servicesStatus').innerHTML = servicesHtml;
-    } catch(e) { console.error(e); }
-}
-
-function toggleService(service) {
-    let panel = document.getElementById(`${service}Panel`);
-    if (panel) panel.classList.toggle('hidden');
-}
-
-async function cleanService(service) {
-    let resultDiv = document.getElementById(`${service}Result`);
-    resultDiv.innerHTML = '⏳ Выполняется...';
-    let formData = new FormData();
-    if (service === 'vk') {
-        let token = document.getElementById('vkToken').value;
-        if (token) formData.append('token', token);
-    } else if (service === 'instagram') {
-        let username = document.getElementById('instaUser').value;
-        let password = document.getElementById('instaPass').value;
-        if (username && password) {
-            formData.append('username', username);
-            formData.append('password', password);
-        }
+        document.getElementById('skeleton').style.display = 'none';
+        document.getElementById('appContent').style.display = 'block';
+    } catch(e) {
+        console.error(e);
+        document.getElementById('skeleton').innerHTML = '<div style="color:red;">Ошибка загрузки профиля</div>';
     }
-    let resp = await apiCall(`/api/clean/${service}`, 'POST', formData);
+}
+
+function toggleService(serviceName) {
+    const panel = document.getElementById(`${serviceName}Panel`);
+    if (panel) panel.classList.toggle('open');
+}
+
+async function cleanService(service, extraData = null) {
+    const resultDiv = document.getElementById(`${service}Result`);
+    if (!resultDiv) return;
+    resultDiv.innerText = '⏳ Выполняется...';
+    resultDiv.classList.add('visible');
+    const formData = new FormData();
+    if (extraData) {
+        Object.entries(extraData).forEach(([k,v]) => formData.append(k,v));
+    }
+    const resp = await apiCall(`/api/clean/${service}`, 'POST', formData);
     if (resp.status === 'auth_required') {
-        resultDiv.innerHTML = `Требуется авторизация: <a href="${resp.auth_url}" target="_blank">Перейти</a>`;
+        resultDiv.innerHTML = `🔐 Требуется авторизация: <a href="${resp.auth_url}" target="_blank" style="color:#2ECC71;">Перейти</a><br>После авторизации вернитесь и нажмите очистку снова.`;
     } else if (resp.status === 'need_token') {
-        resultDiv.innerHTML = resp.message + ' Введите токен в поле выше.';
+        resultDiv.innerText = resp.message + ' Введите токен в поле выше.';
     } else if (resp.status === 'need_credentials') {
-        resultDiv.innerHTML = resp.message + ' Введите логин/пароль.';
+        resultDiv.innerText = resp.message + ' Введите логин/пароль.';
     } else {
-        resultDiv.innerHTML = resp.message || 'Готово.';
+        resultDiv.innerText = resp.message || 'Готово.';
     }
-    loadProfile(); // обновить статусы
+    loadProfile();
 }
 
-function saveVkToken() {
-    let token = document.getElementById('vkToken').value;
-    if (!token) return;
-    apiCall('/api/clean/vk', 'POST', new URLSearchParams({ token })).then(resp => {
-        document.getElementById('vkResult').innerHTML = resp.message;
-        loadProfile();
-    });
-}
-
-function saveInstagram() {
-    let username = document.getElementById('instaUser').value;
-    let password = document.getElementById('instaPass').value;
-    if (!username || !password) return;
-    let fd = new FormData();
-    fd.append('username', username);
-    fd.append('password', password);
-    apiCall('/api/clean/instagram', 'POST', fd).then(resp => {
-        document.getElementById('instagramResult').innerHTML = resp.message;
-        loadProfile();
-    });
-}
-
-function checkCard() {
-    document.getElementById('cardFile').click();
-}
-
-function uploadCard() {
-    let file = document.getElementById('cardFile').files[0];
-    if (!file) return;
-    let fd = new FormData();
-    fd.append('file', file);
-    apiCall('/api/check/card', 'POST', fd).then(resp => {
-        document.getElementById('otherResult').innerHTML = resp.message;
-    });
-}
-
-function checkBreaches() {
-    let email = document.getElementById('emailBreach').value;
-    if (!email) return;
-    let fd = new FormData();
-    fd.append('email', email);
-    apiCall('/api/check/breaches', 'POST', fd).then(resp => {
-        document.getElementById('otherResult').innerHTML = resp.message;
-    });
-}
-
-function generateLetter() {
-    let service = document.getElementById('serviceName').value;
-    let email = document.getElementById('accountEmail').value;
-    if (!service || !email) return;
-    let fd = new FormData();
-    fd.append('service', service);
-    fd.append('email', email);
-    apiCall('/api/generate/letter', 'POST', fd).then(resp => {
-        document.getElementById('otherResult').innerHTML = `<pre class="whitespace-pre-wrap">${resp.message}</pre>`;
-    });
-}
-
-function getAiAdvice() {
-    apiCall('/api/ai/advice', 'GET').then(resp => {
-        document.getElementById('otherResult').innerHTML = resp.message;
-    });
-}
-
-document.getElementById('buyBtn').addEventListener('click', () => {
-    apiCall('/api/payment/notify', 'POST', new URLSearchParams({ user_id: userId })).then(() => {
-        alert('Запрос отправлен администратору. После оплаты 500 ₽ на кошелек 4100118620135634 вам активируют доступ.');
+// Раскрытие панелей
+document.querySelectorAll('.service-row').forEach(row => {
+    row.addEventListener('click', () => {
+        const service = row.dataset.service;
+        if (service) toggleService(service);
     });
 });
 
+// Кнопки очистки
+document.getElementById('gmailCleanBtn')?.addEventListener('click', () => cleanService('gmail'));
+document.getElementById('driveCleanBtn')?.addEventListener('click', () => cleanService('drive'));
+document.getElementById('twitterCleanBtn')?.addEventListener('click', () => cleanService('twitter'));
+
+// VK
+document.getElementById('vkSaveBtn')?.addEventListener('click', async () => {
+    const token = document.getElementById('vkTokenInput').value.trim();
+    if (!token) return tg.showAlert('Введите VK Access Token');
+    const resp = await apiCall('/api/clean/vk', 'POST', new URLSearchParams({ token }));
+    showResult('vkResult', resp.message);
+    loadProfile();
+});
+document.getElementById('vkCleanBtn')?.addEventListener('click', () => cleanService('vk'));
+
+// Instagram
+document.getElementById('instaSaveBtn')?.addEventListener('click', async () => {
+    const username = document.getElementById('instaUser').value.trim();
+    const password = document.getElementById('instaPass').value.trim();
+    if (!username || !password) return tg.showAlert('Введите логин и пароль');
+    const fd = new FormData();
+    fd.append('username', username);
+    fd.append('password', password);
+    const resp = await apiCall('/api/clean/instagram', 'POST', fd);
+    showResult('instagramResult', resp.message);
+    loadProfile();
+});
+document.getElementById('instaCleanBtn')?.addEventListener('click', () => cleanService('instagram'));
+
+// Анализ карты
+document.getElementById('cardUploadBtn')?.addEventListener('click', () => {
+    document.getElementById('cardFileInput').click();
+});
+document.getElementById('cardFileInput')?.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const fd = new FormData();
+    fd.append('file', file);
+    const resp = await apiCall('/api/check/card', 'POST', fd);
+    showResult('cardResult', resp.message);
+});
+
+// Проверка утечек
+document.getElementById('breachCheckBtn')?.addEventListener('click', async () => {
+    const email = document.getElementById('breachEmailInput').value.trim();
+    if (!email) return tg.showAlert('Введите email');
+    const fd = new FormData();
+    fd.append('email', email);
+    const resp = await apiCall('/api/check/breaches', 'POST', fd);
+    showResult('breachResult', resp.message);
+});
+
+// Генерация письма
+document.getElementById('letterGenBtn')?.addEventListener('click', async () => {
+    const service = document.getElementById('letterServiceInput').value.trim();
+    const email = document.getElementById('letterEmailInput').value.trim();
+    if (!service || !email) return tg.showAlert('Заполните оба поля');
+    const fd = new FormData();
+    fd.append('service', service);
+    fd.append('email', email);
+    const resp = await apiCall('/api/generate/letter', 'POST', fd);
+    showResult('letterResult', resp.message);
+});
+
+// ИИ‑совет
+document.getElementById('aiAdviceBtn')?.addEventListener('click', async () => {
+    const resp = await apiCall('/api/ai/advice', 'GET');
+    showResult('aiResult', resp.message);
+});
+
+// Оплата
+document.getElementById('buyButton')?.addEventListener('click', () => {
+    apiCall('/api/payment/notify', 'POST', new URLSearchParams({ user_id: userId })).then(() => {
+        tg.showAlert('Запрос отправлен администратору. После оплаты 500 ₽ на кошелёк 4100118620135634 (с указанием Telegram ID) доступ будет активирован.');
+    });
+});
+
+// Старт
 loadProfile();
