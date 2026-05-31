@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SlateClean — Цифровая санация</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="bg-gray-900 text-white">
+    <div class="container mx-auto px-4 py-6 max-w-2xl">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">SlateClean</h1>
+            <p class="text-gray-400 mt-2">Полная зачистка цифрового следа</p>
+        </div>
+
+        <!-- Профиль и статус оплаты -->
+        <div id="profile" class="bg-gray-800 rounded-xl p-4 mb-6 shadow-lg">
+            <div class="flex justify-between items-center">
+                <span class="font-semibold">👤 Статус</span>
+                <span id="paidStatus" class="px-3 py-1 rounded-full text-sm bg-red-600">Не оплачен</span>
+            </div>
+            <div class="mt-2 text-sm text-gray-400" id="servicesStatus"></div>
+            <button id="buyBtn" class="mt-3 w-full bg-green-600 hover:bg-green-700 transition py-2 rounded-lg font-bold">💰 Оплатить 500 ₽</button>
+        </div>
+
+        <!-- Секции очистки (сворачиваемые) -->
+        <div class="space-y-4">
+            <div class="service-card" data-service="gmail">
+                <div class="flex justify-between items-center p-4 bg-gray-800 rounded-t-xl cursor-pointer" onclick="toggleService('gmail')">
+                    <span class="text-xl">📧 Gmail</span>
+                    <span id="gmailStatus" class="text-sm text-gray-400">⚪ не авторизован</span>
+                </div>
+                <div id="gmailPanel" class="hidden p-4 bg-gray-700 rounded-b-xl space-y-3">
+                    <button onclick="cleanService('gmail')" class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded">Запустить очистку</button>
+                    <div id="gmailResult" class="text-sm text-gray-300"></div>
+                </div>
+            </div>
+
+            <div class="service-card" data-service="drive">
+                <div class="flex justify-between items-center p-4 bg-gray-800 rounded-t-xl cursor-pointer" onclick="toggleService('drive')">
+                    <span class="text-xl">🗂️ Google Drive</span>
+                    <span id="driveStatus" class="text-sm text-gray-400">⚪ не авторизован</span>
+                </div>
+                <div id="drivePanel" class="hidden p-4 bg-gray-700 rounded-b-xl space-y-3">
+                    <button onclick="cleanService('drive')" class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded">Удалить дубликаты и старые файлы</button>
+                    <div id="driveResult" class="text-sm text-gray-300"></div>
+                </div>
+            </div>
+
+            <div class="service-card" data-service="twitter">
+                <div class="flex justify-between items-center p-4 bg-gray-800 rounded-t-xl cursor-pointer" onclick="toggleService('twitter')">
+                    <span class="text-xl">🐦 Twitter</span>
+                    <span id="twitterStatus" class="text-sm text-gray-400">⚪ не авторизован</span>
+                </div>
+                <div id="twitterPanel" class="hidden p-4 bg-gray-700 rounded-b-xl space-y-3">
+                    <button onclick="cleanService('twitter')" class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded">Очистить Twitter</button>
+                    <div id="twitterResult" class="text-sm text-gray-300"></div>
+                </div>
+            </div>
+
+            <div class="service-card" data-service="vk">
+                <div class="flex justify-between items-center p-4 bg-gray-800 rounded-t-xl cursor-pointer" onclick="toggleService('vk')">
+                    <span class="text-xl">🇷🇺 VK</span>
+                    <span id="vkStatus" class="text-sm text-gray-400">⚪ не авторизован</span>
+                </div>
+                <div id="vkPanel" class="hidden p-4 bg-gray-700 rounded-b-xl space-y-3">
+                    <input type="text" id="vkToken" placeholder="VK Access Token" class="w-full p-2 rounded bg-gray-600 text-white">
+                    <button onclick="saveVkToken()" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 rounded">Сохранить токен</button>
+                    <button onclick="cleanService('vk')" class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded">Очистить стену VK</button>
+                    <div id="vkResult" class="text-sm text-gray-300"></div>
+                </div>
+            </div>
+
+            <div class="service-card" data-service="instagram">
+                <div class="flex justify-between items-center p-4 bg-gray-800 rounded-t-xl cursor-pointer" onclick="toggleService('instagram')">
+                    <span class="text-xl">📸 Instagram</span>
+                    <span id="instagramStatus" class="text-sm text-gray-400">⚪ не авторизован</span>
+                </div>
+                <div id="instagramPanel" class="hidden p-4 bg-gray-700 rounded-b-xl space-y-3">
+                    <input type="text" id="instaUser" placeholder="Логин" class="w-full p-2 rounded bg-gray-600 text-white mb-2">
+                    <input type="password" id="instaPass" placeholder="Пароль" class="w-full p-2 rounded bg-gray-600 text-white">
+                    <button onclick="saveInstagram()" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 rounded">Сохранить логин/пароль</button>
+                    <button onclick="cleanService('instagram')" class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded">Удалить посты</button>
+                    <div id="instagramResult" class="text-sm text-gray-300"></div>
+                </div>
+            </div>
+
+            <div class="service-card" data-service="other">
+                <div class="flex justify-between items-center p-4 bg-gray-800 rounded-t-xl cursor-pointer" onclick="toggleService('other')">
+                    <span class="text-xl">🛠️ Дополнительно</span>
+                    <span class="text-sm text-gray-400">▼</span>
+                </div>
+                <div id="otherPanel" class="hidden p-4 bg-gray-700 rounded-b-xl space-y-3">
+                    <div>
+                        <button onclick="checkCard()" class="w-full bg-purple-600 hover:bg-purple-700 py-2 rounded">💳 Проверить карту (загрузить CSV)</button>
+                        <input type="file" id="cardFile" accept=".csv" class="hidden" onchange="uploadCard()">
+                    </div>
+                    <div>
+                        <input type="email" id="emailBreach" placeholder="Email для проверки утечек" class="w-full p-2 rounded bg-gray-600 text-white">
+                        <button onclick="checkBreaches()" class="w-full bg-purple-600 hover:bg-purple-700 py-2 rounded mt-2">🔐 Проверить утечки</button>
+                    </div>
+                    <div>
+                        <input type="text" id="serviceName" placeholder="Название сервиса" class="w-full p-2 rounded bg-gray-600 text-white mb-2">
+                        <input type="email" id="accountEmail" placeholder="Email на сервисе" class="w-full p-2 rounded bg-gray-600 text-white">
+                        <button onclick="generateLetter()" class="w-full bg-purple-600 hover:bg-purple-700 py-2 rounded mt-2">✉️ Сгенерировать письмо для удаления</button>
+                    </div>
+                    <button onclick="getAiAdvice()" class="w-full bg-purple-600 hover:bg-purple-700 py-2 rounded">🧠 ИИ-совет</button>
+                    <div id="otherResult" class="text-sm text-gray-300 mt-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
