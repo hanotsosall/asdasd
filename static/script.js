@@ -1,196 +1,58 @@
 const tg = window.Telegram.WebApp;
-tg.ready();
-tg.expand();
-
+tg.ready(); tg.expand();
 let userId = tg.initDataUnsafe.user?.id;
-if (!userId) userId = prompt('Введите ваш Telegram ID');
-document.getElementById('userIdDisplay').innerText = userId;
+if (!userId) userId = prompt("Введите ваш Telegram ID");
 
-let paid = false;
+document.getElementById('userIdSpan').innerText = userId;
 
-function setBadge(elementId, text, type) {
-    const badge = document.getElementById(elementId);
-    if (!badge) return;
-    badge.innerText = text;
-    badge.className = 'badge ';
-    if (type === 'success') badge.classList.add('badge-success');
-    else if (type === 'error') badge.classList.add('badge-error');
-    else if (type === 'warning') badge.classList.add('badge-warning');
-    else badge.classList.add('badge-neutral');
-}
-
-function updateUI() {
-    if (paid) {
-        setBadge('paidBadge', '✅ Активирован', 'success');
-        const buyBtn = document.getElementById('buyButton');
-        if (buyBtn) buyBtn.style.display = 'none';
-    } else {
-        setBadge('paidBadge', '❌ Не оплачен', 'error');
-    }
-}
-
-async function apiCall(endpoint, method = 'POST', body = null) {
+async function apiCall(endpoint, method='POST', body=null) {
     const headers = { 'X-User-Id': userId };
     const options = { method, headers };
     if (body) {
-        if (body instanceof FormData) {
-            options.body = body;
-        } else {
-            headers['Content-Type'] = 'application/json';
-            options.body = JSON.stringify(body);
-        }
+        if (body instanceof FormData) options.body = body;
+        else { headers['Content-Type'] = 'application/json'; options.body = JSON.stringify(body); }
     }
-    const response = await fetch(endpoint, options);
-    return response.json();
-}
-
-function showResult(elementId, message, isError = false) {
-    const el = document.getElementById(elementId);
-    if (!el) return;
-    el.innerText = message;
-    el.style.borderLeftColor = isError ? '#E74C3C' : '#2A6B4E';
-    el.classList.add('visible');
-    setTimeout(() => el.classList.remove('visible'), 5000);
+    const resp = await fetch(endpoint, options);
+    return resp.json();
 }
 
 async function loadProfile() {
-    try {
-        const data = await apiCall('/api/profile', 'GET');
-        paid = data.paid;
-        updateUI();
-        const services = data.services;
-        for (const [srv, ok] of Object.entries(services)) {
-            const badge = document.getElementById(`${srv}StatusBadge`);
-            const cleanBtn = document.getElementById(`${srv}CleanBtn`);
-            if (badge) {
-                badge.innerText = ok ? 'авторизован' : 'не авторизован';
-                badge.className = ok ? 'badge badge-success' : 'badge badge-neutral';
-            }
-            if (cleanBtn) {
-                if (ok && paid) {
-                    cleanBtn.innerText = '▶ Запустить очистку';
-                    cleanBtn.disabled = false;
-                    cleanBtn.classList.remove('btn-disabled');
-                    cleanBtn.classList.add('btn-primary');
-                } else {
-                    cleanBtn.innerText = ok ? '⏳ Оплатите доступ' : '🔐 Требуется авторизация';
-                    cleanBtn.disabled = true;
-                    cleanBtn.classList.remove('btn-primary');
-                    cleanBtn.classList.add('btn-disabled');
-                }
-            }
-        }
-        document.getElementById('skeletonLoader').style.display = 'none';
-        document.getElementById('mainContent').style.display = 'block';
-    } catch(e) {
-        console.error(e);
-        document.getElementById('skeletonLoader').innerHTML = '<div class="card" style="color:red;">Ошибка загрузки профиля</div>';
-    }
-}
-
-function toggleService(serviceName) {
-    const panel = document.getElementById(`${serviceName}Panel`);
-    if (panel) panel.classList.toggle('open');
-}
-
-async function cleanService(service, extraData = null) {
-    const resultDiv = document.getElementById(`${service}Result`);
-    if (!resultDiv) return;
-    resultDiv.innerText = '⏳ Выполняется...';
-    resultDiv.classList.add('visible');
-    const formData = new FormData();
-    if (extraData) {
-        Object.entries(extraData).forEach(([k,v]) => formData.append(k,v));
-    }
-    const resp = await apiCall(`/api/clean/${service}`, 'POST', formData);
-    if (resp.status === 'auth_required') {
-        resultDiv.innerHTML = `🔐 Требуется авторизация: <a href="${resp.auth_url}" target="_blank" style="color:#2ECC71;">Перейти</a><br>После авторизации вернитесь и нажмите очистку снова.`;
-    } else if (resp.status === 'need_token') {
-        resultDiv.innerText = resp.message + ' Введите токен в поле выше.';
-    } else if (resp.status === 'need_credentials') {
-        resultDiv.innerText = resp.message + ' Введите логин/пароль.';
+    const data = await apiCall('/api/profile', 'GET');
+    if (data.paid) {
+        document.getElementById('paidBadge').className = 'badge badge-success';
+        document.getElementById('paidBadge').innerText = '✅ Активен';
+        document.getElementById('statusText').innerHTML = '🟢 Доступ активирован';
+        document.getElementById('buyBtn').style.display = 'none';
     } else {
-        resultDiv.innerText = resp.message || 'Готово.';
+        document.getElementById('paidBadge').className = 'badge badge-warning';
+        document.getElementById('paidBadge').innerText = '❌ Не оплачен';
+        document.getElementById('statusText').innerHTML = '🔴 Требуется оплата';
+        document.getElementById('buyBtn').style.display = 'block';
     }
-    loadProfile();
+    for (const [srv, ok] of Object.entries(data.services)) {
+        const badge = document.getElementById(`${srv}Status`);
+        if (badge) badge.innerText = ok ? '✅ авторизован' : '⚪ не авторизован';
+    }
 }
 
-// ----- Инициализация слушателей -----
-document.querySelectorAll('.service-header').forEach(header => {
-    const service = header.dataset.service;
-    if (service) header.addEventListener('click', () => toggleService(service));
+function togglePanel(header) {
+    const panel = header.parentElement.querySelector('.panel');
+    panel.classList.toggle('open');
+}
+
+document.getElementById('buyBtn')?.addEventListener('click', async () => {
+    await apiCall('/api/payment/notify', 'POST', new URLSearchParams({ user_id: userId }));
+    tg.showAlert('Запрос отправлен администратору. После оплаты 500₽ доступ будет активирован.');
 });
 
-document.getElementById('buyButton')?.addEventListener('click', () => {
-    apiCall('/api/payment/notify', 'POST', new URLSearchParams({ user_id: userId })).then(() => {
-        tg.showAlert('Запрос отправлен администратору. После оплаты 500 ₽ на кошелёк 4100118620135634 (с указанием Telegram ID) доступ будет активирован.');
+document.querySelectorAll('.clean-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+        const service = btn.dataset.service;
+        const resultDiv = document.getElementById(`${service}Result`);
+        resultDiv.innerText = '⏳ Выполняется...';
+        const resp = await apiCall(`/api/clean/${service}`, 'POST');
+        resultDiv.innerText = resp.message || 'Готово.';
     });
-});
-
-document.getElementById('aboutBtn')?.addEventListener('click', () => {
-    window.open('/about', '_blank');
-});
-
-// Gmail
-document.getElementById('gmailCleanBtn')?.addEventListener('click', () => cleanService('gmail'));
-document.getElementById('driveCleanBtn')?.addEventListener('click', () => cleanService('drive'));
-document.getElementById('twitterCleanBtn')?.addEventListener('click', () => cleanService('twitter'));
-
-// VK
-document.getElementById('vkSaveBtn')?.addEventListener('click', async () => {
-    const token = document.getElementById('vkTokenInput').value.trim();
-    if (!token) return tg.showAlert('Введите VK Access Token');
-    const resp = await apiCall('/api/clean/vk', 'POST', new URLSearchParams({ token }));
-    showResult('vkResult', resp.message);
-    loadProfile();
-});
-document.getElementById('vkCleanBtn')?.addEventListener('click', () => cleanService('vk'));
-
-// Instagram
-document.getElementById('instaSaveBtn')?.addEventListener('click', async () => {
-    const username = document.getElementById('instaUser').value.trim();
-    const password = document.getElementById('instaPass').value.trim();
-    if (!username || !password) return tg.showAlert('Введите логин и пароль');
-    const fd = new FormData();
-    fd.append('username', username);
-    fd.append('password', password);
-    const resp = await apiCall('/api/clean/instagram', 'POST', fd);
-    showResult('instagramResult', resp.message);
-    loadProfile();
-});
-document.getElementById('instaCleanBtn')?.addEventListener('click', () => cleanService('instagram'));
-
-// Инструменты
-document.getElementById('cardUploadBtn')?.addEventListener('click', () => document.getElementById('cardFileInput').click());
-document.getElementById('cardFileInput')?.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const fd = new FormData();
-    fd.append('file', file);
-    const resp = await apiCall('/api/check/card', 'POST', fd);
-    showResult('cardResult', resp.message);
-});
-document.getElementById('breachCheckBtn')?.addEventListener('click', async () => {
-    const email = document.getElementById('breachEmailInput').value.trim();
-    if (!email) return tg.showAlert('Введите email');
-    const fd = new FormData();
-    fd.append('email', email);
-    const resp = await apiCall('/api/check/breaches', 'POST', fd);
-    showResult('breachResult', resp.message);
-});
-document.getElementById('letterGenBtn')?.addEventListener('click', async () => {
-    const service = document.getElementById('letterServiceInput').value.trim();
-    const email = document.getElementById('letterEmailInput').value.trim();
-    if (!service || !email) return tg.showAlert('Заполните оба поля');
-    const fd = new FormData();
-    fd.append('service', service);
-    fd.append('email', email);
-    const resp = await apiCall('/api/generate/letter', 'POST', fd);
-    showResult('letterResult', resp.message);
-});
-document.getElementById('aiAdviceBtn')?.addEventListener('click', async () => {
-    const resp = await apiCall('/api/ai/advice', 'GET');
-    showResult('aiResult', resp.message);
 });
 
 loadProfile();
