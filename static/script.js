@@ -5,9 +5,9 @@ tg.expand();
 let userId = tg.initDataUnsafe.user?.id;
 if (!userId) userId = prompt('Введите ваш Telegram ID');
 document.getElementById('userIdDisplay').innerText = userId;
+
 let paid = false;
 
-// Вспомогательные функции UI
 function setBadge(elementId, text, type) {
     const badge = document.getElementById(elementId);
     if (!badge) return;
@@ -21,11 +21,11 @@ function setBadge(elementId, text, type) {
 
 function updateUI() {
     if (paid) {
-        setBadge('paidBadge', '✅ Активен', 'success');
-        document.getElementById('buyButton').style.display = 'none';
+        setBadge('paidBadge', '✅ Активирован', 'success');
+        const buyBtn = document.getElementById('buyButton');
+        if (buyBtn) buyBtn.style.display = 'none';
     } else {
         setBadge('paidBadge', '❌ Не оплачен', 'error');
-        document.getElementById('buyButton').style.display = 'block';
     }
 }
 
@@ -45,15 +45,12 @@ async function apiCall(endpoint, method = 'POST', body = null) {
 }
 
 function showResult(elementId, message, isError = false) {
-    const el = document.getElementById(elementId);F
+    const el = document.getElementById(elementId);
     if (!el) return;
     el.innerText = message;
-    if (isError) el.style.borderLeftColor = '#E74C3C';
-    else el.style.borderLeftColor = '#2A6B4E';
+    el.style.borderLeftColor = isError ? '#E74C3C' : '#2A6B4E';
     el.classList.add('visible');
-    setTimeout(() => {
-        el.classList.remove('visible');
-    }, 5000);
+    setTimeout(() => el.classList.remove('visible'), 5000);
 }
 
 async function loadProfile() {
@@ -83,15 +80,11 @@ async function loadProfile() {
                 }
             }
         }
-        document.getElementById('skeleton').style.display = 'none';
-        document.getElementById('appContent').style.display = 'block';
+        document.getElementById('skeletonLoader').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
     } catch(e) {
         console.error(e);
-        document.getElementById('skeleton').innerHTML = '<div style="color:red;">Ошибка загрузки профиля</div>';
-        // После загрузки профиля добавить обработчик
-        document.getElementById('infoBtn')?.addEventListener('click', () => {
-            tg.openLink('/help');  // или /static/help.html
-});
+        document.getElementById('skeletonLoader').innerHTML = '<div class="card" style="color:red;">Ошибка загрузки профиля</div>';
     }
 }
 
@@ -122,15 +115,23 @@ async function cleanService(service, extraData = null) {
     loadProfile();
 }
 
-// Раскрытие панелей
-document.querySelectorAll('.service-row').forEach(row => {
-    row.addEventListener('click', () => {
-        const service = row.dataset.service;
-        if (service) toggleService(service);
+// ----- Инициализация слушателей -----
+document.querySelectorAll('.service-header').forEach(header => {
+    const service = header.dataset.service;
+    if (service) header.addEventListener('click', () => toggleService(service));
+});
+
+document.getElementById('buyButton')?.addEventListener('click', () => {
+    apiCall('/api/payment/notify', 'POST', new URLSearchParams({ user_id: userId })).then(() => {
+        tg.showAlert('Запрос отправлен администратору. После оплаты 500 ₽ на кошелёк 4100118620135634 (с указанием Telegram ID) доступ будет активирован.');
     });
 });
 
-// Кнопки очистки
+document.getElementById('aboutBtn')?.addEventListener('click', () => {
+    window.open('/about', '_blank');
+});
+
+// Gmail
 document.getElementById('gmailCleanBtn')?.addEventListener('click', () => cleanService('gmail'));
 document.getElementById('driveCleanBtn')?.addEventListener('click', () => cleanService('drive'));
 document.getElementById('twitterCleanBtn')?.addEventListener('click', () => cleanService('twitter'));
@@ -159,10 +160,8 @@ document.getElementById('instaSaveBtn')?.addEventListener('click', async () => {
 });
 document.getElementById('instaCleanBtn')?.addEventListener('click', () => cleanService('instagram'));
 
-// Анализ карты
-document.getElementById('cardUploadBtn')?.addEventListener('click', () => {
-    document.getElementById('cardFileInput').click();
-});
+// Инструменты
+document.getElementById('cardUploadBtn')?.addEventListener('click', () => document.getElementById('cardFileInput').click());
 document.getElementById('cardFileInput')?.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -171,8 +170,6 @@ document.getElementById('cardFileInput')?.addEventListener('change', async (e) =
     const resp = await apiCall('/api/check/card', 'POST', fd);
     showResult('cardResult', resp.message);
 });
-
-// Проверка утечек
 document.getElementById('breachCheckBtn')?.addEventListener('click', async () => {
     const email = document.getElementById('breachEmailInput').value.trim();
     if (!email) return tg.showAlert('Введите email');
@@ -181,8 +178,6 @@ document.getElementById('breachCheckBtn')?.addEventListener('click', async () =>
     const resp = await apiCall('/api/check/breaches', 'POST', fd);
     showResult('breachResult', resp.message);
 });
-
-// Генерация письма
 document.getElementById('letterGenBtn')?.addEventListener('click', async () => {
     const service = document.getElementById('letterServiceInput').value.trim();
     const email = document.getElementById('letterEmailInput').value.trim();
@@ -193,23 +188,9 @@ document.getElementById('letterGenBtn')?.addEventListener('click', async () => {
     const resp = await apiCall('/api/generate/letter', 'POST', fd);
     showResult('letterResult', resp.message);
 });
-
-// ИИ‑совет
 document.getElementById('aiAdviceBtn')?.addEventListener('click', async () => {
     const resp = await apiCall('/api/ai/advice', 'GET');
     showResult('aiResult', resp.message);
 });
 
-// Оплата
-document.getElementById('buyButton')?.addEventListener('click', () => {
-    apiCall('/api/payment/notify', 'POST', new URLSearchParams({ user_id: userId })).then(() => {
-        tg.showAlert('Запрос отправлен администратору. После оплаты 500 ₽ на кошелёк 4100118620135634 (с указанием Telegram ID) доступ будет активирован.');
-    });
-});
-
-document.getElementById('infoBtn')?.addEventListener('click', () => {
-    tg.openLink('/static/help.html');
-});
-
-// Старт
 loadProfile();
