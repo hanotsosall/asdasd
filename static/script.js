@@ -51,7 +51,6 @@ document.getElementById('buyBtn')?.addEventListener('click', async () => {
     tg.showAlert('Запрос отправлен администратору. После оплаты 500₽ доступ будет активирован.');
 });
 
-// Обработчики для clean-кнопок
 document.querySelectorAll('.clean-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
         const service = btn.dataset.service;
