@@ -3,9 +3,9 @@ import logging
 from dotenv import load_dotenv
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
-from utils import is_paid, add_paid_user, load_creds, save_creds, parse_bank_statement
+from database import set_paid, is_paid, log_action, get_admin_token
 from cleaners import gmail_cleaner, drive_cleaner, twitter_cleaner, vk_cleaner, instagram_cleaner
-from database import get_admin_token
+from utils import load_creds
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -28,28 +28,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("❓ Помощь", callback_data='help')],
     ]
     await update.message.reply_text(
-        "🔥 *SlateClean* — профессиональная зачистка цифрового следа.\n"
-        "Выберите действие:",
+        "🔥 *SlateClean* — профессиональная зачистка цифрового следа.\n\nВыберите действие:",
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode="Markdown"
     )
-
-async def start(update, context):
-    keyboard = [[InlineKeyboardButton("🚀 Открыть мини-апп", web_app=WebAppInfo(url=os.getenv("WEBAPP_URL")))]]
-    await update.message.reply_text("Добро пожаловать в SlateClean!", reply_markup=InlineKeyboardMarkup(keyboard))
-
-async def admin_panel(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != int(os.getenv("ADMIN_ID")):
-        await update.message.reply_text("Нет доступа")
-        return
-    token = get_admin_token()
-    url = f"{os.getenv('WEBAPP_URL')}/admin?token={token}"
-    await update.message.reply_text(f"Ссылка на админ-панель: {url}")
-
-def main():
-    app = Application.builder().token(os.getenv("BOT_TOKEN")).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("admin", admin_panel))
 
 async def clean_callback(update: Update, context: ContextTypes.DEFAULT_TYPE, service: str):
     query = update.callback_query
@@ -57,7 +39,6 @@ async def clean_callback(update: Update, context: ContextTypes.DEFAULT_TYPE, ser
     if not is_paid(user_id):
         await query.edit_message_text("🚫 Доступ платный. Оплатите 500 ₽ (кнопка «Оплатить»).")
         return
-    # Проверяем авторизацию
     creds = load_creds(user_id, service)
     if not creds:
         await query.edit_message_text(f"🔐 Сервис {service} не авторизован. Используйте мини-апп для авторизации.")
@@ -75,6 +56,7 @@ async def clean_callback(update: Update, context: ContextTypes.DEFAULT_TYPE, ser
         res = instagram_cleaner.clean(user_id)
     else:
         res = "Функция в разработке"
+    log_action(user_id, f"bot_clean_{service}", res)
     await query.edit_message_text(res)
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -89,7 +71,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "✅ Безопасно (пароли не храним)\n"
             "✅ 5000+ пользователей\n"
             "✅ Доступ ко всем функциям после разовой оплаты 500 ₽\n\n"
-            "[Подробнее]({}/about)".format(os.getenv("WEBAPP_URL")),
+            f"[Подробнее]({WEBAPP_URL}/about)",
             parse_mode="Markdown", disable_web_page_preview=True
         )
     elif data == 'buy':
@@ -115,7 +97,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "/start — главное меню\n"
             "Мини-апп — все функции с интерфейсом\n"
             "Оплата: 500 ₽ на 4100118620135634 с указанием Telegram ID\n"
-            "После оплаты администратор активирует доступ."
+            "После оплаты администратор активирует доступ командой /pay.\n"
+            "Админ-панель: /admin",
+            parse_mode="Markdown"
         )
     else:
         await query.edit_message_text("Используйте мини-апп для полного доступа.")
@@ -129,16 +113,25 @@ async def pay_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     try:
         uid = int(context.args[0])
-        add_paid_user(uid)
+        set_paid(uid, True)
         await update.message.reply_text(f"✅ Пользователь {uid} активирован.")
         await context.bot.send_message(uid, "🎉 Доступ к SlateClean активирован! Используйте /start")
     except Exception as e:
         await update.message.reply_text(f"Ошибка: {e}")
 
+async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        await update.message.reply_text("Нет доступа")
+        return
+    token = get_admin_token()
+    url = f"{WEBAPP_URL}/admin?token={token}"
+    await update.message.reply_text(f"Ссылка на админ-панель: {url}")
+
 def main():
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("pay", pay_command))
+    app.add_handler(CommandHandler("admin", admin_command))
     app.add_handler(CallbackQueryHandler(button_handler))
     logger.info("Бот запущен")
     app.run_polling()
