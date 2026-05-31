@@ -5,272 +5,142 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>SlateClean — Цифровая санация</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            background: #0A0D12;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', system-ui, sans-serif;
-            color: #EAEDF2;
-            padding: 20px 16px 48px;
-            line-height: 1.4;
-            -webkit-font-smoothing: antialiased;
-        }
-        .container { max-width: 600px; margin: 0 auto; }
-        
-        /* Tabs */
-        .tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 24px;
-            border-bottom: 1px solid #1E242C;
-            padding-bottom: 8px;
-        }
-        .tab-btn {
-            background: none;
-            border: none;
-            padding: 8px 20px;
-            font-size: 15px;
-            font-weight: 500;
-            color: #9AAEBF;
-            cursor: pointer;
-            border-radius: 30px;
-            transition: all 0.2s;
-        }
-        .tab-btn.active {
-            background: #2A6B4E;
-            color: white;
-        }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fade 0.2s ease; }
-        @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
-
-        /* Карточки */
-        .card {
-            background: #11161C;
-            border: 1px solid #1E242C;
-            border-radius: 20px;
-            margin-bottom: 16px;
-            transition: box-shadow 0.2s;
-        }
-        .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-        .card-header {
-            padding: 16px 18px;
-            background: #0D1218;
-            border-bottom: 1px solid #1E242C;
-            font-weight: 500;
-            font-size: 14px;
-            color: #AEBECD;
-        }
-        .card-content { padding: 18px; }
-
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 4px 10px;
-            border-radius: 100px;
-            font-size: 11px;
-            font-weight: 500;
-        }
-        .badge-success { background: #0D3B26; color: #2ECC71; }
-        .badge-error { background: #2C1A1A; color: #E74C3C; }
-        .badge-neutral { background: #181F26; color: #96A5B8; }
-
-        .btn {
-            display: block;
-            width: 100%;
-            padding: 10px 16px;
-            border-radius: 12px;
-            font-weight: 500;
-            font-size: 14px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.15s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-            border: none;
-        }
-        .btn-primary { background: #2A6B4E; color: white; }
-        .btn-primary:hover { background: #347E5C; }
-        .btn-secondary { background: #18202A; color: #CBD5E1; border: 1px solid #25303C; }
-        .btn-secondary:hover { background: #202A36; }
-        .btn-disabled { opacity: 0.5; pointer-events: none; background: #10161C; color: #5C6D7E; }
-
-        .service-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 18px;
-            border-bottom: 1px solid #171E25;
-            cursor: pointer;
-        }
-        .service-row:hover { background: #0E141B; }
-        .service-name { display: flex; align-items: center; gap: 12px; font-weight: 500; }
-
-        .panel {
-            display: grid;
-            grid-template-rows: 0fr;
-            transition: grid-template-rows 0.25s ease-out;
-            background: #0D1218;
-            border-top: 1px solid #171E25;
-        }
-        .panel.open { grid-template-rows: 1fr; }
-        .panel-inner { overflow: hidden; padding: 0 18px 18px 18px; }
-
-        .input-field {
-            width: 100%;
-            background: #0C1117;
-            border: 1px solid #222A33;
-            border-radius: 12px;
-            padding: 10px 14px;
-            font-size: 13px;
-            color: #E1E9F0;
-            margin-bottom: 12px;
-        }
-        .result-block {
-            background: #0A0E13;
-            border-left: 3px solid #2A6B4E;
-            padding: 12px;
-            font-size: 12px;
-            color: #9AADBF;
-            border-radius: 10px;
-            margin-top: 12px;
-            white-space: pre-wrap;
-        }
-        .info-text {
-            font-size: 13px;
-            color: #B0C4DE;
-            margin-bottom: 12px;
-            line-height: 1.5;
-        }
-        hr { border-color: #1E242C; margin: 16px 0; }
-        .skeleton { background: #141B22; border-radius: 12px; height: 80px; margin-bottom: 16px; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 0.8; } 100% { opacity: 0.5; } }
-        .hidden { display: none; }
-    </style>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
 </head>
 <body>
-<div class="container">
-    <div class="tabs">
-        <button class="tab-btn active" data-tab="services">🔧 Сервисы</button>
-        <button id="infoBtn" class="btn btn-secondary" style="margin-top: 12px;">📖 Что это за сервис?</button>
+<div class="app-container">
+    <header class="app-header">
+        <div class="logo">SlateClean</div>
+        <div class="tagline">professional digital sanitation</div>
+    </header>
+
+    <div class="skeleton-loader" id="skeletonLoader">
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
     </div>
 
-    <div id="skeleton" class="skeleton"></div>
-
-    <!-- Вкладка: Сервисы -->
-    <div id="tab-services" class="tab-content active">
-        <!-- Карточка профиля -->
-        <div class="card">
-            <div class="card-header">Аккаунт</div>
-            <div class="card-content">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-                    <span style="color:#8896A8;">ID пользователя</span>
-                    <span id="userIdDisplay" class="font-mono" style="color:#FFFFFF;">—</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-                    <span style="color:#8896A8;">Доступ</span>
+    <main id="mainContent" style="display: none;">
+        <div class="card profile-card">
+            <div class="card-header">
+                <span>Аккаунт</span>
+                <span id="userIdDisplay" class="user-id">—</span>
+            </div>
+            <div class="card-body">
+                <div class="status-row">
+                    <span>Доступ</span>
                     <span id="paidBadge" class="badge badge-error">Не активирован</span>
                 </div>
-                <button id="buyButton" class="btn btn-primary">💰 Оплатить доступ — 500 ₽</button>
-                <div style="font-size: 11px; color: #5A6A7A; margin-top: 12px; text-align: center;">
-                    Перевод на кошелёк 4100118620135634 с комментарием: ваш ID
+                <button id="buyButton" class="btn btn-primary btn-block">💰 Оплатить доступ — 500 ₽</button>
+                <div class="payment-hint">Перевод на кошелёк 4100118620135634 с комментарием: ваш ID</div>
+            </div>
+        </div>
+
+        <!-- Список сервисов (каждый сворачивается) -->
+        <div class="card service-card" data-service="gmail">
+            <div class="service-header" data-service="gmail">
+                <div class="service-title"><span class="service-icon">📧</span> Gmail</div>
+                <div><span id="gmailStatusBadge" class="badge badge-neutral">не авторизован</span><span class="chevron">▼</span></div>
+            </div>
+            <div id="gmailPanel" class="service-panel">
+                <div class="service-panel-inner">
+                    <button id="gmailCleanBtn" class="btn btn-secondary" disabled>🔐 Требуется авторизация</button>
+                    <div id="gmailResult" class="result-message"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Остальные карточки сервисов (Gmail, Drive, Twitter, VK, Instagram, Инструменты) -->
-        <!-- Код карточек такой же, как в предыдущей версии, повторю кратко для экономии места, но в реальном файле все должны быть -->
-        <!-- Для краткости я покажу только Gmail, остальные идентичны предыдущей версии, просто скопируйте их -->
-        <div class="card">
-            <div class="service-row" data-service="gmail">
-                <div class="service-name"><span class="service-icon">📧</span> Gmail</div>
-                <div><span id="gmailStatusBadge" class="badge badge-neutral">не авторизован</span> ▼</div>
+        <div class="card service-card" data-service="drive">
+            <div class="service-header" data-service="drive">
+                <div class="service-title"><span class="service-icon">🗂️</span> Google Drive</div>
+                <div><span id="driveStatusBadge" class="badge badge-neutral">не авторизован</span><span class="chevron">▼</span></div>
             </div>
-            <div id="gmailPanel" class="panel"><div class="panel-inner">
-                <button id="gmailCleanBtn" class="btn btn-secondary btn-disabled" disabled>🔐 Требуется авторизация</button>
-                <div id="gmailResult" class="result-block"></div>
-            </div></div>
-        </div>
-
-        <div class="card"><div class="service-row" data-service="drive"><div class="service-name">🗂️ Google Drive</div><div><span id="driveStatusBadge" class="badge badge-neutral">не авторизован</span> ▼</div></div>
-        <div id="drivePanel" class="panel"><div class="panel-inner"><button id="driveCleanBtn" class="btn btn-secondary btn-disabled" disabled>🔐 Требуется авторизация</button><div id="driveResult" class="result-block"></div></div></div></div>
-
-        <div class="card"><div class="service-row" data-service="twitter"><div class="service-name">🐦 Twitter</div><div><span id="twitterStatusBadge" class="badge badge-neutral">не авторизован</span> ▼</div></div>
-        <div id="twitterPanel" class="panel"><div class="panel-inner"><button id="twitterCleanBtn" class="btn btn-secondary btn-disabled" disabled>🔐 Требуется авторизация</button><div id="twitterResult" class="result-block"></div></div></div></div>
-
-        <div class="card"><div class="service-row" data-service="vk"><div class="service-name">🇷🇺 VK</div><div><span id="vkStatusBadge" class="badge badge-neutral">не авторизован</span> ▼</div></div>
-        <div id="vkPanel" class="panel"><div class="panel-inner"><input type="text" id="vkTokenInput" class="input-field" placeholder="VK Access Token"><button id="vkSaveBtn" class="btn btn-secondary">💾 Сохранить токен</button><button id="vkCleanBtn" class="btn btn-primary">Очистить стену VK</button><div id="vkResult" class="result-block"></div></div></div></div>
-
-        <div class="card"><div class="service-row" data-service="instagram"><div class="service-name">📸 Instagram</div><div><span id="instagramStatusBadge" class="badge badge-neutral">не авторизован</span> ▼</div></div>
-        <div id="instagramPanel" class="panel"><div class="panel-inner"><input type="text" id="instaUser" class="input-field" placeholder="Логин"><input type="password" id="instaPass" class="input-field" placeholder="Пароль"><button id="instaSaveBtn" class="btn btn-secondary">💾 Сохранить данные</button><button id="instaCleanBtn" class="btn btn-primary">Удалить посты</button><div id="instagramResult" class="result-block"></div></div></div></div>
-
-        <div class="card"><div class="service-row" data-service="tools"><div class="service-name">🛠️ Инструменты</div><div>▼</div></div>
-        <div id="toolsPanel" class="panel"><div class="panel-inner">
-            <button id="cardUploadBtn" class="btn btn-secondary">💳 Анализ выписки (CSV)</button><input type="file" id="cardFileInput" accept=".csv" hidden><div id="cardResult" class="result-block"></div>
-            <input type="email" id="breachEmailInput" class="input-field" placeholder="Email для проверки утечек"><button id="breachCheckBtn" class="btn btn-secondary">🔍 Проверить утечки</button><div id="breachResult" class="result-block"></div>
-            <input type="text" id="letterServiceInput" class="input-field" placeholder="Название сервиса"><input type="email" id="letterEmailInput" class="input-field" placeholder="Email на сервисе"><button id="letterGenBtn" class="btn btn-secondary">✉️ Сгенерировать письмо для удаления</button><div id="letterResult" class="result-block"></div>
-            <button id="aiAdviceBtn" class="btn btn-secondary">🧠 Получить ИИ‑совет</button><div id="aiResult" class="result-block"></div>
-        </div></div></div>
-    </div>
-
-    <!-- Вкладка: О сервисе -->
-    <div id="tab-info" class="tab-content">
-        <div class="card">
-            <div class="card-header">📌 Что такое SlateClean?</div>
-            <div class="card-content">
-                <div class="info-text">
-                    SlateClean — это профессиональный инструмент для полной зачистки цифрового следа. Мы удаляем:
-                </div>
-                <ul style="margin-left: 20px; margin-bottom: 16px; color: #B0C4DE;">
-                    <li>📧 Все старые письма и рассылки из Gmail</li>
-                    <li>🗂️ Дубликаты и устаревшие файлы в Google Drive</li>
-                    <li>🐦 Твиты, лайки, ретвиты из Twitter</li>
-                    <li>🇷🇺 Записи со стены VK</li>
-                    <li>📸 Посты из Instagram</li>
-                    <li>💳 Регулярные платежи (подписки) по выписке из банка</li>
-                    <li>🔐 Проверяем утечки вашего email через Have I Been Pwned</li>
-                </ul>
-                <div class="info-text">
-                    <strong>ИИ-помощник</strong> (ChatGPT) генерирует письма для удаления аккаунтов с любых сайтов и даёт персональные советы по цифровой гигиене.
+            <div id="drivePanel" class="service-panel">
+                <div class="service-panel-inner">
+                    <button id="driveCleanBtn" class="btn btn-secondary" disabled>🔐 Требуется авторизация</button>
+                    <div id="driveResult" class="result-message"></div>
                 </div>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-header">🔒 Безопасность и репутация</div>
-            <div class="card-content">
-                <div class="info-text">
-                    ✅ <strong>Мы не храним ваши данные</strong> — все токены и пароли сохраняются только на вашем устройстве и удаляются после сессии.<br>
-                    ✅ Все операции проходят через официальные API Google, Twitter, VK — мы не имеем доступа к вашим паролям.<br>
-                    ✅ Наша технология проверена тысячами пользователей — <strong>рейтинг 4.9/5</strong> на независимых площадках.<br>
-                    ✅ Гарантия конфиденциальности: после очистки вы можете в любой момент отозвать доступ к приложению через аккаунт Google.
+        <div class="card service-card" data-service="twitter">
+            <div class="service-header" data-service="twitter">
+                <div class="service-title"><span class="service-icon">🐦</span> Twitter</div>
+                <div><span id="twitterStatusBadge" class="badge badge-neutral">не авторизован</span><span class="chevron">▼</span></div>
+            </div>
+            <div id="twitterPanel" class="service-panel">
+                <div class="service-panel-inner">
+                    <button id="twitterCleanBtn" class="btn btn-secondary" disabled>🔐 Требуется авторизация</button>
+                    <div id="twitterResult" class="result-message"></div>
                 </div>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-header">⚙️ Как это работает?</div>
-            <div class="card-content">
-                <div class="info-text">
-                    1. Вы оплачиваете разовый доступ — 500 ₽ на кошелёк 4100118620135634, указав в комментарии ваш Telegram ID.<br>
-                    2. Администратор активирует доступ.<br>
-                    3. Авторизуйтесь через Google OAuth (Gmail/Drive) или введите токены для VK/Twitter/Instagram.<br>
-                    4. Нажмите кнопку очистки — через пару минут ваш цифровой след станет чистым.<br>
-                    5. При необходимости ИИ напишет письмо для удаления аккаунта с любого сайта.<br><br>
-                    <strong>Всё автоматически, без вашего участия.</strong>
+        <div class="card service-card" data-service="vk">
+            <div class="service-header" data-service="vk">
+                <div class="service-title"><span class="service-icon">🇷🇺</span> VK</div>
+                <div><span id="vkStatusBadge" class="badge badge-neutral">не авторизован</span><span class="chevron">▼</span></div>
+            </div>
+            <div id="vkPanel" class="service-panel">
+                <div class="service-panel-inner">
+                    <input type="text" id="vkTokenInput" class="input-field" placeholder="VK Access Token">
+                    <button id="vkSaveBtn" class="btn btn-secondary btn-sm">💾 Сохранить токен</button>
+                    <button id="vkCleanBtn" class="btn btn-primary btn-sm">Очистить стену VK</button>
+                    <div id="vkResult" class="result-message"></div>
                 </div>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-header">📞 Поддержка и контакты</div>
-            <div class="card-content">
-                <div class="info-text">
-                    Возникли вопросы? Пишите нашему администратору в Telegram: @support_slateclean<br>
-                    Отвечаем в течение 2 часов.
+        <div class="card service-card" data-service="instagram">
+            <div class="service-header" data-service="instagram">
+                <div class="service-title"><span class="service-icon">📸</span> Instagram</div>
+                <div><span id="instagramStatusBadge" class="badge badge-neutral">не авторизован</span><span class="chevron">▼</span></div>
+            </div>
+            <div id="instagramPanel" class="service-panel">
+                <div class="service-panel-inner">
+                    <input type="text" id="instaUser" class="input-field" placeholder="Логин">
+                    <input type="password" id="instaPass" class="input-field" placeholder="Пароль">
+                    <button id="instaSaveBtn" class="btn btn-secondary btn-sm">💾 Сохранить данные</button>
+                    <button id="instaCleanBtn" class="btn btn-primary btn-sm">Удалить посты</button>
+                    <div id="instagramResult" class="result-message"></div>
                 </div>
             </div>
         </div>
-    </div>
+
+        <div class="card service-card" data-service="tools">
+            <div class="service-header" data-service="tools">
+                <div class="service-title"><span class="service-icon">🛠️</span> Инструменты</div>
+                <div><span class="chevron">▼</span></div>
+            </div>
+            <div id="toolsPanel" class="service-panel">
+                <div class="service-panel-inner">
+                    <button id="cardUploadBtn" class="btn btn-secondary">💳 Анализ выписки (CSV)</button>
+                    <input type="file" id="cardFileInput" accept=".csv" hidden>
+                    <div id="cardResult" class="result-message"></div>
+
+                    <input type="email" id="breachEmailInput" class="input-field" placeholder="Email для проверки утечек">
+                    <button id="breachCheckBtn" class="btn btn-secondary">🔍 Проверить утечки</button>
+                    <div id="breachResult" class="result-message"></div>
+
+                    <input type="text" id="letterServiceInput" class="input-field" placeholder="Название сервиса (spotify)">
+                    <input type="email" id="letterEmailInput" class="input-field" placeholder="Email на сервисе">
+                    <button id="letterGenBtn" class="btn btn-secondary">✉️ Сгенерировать письмо</button>
+                    <div id="letterResult" class="result-message"></div>
+
+                    <button id="aiAdviceBtn" class="btn btn-secondary">🧠 Получить ИИ‑совет</button>
+                    <div id="aiResult" class="result-message"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card about-card">
+            <div class="card-header">О сервисе</div>
+            <div class="card-body">
+                <p>SlateClean — профессиональный инструмент для удаления цифрового следа. Безопасно, конфиденциально, эффективно.</p>
+                <button id="aboutBtn" class="btn btn-secondary btn-block">📖 Подробнее</button>
+            </div>
+        </div>
+    </main>
 </div>
 <script src="/static/script.js"></script>
 </body>
