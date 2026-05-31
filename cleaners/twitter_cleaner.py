@@ -19,13 +19,11 @@ def clean(user_id, pin, request_token):
         access_token, access_secret = auth.get_access_token(pin)
         save_creds(user_id, (access_token, access_secret), "twitter")
         api = tweepy.API(auth)
-        # Удаляем твиты
         tweets = api.user_timeline(count=200)
         deleted = 0
         for tweet in tweets:
             api.destroy_status(tweet.id)
             deleted += 1
-        # Удаляем лайки
         favs = api.favorites(count=200)
         for fav in favs:
             api.destroy_favorite(fav.id)
@@ -36,7 +34,7 @@ def clean(user_id, pin, request_token):
 def clean_with_existing_tokens(user_id):
     creds = load_creds(user_id, "twitter")
     if not creds:
-        return "❌ Twitter не авторизован. Используйте авторизацию через PIN."
+        return "❌ Twitter не авторизован."
     access_token, access_secret = creds
     auth = tweepy.OAuth1UserHandler(API_KEY, API_SECRET, access_token, access_secret)
     api = tweepy.API(auth)
