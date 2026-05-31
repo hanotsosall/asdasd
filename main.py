@@ -1,12 +1,16 @@
 import os
 import logging
-from fastapi import FastAPI, Request, Form, HTTPException, Depends
+from fastapi import FastAPI, Request, Form, HTTPException, Depends, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 import requests
 
+from database import (
+    init_db, register_user, set_paid, is_paid, get_all_users,
+    get_stats, log_action, get_admin_token, set_user_token_status
+)
 from utils import load_creds, save_creds, parse_bank_statement, check_hibp
 from cleaners import (
     gmail_cleaner, drive_cleaner, twitter_cleaner,
@@ -18,7 +22,9 @@ WEBAPP_URL = os.getenv("WEBAPP_URL", "http://localhost:8080")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID", 0))
 
-app = FastAPI(title="SlateClean Mini App")
+init_db()
+
+app = FastAPI(title="SlateClean")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
@@ -27,9 +33,10 @@ user_sessions = {}
 def get_user_id_from_request(request: Request) -> int:
     user_id = request.headers.get("X-User-Id")
     if not user_id:
-        raise HTTPException(status_code=401, detail="User ID required")
+        raise HTTPException(status_code=401, detail="Missing user ID")
     return int(user_id)
 
+# ---------- Страницы ----------
 @app.get("/", response_class=HTMLResponse)
 async def index():
     with open("static/index.html", "r", encoding="utf-8") as f:
@@ -39,12 +46,40 @@ async def index():
 async def about(request: Request):
     return templates.TemplateResponse("about.html", {"request": request, "webapp_url": WEBAPP_URL})
 
+# ---------- Админ-панель ----------
+@app.get("/admin")
+async def admin_panel(request: Request, token: str = Query(...)):
+    if token != get_admin_token():
+        raise HTTPException(status_code=403, detail="Invalid admin token")
+    return templates.TemplateResponse("admin.html", {"request": request})
+
+@app.get("/admin/api/users")
+async def admin_users(token: str = Query(...)):
+    if token != get_admin_token():
+        raise HTTPException(status_code=403)
+    return get_all_users()
+
+@app.post("/admin/api/set_paid")
+async def admin_set_paid(user_id: int = Form(...), paid: bool = Form(...), token: str = Form(...)):
+    if token != get_admin_token():
+        raise HTTPException(status_code=403)
+    set_paid(user_id, paid)
+    log_action(0, "admin_set_paid", f"User {user_id} paid={paid}")
+    return {"status": "ok"}
+
+@app.get("/admin/api/stats")
+async def admin_stats(token: str = Query(...)):
+    if token != get_admin_token():
+        raise HTTPException(status_code=403)
+    return get_stats()
+
+# ---------- Пользовательское API ----------
 @app.get("/api/profile")
 async def get_profile(user_id: int = Depends(get_user_id_from_request)):
-    paid = user_sessions.get(user_id, {}).get("paid", False)
+    register_user(user_id)
     return {
         "user_id": user_id,
-        "paid": paid,
+        "paid": is_paid(user_id),
         "services": {
             "gmail": load_creds(user_id, "gmail") is not None,
             "drive": load_creds(user_id, "drive") is not None,
@@ -56,58 +91,60 @@ async def get_profile(user_id: int = Depends(get_user_id_from_request)):
 
 @app.post("/api/payment/notify")
 async def payment_notify(user_id: int = Form(...)):
-    logging.info(f"User {user_id} requested payment activation")
+    log_action(user_id, "payment_notify", "User requested payment")
     if BOT_TOKEN and ADMIN_ID:
-        text = f"💰 Пользователь {user_id} запросил активацию. Оплатите 500₽ на 4100118620135634 и активируйте командой /pay {user_id}"
+        text = f"💰 Пользователь {user_id} запросил активацию. Оплатите 500₽ на 4100118620135634 и активируйте /pay {user_id}"
         try:
             requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", json={"chat_id": ADMIN_ID, "text": text})
-        except Exception as e:
-            logging.error(f"Failed to notify admin: {e}")
+        except:
+            pass
     return {"status": "ok"}
 
-# ---------- Эндпоинты очистки (без изменений, но для краткости они тут) ----------
 @app.post("/api/clean/gmail")
 async def clean_gmail(user_id: int = Depends(get_user_id_from_request)):
-    if not user_sessions.get(user_id, {}).get("paid", False):
+    if not is_paid(user_id):
         raise HTTPException(status_code=403, detail="Not paid")
     creds = load_creds(user_id, "gmail")
     if not creds:
         url, flow = gmail_cleaner.get_auth_url()
-        user_sessions.setdefault(user_id, {})["gmail_flow"] = flow
+        user_sessions[str(user_id)] = {"gmail_flow": flow}
         return {"status": "auth_required", "auth_url": url}
     result1 = gmail_cleaner.delete_old_emails(user_id)
     result2 = gmail_cleaner.unsubscribe_all(user_id)
+    log_action(user_id, "clean_gmail", result1 + " " + result2)
     return {"status": "success", "message": f"{result1}\n{result2}"}
 
 @app.post("/api/clean/drive")
 async def clean_drive(user_id: int = Depends(get_user_id_from_request)):
-    if not user_sessions.get(user_id, {}).get("paid", False):
-        raise HTTPException(status_code=403, detail="Not paid")
+    if not is_paid(user_id):
+        raise HTTPException(status_code=403)
     creds = load_creds(user_id, "drive")
     if not creds:
         url, flow = drive_cleaner.get_auth_url()
-        user_sessions.setdefault(user_id, {})["drive_flow"] = flow
+        user_sessions[str(user_id)] = {"drive_flow": flow}
         return {"status": "auth_required", "auth_url": url}
     result1 = drive_cleaner.delete_duplicates(user_id)
     result2 = drive_cleaner.delete_old_files(user_id)
+    log_action(user_id, "clean_drive", result1 + " " + result2)
     return {"status": "success", "message": f"{result1}\n{result2}"}
 
 @app.post("/api/clean/twitter")
 async def clean_twitter(user_id: int = Depends(get_user_id_from_request)):
-    if not user_sessions.get(user_id, {}).get("paid", False):
-        raise HTTPException(status_code=403, detail="Not paid")
+    if not is_paid(user_id):
+        raise HTTPException(status_code=403)
     creds = load_creds(user_id, "twitter")
     if not creds:
         url, auth = twitter_cleaner.get_auth_url()
-        user_sessions.setdefault(user_id, {})["twitter_auth"] = auth
+        user_sessions[str(user_id)] = {"twitter_auth": auth}
         return {"status": "auth_required", "auth_url": url}
     result = twitter_cleaner.clean_with_existing_tokens(user_id)
+    log_action(user_id, "clean_twitter", result)
     return {"status": "success", "message": result}
 
 @app.post("/api/clean/vk")
 async def clean_vk(user_id: int = Depends(get_user_id_from_request), token: str = Form(None)):
-    if not user_sessions.get(user_id, {}).get("paid", False):
-        raise HTTPException(status_code=403, detail="Not paid")
+    if not is_paid(user_id):
+        raise HTTPException(status_code=403)
     if token:
         vk_cleaner.save_token(user_id, token)
         return {"status": "token_saved", "message": "Токен VK сохранён."}
@@ -115,12 +152,13 @@ async def clean_vk(user_id: int = Depends(get_user_id_from_request), token: str 
     if not creds:
         return {"status": "need_token", "message": "Введите VK Access Token"}
     result = vk_cleaner.clean(user_id, creds)
+    log_action(user_id, "clean_vk", result)
     return {"status": "success", "message": result}
 
 @app.post("/api/clean/instagram")
 async def clean_instagram(user_id: int = Depends(get_user_id_from_request), username: str = Form(None), password: str = Form(None)):
-    if not user_sessions.get(user_id, {}).get("paid", False):
-        raise HTTPException(status_code=403, detail="Not paid")
+    if not is_paid(user_id):
+        raise HTTPException(status_code=403)
     if username and password:
         instagram_cleaner.save_credentials(user_id, username, password)
         return {"status": "token_saved", "message": "Данные Instagram сохранены."}
@@ -128,34 +166,39 @@ async def clean_instagram(user_id: int = Depends(get_user_id_from_request), user
     if not creds:
         return {"status": "need_credentials", "message": "Введите логин и пароль"}
     result = instagram_cleaner.clean(user_id)
+    log_action(user_id, "clean_instagram", result)
     return {"status": "success", "message": result}
 
 @app.post("/api/check/card")
 async def check_card(user_id: int = Depends(get_user_id_from_request), file: bytes = Form(...)):
-    if not user_sessions.get(user_id, {}).get("paid", False):
-        raise HTTPException(status_code=403, detail="Not paid")
+    if not is_paid(user_id):
+        raise HTTPException(status_code=403)
     result = parse_bank_statement(file, "statement.csv")
+    log_action(user_id, "check_card", result)
     return {"status": "success", "message": result}
 
 @app.post("/api/check/breaches")
 async def check_breaches(email: str = Form(...), user_id: int = Depends(get_user_id_from_request)):
-    if not user_sessions.get(user_id, {}).get("paid", False):
-        raise HTTPException(status_code=403, detail="Not paid")
+    if not is_paid(user_id):
+        raise HTTPException(status_code=403)
     result = check_hibp(email)
+    log_action(user_id, "check_breaches", result)
     return {"status": "success", "message": result}
 
 @app.post("/api/generate/letter")
 async def generate_letter(service: str = Form(...), email: str = Form(...), user_id: int = Depends(get_user_id_from_request)):
-    if not user_sessions.get(user_id, {}).get("paid", False):
-        raise HTTPException(status_code=403, detail="Not paid")
+    if not is_paid(user_id):
+        raise HTTPException(status_code=403)
     letter = account_deleter.generate_deletion_letter(service, email)
+    log_action(user_id, "generate_letter", f"service={service}")
     return {"status": "success", "message": letter}
 
 @app.get("/api/ai/advice")
 async def ai_advice(user_id: int = Depends(get_user_id_from_request)):
-    if not user_sessions.get(user_id, {}).get("paid", False):
-        raise HTTPException(status_code=403, detail="Not paid")
+    if not is_paid(user_id):
+        raise HTTPException(status_code=403)
     advice = ai_advisor.get_advice()
+    log_action(user_id, "ai_advice", "advice requested")
     return {"status": "success", "message": advice}
 
 @app.get("/auth/google/callback")
@@ -164,13 +207,15 @@ async def google_callback(code: str, state: str):
         user_id, service = state.split(":")
         user_id = int(user_id)
         if service == "gmail":
-            flow = user_sessions.get(user_id, {}).get("gmail_flow")
+            flow = user_sessions.get(str(user_id), {}).get("gmail_flow")
             if flow:
                 gmail_cleaner.get_service(user_id, flow, code)
+                set_user_token_status(user_id, "gmail", True)
         elif service == "drive":
-            flow = user_sessions.get(user_id, {}).get("drive_flow")
+            flow = user_sessions.get(str(user_id), {}).get("drive_flow")
             if flow:
                 drive_cleaner.get_service(user_id, flow, code)
+                set_user_token_status(user_id, "drive", True)
         return RedirectResponse(url=f"{WEBAPP_URL}/static/index.html?auth_success={service}")
     except Exception as e:
         return RedirectResponse(url=f"{WEBAPP_URL}/static/index.html?auth_error={e}")
