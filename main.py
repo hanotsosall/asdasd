@@ -46,6 +46,62 @@ async def index():
 async def about(request: Request):
     return templates.TemplateResponse("about.html", {"request": request, "webapp_url": WEBAPP_URL})
 
+@app.get("/auth_help", response_class=HTMLResponse)
+async def auth_help_page():
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head><title>Инструкция по авторизации SlateClean</title><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body{background:#0B0E14;color:#E2E8F0;font-family:system-ui;padding:20px;max-width:800px;margin:0 auto;}
+        h1{color:#6EE7B7;}
+        h2{color:#3B82F6;}
+        code{background:#1E293B;padding:2px 6px;border-radius:6px;}
+        a{color:#3B82F6;}
+        .card{background:#11161F;border-radius:16px;padding:20px;margin:20px 0;border:1px solid #1E293B;}
+    </style>
+    </head>
+    <body>
+    <h1>📘 Инструкция по авторизации в SlateClean</h1>
+    <p>Все авторизации проходят через официальные API. Ваши пароли не запрашиваются и не хранятся.</p>
+    
+    <div class="card">
+        <h2>📧 Google (Gmail / Drive)</h2>
+        <ol><li>Нажмите «Запустить очистку» в мини-аппе или боте.</li>
+        <li>Перейдите по ссылке, выберите аккаунт.</li>
+        <li>Разрешите доступ SlateClean (права на чтение/удаление).</li>
+        <li>Скопируйте код из адресной строки (часть после <code>code=</code>) и отправьте боту.</li></ol>
+    </div>
+
+    <div class="card">
+        <h2>🐦 Twitter</h2>
+        <ol><li>Нажмите «Очистить Twitter».</li>
+        <li>Перейдите по ссылке, авторизуйтесь, разрешите доступ.</li>
+        <li>Полученный PIN-код отправьте боту.</li></ol>
+    </div>
+
+    <div class="card">
+        <h2>🇷🇺 VK</h2>
+        <ol><li>Получите Access Token на <a href="https://vkhost.github.io" target="_blank">vkhost.github.io</a> (права <code>wall</code>).</li>
+        <li>Скопируйте токен и вставьте в поле в мини-аппе или отправьте боту.</li></ol>
+    </div>
+
+    <div class="card">
+        <h2>📸 Instagram</h2>
+        <ol><li>Введите логин и пароль в мини-аппе.</li>
+        <li>Нажмите «Сохранить данные».</li>
+        <li>Если Instagram запросит подтверждение – подтвердите в приложении.</li></ol>
+    </div>
+
+    <div class="card">
+        <h2>💰 Оплата доступа</h2>
+        <p>Переведите 500 ₽ на кошелёк ЮMoney <code>4100118620135634</code> с комментарием, содержащим ваш Telegram ID. После оплаты нажмите «Я перевел» в мини-аппе – администратор активирует доступ.</p>
+    </div>
+
+    <p><a href="/">← Вернуться в мини-апп</a></p>
+    </body></html>
+    """
+
 # ---------- Админ-панель ----------
 @app.get("/admin")
 async def admin_panel(request: Request, token: str = Query(...)):
