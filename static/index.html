@@ -5,20 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>SlateClean — Управление цифровым следом</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: #0B0E14;
-            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
             color: #EDF2F7;
             padding: 24px 16px 40px;
         }
         .container { max-width: 720px; margin: 0 auto; }
-        /* Header */
         .header { margin-bottom: 32px; border-bottom: 1px solid #232830; padding-bottom: 20px; }
         .logo { font-size: 28px; font-weight: 700; background: linear-gradient(135deg, #6EE7B7, #3B82F6); -webkit-background-clip: text; background-clip: text; color: transparent; }
         .subhead { font-size: 14px; color: #94A3B8; margin-top: 6px; }
-        /* Cards */
         .card {
             background: #11161F;
             border-radius: 24px;
@@ -47,13 +46,14 @@
         }
         .badge-success { background: #0B3B2E; color: #6EE7B7; }
         .badge-warning { background: #3B2E0B; color: #FBBF24; }
+        .badge-neutral { background: #1E293B; color: #94A3B8; }
         .panel {
             padding: 0 20px;
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.3s ease-out;
         }
-        .panel.open { max-height: 300px; padding: 20px; }
+        .panel.open { max-height: 400px; padding: 20px; }
         .btn {
             background: #1E293B;
             border: none;
@@ -82,6 +82,11 @@
         }
         .flex-between { display: flex; justify-content: space-between; align-items: center; }
         hr { border-color: #1E293B; margin: 20px 0; }
+        .tab { display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid #1E293B; }
+        .tab-btn { background: none; border: none; padding: 8px 16px; color: #94A3B8; cursor: pointer; font-weight: 500; }
+        .tab-btn.active { color: #3B82F6; border-bottom: 2px solid #3B82F6; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
     </style>
 </head>
 <body>
@@ -91,7 +96,6 @@
         <div class="subhead">Профессиональная цифровая санация</div>
     </div>
 
-    <!-- Карточка профиля -->
     <div class="card">
         <div class="card-header">
             <span>👤 Аккаунт</span>
@@ -105,19 +109,122 @@
         </div>
     </div>
 
-    <!-- Сервисы (аналогично, для каждого) -->
-    <div class="card" data-service="gmail">
-        <div class="card-header" onclick="togglePanel(this)">
-            <span><span class="service-icon">📧</span> Gmail</span>
-            <span id="gmailStatus" class="badge">⚪ не авторизован</span>
+    <div class="tab">
+        <button class="tab-btn active" data-tab="services">Сервисы</button>
+        <button class="tab-btn" data-tab="tools">Инструменты</button>
+        <button class="tab-btn" data-tab="ai">AI</button>
+    </div>
+
+    <!-- Вкладка Сервисы -->
+    <div id="tab-services" class="tab-content active">
+        <div class="card" data-service="gmail">
+            <div class="card-header" onclick="togglePanel(this)">
+                <span><span class="service-icon">📧</span> Gmail</span>
+                <span id="gmailStatus" class="badge badge-neutral">⚪ не авторизован</span>
+            </div>
+            <div class="panel" id="gmailPanel">
+                <button class="btn btn-primary clean-btn" data-service="gmail">▶ Запустить очистку Gmail</button>
+                <div class="result" id="gmailResult"></div>
+            </div>
         </div>
-        <div class="panel" id="gmailPanel">
-            <button class="btn btn-primary clean-btn" data-service="gmail">▶ Запустить очистку</button>
-            <div class="result" id="gmailResult"></div>
+        <div class="card" data-service="drive">
+            <div class="card-header" onclick="togglePanel(this)">
+                <span><span class="service-icon">🗂️</span> Google Drive</span>
+                <span id="driveStatus" class="badge badge-neutral">⚪ не авторизован</span>
+            </div>
+            <div class="panel" id="drivePanel">
+                <button class="btn btn-primary clean-btn" data-service="drive">▶ Очистить Drive</button>
+                <div class="result" id="driveResult"></div>
+            </div>
+        </div>
+        <div class="card" data-service="twitter">
+            <div class="card-header" onclick="togglePanel(this)">
+                <span><span class="service-icon">🐦</span> Twitter</span>
+                <span id="twitterStatus" class="badge badge-neutral">⚪ не авторизован</span>
+            </div>
+            <div class="panel" id="twitterPanel">
+                <button class="btn btn-primary clean-btn" data-service="twitter">▶ Очистить Twitter</button>
+                <div class="result" id="twitterResult"></div>
+            </div>
+        </div>
+        <div class="card" data-service="vk">
+            <div class="card-header" onclick="togglePanel(this)">
+                <span><span class="service-icon">🇷🇺</span> VK</span>
+                <span id="vkStatus" class="badge badge-neutral">⚪ не авторизован</span>
+            </div>
+            <div class="panel" id="vkPanel">
+                <input type="text" id="vkTokenInput" placeholder="VK Access Token">
+                <button id="vkSaveBtn" class="btn btn-secondary">💾 Сохранить токен</button>
+                <button id="vkCleanBtn" class="btn btn-primary">▶ Очистить стену VK</button>
+                <div class="result" id="vkResult"></div>
+            </div>
+        </div>
+        <div class="card" data-service="instagram">
+            <div class="card-header" onclick="togglePanel(this)">
+                <span><span class="service-icon">📸</span> Instagram</span>
+                <span id="instagramStatus" class="badge badge-neutral">⚪ не авторизован</span>
+            </div>
+            <div class="panel" id="instagramPanel">
+                <input type="text" id="instaUser" placeholder="Логин">
+                <input type="password" id="instaPass" placeholder="Пароль">
+                <button id="instaSaveBtn" class="btn btn-secondary">💾 Сохранить данные</button>
+                <button id="instaCleanBtn" class="btn btn-primary">▶ Удалить посты</button>
+                <div class="result" id="instagramResult"></div>
+            </div>
         </div>
     </div>
-    <!-- Аналогично для Drive, Twitter, VK, Instagram, Инструменты – но для краткости опускаю. 
-         Полный код будет передан в финальном архиве. -->
+
+    <!-- Вкладка Инструменты -->
+    <div id="tab-tools" class="tab-content">
+        <div class="card">
+            <div class="card-header" onclick="togglePanel(this)">
+                <span>💳 Анализ выписки</span>
+                <span class="badge badge-neutral">CSV</span>
+            </div>
+            <div class="panel" id="cardPanel">
+                <button id="cardUploadBtn" class="btn btn-secondary">📎 Загрузить CSV</button>
+                <input type="file" id="cardFileInput" accept=".csv" hidden>
+                <div class="result" id="cardResult"></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header" onclick="togglePanel(this)">
+                <span>🔐 Проверка утечек</span>
+                <span class="badge badge-neutral">Have I Been Pwned</span>
+            </div>
+            <div class="panel" id="breachPanel">
+                <input type="email" id="breachEmailInput" placeholder="Email">
+                <button id="breachCheckBtn" class="btn btn-secondary">🔍 Проверить</button>
+                <div class="result" id="breachResult"></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header" onclick="togglePanel(this)">
+                <span>✉️ Письмо об удалении аккаунта</span>
+                <span class="badge badge-neutral">AI</span>
+            </div>
+            <div class="panel" id="letterPanel">
+                <input type="text" id="letterServiceInput" placeholder="Название сервиса (например, spotify)">
+                <input type="email" id="letterEmailInput" placeholder="Email на сервисе">
+                <button id="letterGenBtn" class="btn btn-secondary">✉️ Сгенерировать письмо</button>
+                <div class="result" id="letterResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Вкладка AI -->
+    <div id="tab-ai" class="tab-content">
+        <div class="card">
+            <div class="card-header" onclick="togglePanel(this)">
+                <span>🧠 ИИ-совет по цифровому следу</span>
+                <span class="badge badge-neutral">GPT</span>
+            </div>
+            <div class="panel" id="aiPanel">
+                <button id="aiAdviceBtn" class="btn btn-primary">Получить совет</button>
+                <div class="result" id="aiResult"></div>
+            </div>
+        </div>
+    </div>
 </div>
 <script src="/static/script.js"></script>
 </body>
