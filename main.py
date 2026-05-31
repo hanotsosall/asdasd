@@ -18,10 +18,12 @@ WEBAPP_URL = os.getenv("WEBAPP_URL", "http://localhost:8080")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID", 0))
 
+# ---------- создаём app ----------
 app = FastAPI(title="SlateClean Mini App")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
+# временное хранилище сессий (в реальности использовать БД)
 user_sessions = {}
 
 def get_user_id_from_request(request: Request) -> int:
@@ -30,7 +32,7 @@ def get_user_id_from_request(request: Request) -> int:
         raise HTTPException(status_code=401, detail="User ID required")
     return int(user_id)
 
-# ---------- Страницы ----------
+# ---------- страницы ----------
 @app.get("/", response_class=HTMLResponse)
 async def index():
     with open("static/index.html", "r", encoding="utf-8") as f:
@@ -60,21 +62,12 @@ async def get_profile(user_id: int = Depends(get_user_id_from_request)):
 async def payment_notify(user_id: int = Form(...)):
     logging.info(f"User {user_id} requested payment activation")
     if BOT_TOKEN and ADMIN_ID:
-        text = f"💰 Пользователь {user_id} запросил активацию доступа. Оплатите 500₽ на кошелёк 4100118620135634 и активируйте командой /pay {user_id}"
+        text = f"💰 Пользователь {user_id} запросил активацию. Оплатите 500₽ на 4100118620135634 и активируйте командой /pay {user_id}"
         try:
             requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", json={"chat_id": ADMIN_ID, "text": text})
-        except:
-            pass
+        except Exception as e:
+            logging.error(f"Failed to notify admin: {e}")
     return {"status": "ok"}
-
-# Остальные эндпоинты: /api/clean/gmail, /api/clean/drive, /api/clean/twitter, /api/clean/vk, /api/clean/instagram,
-# /api/check/card, /api/check/breaches, /api/generate/letter, /api/ai/advice, /auth/google/callback
-# (они идентичны предыдущей версии – см. ниже)
-
-# ------------------- Ниже все те же эндпоинты (без изменений) -------------------
-# В целях экономии места они не дублируются, но в реальном файле они должны быть.
-# Полный код main.py с эндпоинтами можно взять из предыдущего ответа.
-# Здесь я приведу только краткую заглушку для демонстрации:
 
 @app.post("/api/clean/gmail")
 async def clean_gmail(user_id: int = Depends(get_user_id_from_request)):
@@ -89,7 +82,101 @@ async def clean_gmail(user_id: int = Depends(get_user_id_from_request)):
     result2 = gmail_cleaner.unsubscribe_all(user_id)
     return {"status": "success", "message": f"{result1}\n{result2}"}
 
-# ... (остальные эндпоинты такие же, как в предыдущем ответе)
+@app.post("/api/clean/drive")
+async def clean_drive(user_id: int = Depends(get_user_id_from_request)):
+    if not user_sessions.get(user_id, {}).get("paid", False):
+        raise HTTPException(status_code=403, detail="Not paid")
+    creds = load_creds(user_id, "drive")
+    if not creds:
+        url, flow = drive_cleaner.get_auth_url()
+        user_sessions.setdefault(user_id, {})["drive_flow"] = flow
+        return {"status": "auth_required", "auth_url": url}
+    result1 = drive_cleaner.delete_duplicates(user_id)
+    result2 = drive_cleaner.delete_old_files(user_id)
+    return {"status": "success", "message": f"{result1}\n{result2}"}
+
+@app.post("/api/clean/twitter")
+async def clean_twitter(user_id: int = Depends(get_user_id_from_request)):
+    if not user_sessions.get(user_id, {}).get("paid", False):
+        raise HTTPException(status_code=403, detail="Not paid")
+    creds = load_creds(user_id, "twitter")
+    if not creds:
+        url, auth = twitter_cleaner.get_auth_url()
+        user_sessions.setdefault(user_id, {})["twitter_auth"] = auth
+        return {"status": "auth_required", "auth_url": url}
+    result = twitter_cleaner.clean_with_existing_tokens(user_id)
+    return {"status": "success", "message": result}
+
+@app.post("/api/clean/vk")
+async def clean_vk(user_id: int = Depends(get_user_id_from_request), token: str = Form(None)):
+    if not user_sessions.get(user_id, {}).get("paid", False):
+        raise HTTPException(status_code=403, detail="Not paid")
+    if token:
+        vk_cleaner.save_token(user_id, token)
+        return {"status": "token_saved", "message": "Токен VK сохранён."}
+    creds = load_creds(user_id, "vk")
+    if not creds:
+        return {"status": "need_token", "message": "Введите VK Access Token"}
+    result = vk_cleaner.clean(user_id, creds)
+    return {"status": "success", "message": result}
+
+@app.post("/api/clean/instagram")
+async def clean_instagram(user_id: int = Depends(get_user_id_from_request), username: str = Form(None), password: str = Form(None)):
+    if not user_sessions.get(user_id, {}).get("paid", False):
+        raise HTTPException(status_code=403, detail="Not paid")
+    if username and password:
+        instagram_cleaner.save_credentials(user_id, username, password)
+        return {"status": "token_saved", "message": "Данные Instagram сохранены."}
+    creds = load_creds(user_id, "instagram")
+    if not creds:
+        return {"status": "need_credentials", "message": "Введите логин и пароль"}
+    result = instagram_cleaner.clean(user_id)
+    return {"status": "success", "message": result}
+
+@app.post("/api/check/card")
+async def check_card(user_id: int = Depends(get_user_id_from_request), file: bytes = Form(...)):
+    if not user_sessions.get(user_id, {}).get("paid", False):
+        raise HTTPException(status_code=403, detail="Not paid")
+    result = parse_bank_statement(file, "statement.csv")
+    return {"status": "success", "message": result}
+
+@app.post("/api/check/breaches")
+async def check_breaches(email: str = Form(...), user_id: int = Depends(get_user_id_from_request)):
+    if not user_sessions.get(user_id, {}).get("paid", False):
+        raise HTTPException(status_code=403, detail="Not paid")
+    result = check_hibp(email)
+    return {"status": "success", "message": result}
+
+@app.post("/api/generate/letter")
+async def generate_letter(service: str = Form(...), email: str = Form(...), user_id: int = Depends(get_user_id_from_request)):
+    if not user_sessions.get(user_id, {}).get("paid", False):
+        raise HTTPException(status_code=403, detail="Not paid")
+    letter = account_deleter.generate_deletion_letter(service, email)
+    return {"status": "success", "message": letter}
+
+@app.get("/api/ai/advice")
+async def ai_advice(user_id: int = Depends(get_user_id_from_request)):
+    if not user_sessions.get(user_id, {}).get("paid", False):
+        raise HTTPException(status_code=403, detail="Not paid")
+    advice = ai_advisor.get_advice()
+    return {"status": "success", "message": advice}
+
+@app.get("/auth/google/callback")
+async def google_callback(code: str, state: str):
+    try:
+        user_id, service = state.split(":")
+        user_id = int(user_id)
+        if service == "gmail":
+            flow = user_sessions.get(user_id, {}).get("gmail_flow")
+            if flow:
+                gmail_cleaner.get_service(user_id, flow, code)
+        elif service == "drive":
+            flow = user_sessions.get(user_id, {}).get("drive_flow")
+            if flow:
+                drive_cleaner.get_service(user_id, flow, code)
+        return RedirectResponse(url=f"{WEBAPP_URL}/static/index.html?auth_success={service}")
+    except Exception as e:
+        return RedirectResponse(url=f"{WEBAPP_URL}/static/index.html?auth_error={e}")
 
 if __name__ == "__main__":
     import uvicorn
