@@ -12,6 +12,7 @@ WEBAPP_URL = os.getenv("WEBAPP_URL")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Хранилище оплаченных пользователей (в реальности БД)
 paid_users = set()
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -30,7 +31,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("❓ Помощь", callback_data='help')],
     ]
     await update.message.reply_text(
-        "🔥 *SlateClean* — профессиональная зачистка цифрового следа.\n\nВыберите действие:",
+        "🔥 *SlateClean* — профессиональная зачистка цифрового следа.\n\n"
+        "Выберите действие:",
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode="Markdown"
     )
@@ -43,39 +45,38 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if data == 'about':
         await query.edit_message_text(
-            "📖 *О сервисе SlateClean*\n\n"
-            "Удаляем цифровой мусор: письма, дубликаты, посты, скрытые подписки.\n"
-            "Безопасно: только OAuth, без паролей.\n"
-            "Стоимость: 500 ₽ разово.\n"
-            "Подробнее: /about (мини-апп)",
+            "📖 *SlateClean* — сервис для удаления цифрового мусора.\n\n"
+            "Мы очищаем Gmail, Google Drive, Twitter, VK, Instagram, находим скрытые подписки, проверяем утечки, генерируем письма для удаления аккаунтов.\n\n"
+            "Безопасно: только OAuth, без паролей. Подробнее в мини-аппе /about",
             parse_mode="Markdown"
         )
         return
     if data == 'buy':
         await query.edit_message_text(
-            f"💰 *Оплата*: 500 ₽ на кошелёк `4100118620135634`\n"
-            f"В комментарии укажите ваш ID: `{user_id}`\n"
-            f"После перевода нажмите «Я перевел» в мини-аппе.",
+            f"💰 *Оплата доступа*: 500 ₽ разово\n\n"
+            f"Переведите на кошелёк ЮMoney:\n`4100118620135634`\n\n"
+            f"В комментарии укажите ваш Telegram ID: `{user_id}`\n\n"
+            f"После перевода нажмите «Я перевел» в мини-аппе. Администратор активирует доступ.",
             parse_mode="Markdown"
         )
         return
-    if data == 'clean_gmail':
+    if data in ('clean_gmail', 'clean_drive', 'clean_twitter', 'clean_vk', 'clean_instagram', 'check_card', 'check_breaches', 'ai_advice'):
         if user_id not in paid_users:
             await query.edit_message_text("🚫 Доступ платный. Оплатите 500 ₽ (кнопка «Оплатить доступ»).")
             return
-        # Здесь вызов очистки Gmail (можно перенаправить в мини-апп)
-        await query.edit_message_text("🔄 Очистка Gmail запущена. Используйте мини-апп для полного контроля.")
+        await query.edit_message_text("✅ Для выполнения этой операции используйте мини-апп (кнопка выше).")
         return
-    # Аналогично для других сервисов – либо перенаправляем в мини-апп, либо реализуем логику
     if data == 'help':
         await query.edit_message_text(
-            "❓ /start – меню\n"
-            "Мини-апп – все функции\n"
-            "Оплата: 500 ₽ на 4100118620135634 с ID в комментарии",
+            "❓ *Помощь*\n\n"
+            "/start – главное меню\n"
+            "Мини-апп – все функции очистки\n"
+            "Оплата: 500 ₽ на 4100118620135634 с комментарием (ваш Telegram ID)\n\n"
+            "Техподдержка: @admin",
             parse_mode="Markdown"
         )
         return
-    await query.edit_message_text("✅ Используйте мини-апп для полного доступа к функциям.")
+    await query.edit_message_text("Функция в разработке. Используйте мини-апп.")
 
 async def pay_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
