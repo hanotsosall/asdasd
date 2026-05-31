@@ -5,6 +5,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppI
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 from utils import is_paid, add_paid_user, load_creds, save_creds, parse_bank_statement
 from cleaners import gmail_cleaner, drive_cleaner, twitter_cleaner, vk_cleaner, instagram_cleaner
+from database import get_admin_token
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -32,6 +33,23 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode="Markdown"
     )
+
+async def start(update, context):
+    keyboard = [[InlineKeyboardButton("🚀 Открыть мини-апп", web_app=WebAppInfo(url=os.getenv("WEBAPP_URL")))]]
+    await update.message.reply_text("Добро пожаловать в SlateClean!", reply_markup=InlineKeyboardMarkup(keyboard))
+
+async def admin_panel(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != int(os.getenv("ADMIN_ID")):
+        await update.message.reply_text("Нет доступа")
+        return
+    token = get_admin_token()
+    url = f"{os.getenv('WEBAPP_URL')}/admin?token={token}"
+    await update.message.reply_text(f"Ссылка на админ-панель: {url}")
+
+def main():
+    app = Application.builder().token(os.getenv("BOT_TOKEN")).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("admin", admin_panel))
 
 async def clean_callback(update: Update, context: ContextTypes.DEFAULT_TYPE, service: str):
     query = update.callback_query
