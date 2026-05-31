@@ -18,12 +18,10 @@ WEBAPP_URL = os.getenv("WEBAPP_URL", "http://localhost:8080")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID", 0))
 
-# ---------- создаём app ----------
 app = FastAPI(title="SlateClean Mini App")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# временное хранилище сессий (в реальности использовать БД)
 user_sessions = {}
 
 def get_user_id_from_request(request: Request) -> int:
@@ -32,7 +30,6 @@ def get_user_id_from_request(request: Request) -> int:
         raise HTTPException(status_code=401, detail="User ID required")
     return int(user_id)
 
-# ---------- страницы ----------
 @app.get("/", response_class=HTMLResponse)
 async def index():
     with open("static/index.html", "r", encoding="utf-8") as f:
@@ -42,7 +39,6 @@ async def index():
 async def about(request: Request):
     return templates.TemplateResponse("about.html", {"request": request, "webapp_url": WEBAPP_URL})
 
-# ---------- API ----------
 @app.get("/api/profile")
 async def get_profile(user_id: int = Depends(get_user_id_from_request)):
     paid = user_sessions.get(user_id, {}).get("paid", False)
@@ -69,6 +65,7 @@ async def payment_notify(user_id: int = Form(...)):
             logging.error(f"Failed to notify admin: {e}")
     return {"status": "ok"}
 
+# ---------- Эндпоинты очистки (без изменений, но для краткости они тут) ----------
 @app.post("/api/clean/gmail")
 async def clean_gmail(user_id: int = Depends(get_user_id_from_request)):
     if not user_sessions.get(user_id, {}).get("paid", False):
