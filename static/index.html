@@ -4,115 +4,417 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>SlateClean — Цифровая санация</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0A0D12;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', system-ui, sans-serif;
+            color: #EAEDF2;
+            padding: 20px 16px 48px;
+            line-height: 1.4;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Контейнер */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Заголовок */
+        .header {
+            margin-bottom: 28px;
+            border-bottom: 1px solid #1E242C;
+            padding-bottom: 18px;
+        }
+        .title {
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+            color: #FFFFFF;
+        }
+        .sub {
+            font-size: 13px;
+            color: #7A8798;
+            margin-top: 6px;
+        }
+
+        /* Карточки */
+        .card {
+            background: #11161C;
+            border: 1px solid #1E242C;
+            border-radius: 20px;
+            margin-bottom: 16px;
+            transition: box-shadow 0.2s ease;
+        }
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .card-header {
+            padding: 16px 18px;
+            background: #0D1218;
+            border-bottom: 1px solid #1E242C;
+            font-weight: 500;
+            font-size: 14px;
+            color: #AEBECD;
+            letter-spacing: 0.2px;
+        }
+        .card-content {
+            padding: 18px;
+        }
+
+        /* Бейджи */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        .badge-success {
+            background: #0D3B26;
+            color: #2ECC71;
+        }
+        .badge-error {
+            background: #2C1A1A;
+            color: #E74C3C;
+        }
+        .badge-warning {
+            background: #2C2A1A;
+            color: #F1C40F;
+        }
+        .badge-neutral {
+            background: #181F26;
+            color: #96A5B8;
+        }
+
+        /* Кнопки */
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            border: none;
+            background: none;
+            font-family: inherit;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn:active {
+            transform: scale(0.98);
+        }
+        .btn-primary {
+            background: #2A6B4E;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #347E5C;
+        }
+        .btn-secondary {
+            background: #18202A;
+            color: #CBD5E1;
+            border: 1px solid #25303C;
+        }
+        .btn-secondary:hover {
+            background: #202A36;
+        }
+        .btn-disabled {
+            opacity: 0.5;
+            pointer-events: none;
+            background: #10161C;
+            color: #5C6D7E;
+        }
+
+        /* Строки сервисов */
+        .service-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            border-bottom: 1px solid #171E25;
+            cursor: pointer;
+            transition: background 0.1s ease;
+        }
+        .service-row:hover {
+            background: #0E141B;
+        }
+        .service-name {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            font-size: 15px;
+        }
+        .service-icon {
+            font-size: 20px;
+            width: 28px;
+        }
+
+        /* Панель с плавной анимацией */
+        .panel {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.25s ease-out;
+            background: #0D1218;
+            border-top: 1px solid #171E25;
+        }
+        .panel.open {
+            grid-template-rows: 1fr;
+        }
+        .panel-inner {
+            overflow: hidden;
+            padding: 0 18px 18px 18px;
+        }
+
+        /* Поля ввода */
+        .input-field {
+            width: 100%;
+            background: #0C1117;
+            border: 1px solid #222A33;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-size: 13px;
+            color: #E1E9F0;
+            transition: border 0.15s;
+            margin-bottom: 12px;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #2A6B4E;
+        }
+
+        /* Результаты */
+        .result-block {
+            background: #0A0E13;
+            border-left: 3px solid #2A6B4E;
+            padding: 12px;
+            font-size: 12px;
+            color: #9AADBF;
+            border-radius: 10px;
+            margin-top: 12px;
+            word-break: break-word;
+            white-space: pre-wrap;
+            opacity: 0;
+            transform: translateY(-4px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .result-block.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Скелетон-лоадер */
+        .skeleton {
+            background: #141B22;
+            border-radius: 12px;
+            height: 80px;
+            width: 100%;
+            margin-bottom: 16px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 0.8; }
+            100% { opacity: 0.5; }
+        }
+
+        /* Анимация появления карточек */
+        .card {
+            animation: fadeSlideUp 0.3s ease forwards;
+            opacity: 0;
+            transform: translateY(8px);
+        }
+        @keyframes fadeSlideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        hr {
+            border-color: #1E242C;
+            margin: 20px 0;
+        }
+
+        /* Утилиты */
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
-<body class="bg-gray-900 text-white">
-    <div class="container mx-auto px-4 py-6 max-w-2xl">
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">SlateClean</h1>
-            <p class="text-gray-400 mt-2">Полная зачистка цифрового следа</p>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="title">SlateClean</div>
+        <div class="sub">Управление цифровым следом</div>
+    </div>
+
+    <div id="skeleton" class="skeleton"></div>
+
+    <div id="appContent" style="display: none;">
+        <!-- Карточка профиля -->
+        <div class="card" style="animation-delay: 0.05s;">
+            <div class="card-header">Аккаунт</div>
+            <div class="card-content">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                    <span style="color:#8896A8;">ID пользователя</span>
+                    <span id="userIdDisplay" class="font-mono" style="color:#FFFFFF;">—</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                    <span style="color:#8896A8;">Доступ</span>
+                    <span id="paidBadge" class="badge badge-error">Не активирован</span>
+                </div>
+                <button id="buyButton" class="btn btn-primary">💰 Оплатить доступ — 500 ₽</button>
+                <div style="font-size: 11px; color: #5A6A7A; margin-top: 12px; text-align: center;">
+                    Перевод на кошелёк 4100118620135634 с комментарием: ваш ID
+                </div>
+            </div>
         </div>
 
-        <!-- Профиль и статус оплаты -->
-        <div id="profile" class="bg-gray-800 rounded-xl p-4 mb-6 shadow-lg">
-            <div class="flex justify-between items-center">
-                <span class="font-semibold">👤 Статус</span>
-                <span id="paidStatus" class="px-3 py-1 rounded-full text-sm bg-red-600">Не оплачен</span>
+        <!-- Gmail -->
+        <div class="card" style="animation-delay: 0.07s;">
+            <div class="service-row" data-service="gmail">
+                <div class="service-name">
+                    <span class="service-icon">📧</span> Gmail
+                </div>
+                <div>
+                    <span id="gmailStatusBadge" class="badge badge-neutral">не авторизован</span>
+                    <span style="margin-left: 8px; font-size: 12px;">▼</span>
+                </div>
             </div>
-            <div class="mt-2 text-sm text-gray-400" id="servicesStatus"></div>
-            <button id="buyBtn" class="mt-3 w-full bg-green-600 hover:bg-green-700 transition py-2 rounded-lg font-bold">💰 Оплатить 500 ₽</button>
+            <div id="gmailPanel" class="panel">
+                <div class="panel-inner">
+                    <button id="gmailCleanBtn" class="btn btn-secondary btn-disabled" disabled>🔐 Требуется авторизация</button>
+                    <div id="gmailResult" class="result-block"></div>
+                </div>
+            </div>
         </div>
 
-        <!-- Секции очистки (сворачиваемые) -->
-        <div class="space-y-4">
-            <div class="service-card" data-service="gmail">
-                <div class="flex justify-between items-center p-4 bg-gray-800 rounded-t-xl cursor-pointer" onclick="toggleService('gmail')">
-                    <span class="text-xl">📧 Gmail</span>
-                    <span id="gmailStatus" class="text-sm text-gray-400">⚪ не авторизован</span>
+        <!-- Google Drive -->
+        <div class="card" style="animation-delay: 0.09s;">
+            <div class="service-row" data-service="drive">
+                <div class="service-name">
+                    <span class="service-icon">🗂️</span> Google Drive
                 </div>
-                <div id="gmailPanel" class="hidden p-4 bg-gray-700 rounded-b-xl space-y-3">
-                    <button onclick="cleanService('gmail')" class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded">Запустить очистку</button>
-                    <div id="gmailResult" class="text-sm text-gray-300"></div>
-                </div>
-            </div>
-
-            <div class="service-card" data-service="drive">
-                <div class="flex justify-between items-center p-4 bg-gray-800 rounded-t-xl cursor-pointer" onclick="toggleService('drive')">
-                    <span class="text-xl">🗂️ Google Drive</span>
-                    <span id="driveStatus" class="text-sm text-gray-400">⚪ не авторизован</span>
-                </div>
-                <div id="drivePanel" class="hidden p-4 bg-gray-700 rounded-b-xl space-y-3">
-                    <button onclick="cleanService('drive')" class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded">Удалить дубликаты и старые файлы</button>
-                    <div id="driveResult" class="text-sm text-gray-300"></div>
+                <div>
+                    <span id="driveStatusBadge" class="badge badge-neutral">не авторизован</span>
+                    <span style="margin-left: 8px; font-size: 12px;">▼</span>
                 </div>
             </div>
-
-            <div class="service-card" data-service="twitter">
-                <div class="flex justify-between items-center p-4 bg-gray-800 rounded-t-xl cursor-pointer" onclick="toggleService('twitter')">
-                    <span class="text-xl">🐦 Twitter</span>
-                    <span id="twitterStatus" class="text-sm text-gray-400">⚪ не авторизован</span>
-                </div>
-                <div id="twitterPanel" class="hidden p-4 bg-gray-700 rounded-b-xl space-y-3">
-                    <button onclick="cleanService('twitter')" class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded">Очистить Twitter</button>
-                    <div id="twitterResult" class="text-sm text-gray-300"></div>
+            <div id="drivePanel" class="panel">
+                <div class="panel-inner">
+                    <button id="driveCleanBtn" class="btn btn-secondary btn-disabled" disabled>🔐 Требуется авторизация</button>
+                    <div id="driveResult" class="result-block"></div>
                 </div>
             </div>
+        </div>
 
-            <div class="service-card" data-service="vk">
-                <div class="flex justify-between items-center p-4 bg-gray-800 rounded-t-xl cursor-pointer" onclick="toggleService('vk')">
-                    <span class="text-xl">🇷🇺 VK</span>
-                    <span id="vkStatus" class="text-sm text-gray-400">⚪ не авторизован</span>
+        <!-- Twitter -->
+        <div class="card" style="animation-delay: 0.11s;">
+            <div class="service-row" data-service="twitter">
+                <div class="service-name">
+                    <span class="service-icon">🐦</span> Twitter
                 </div>
-                <div id="vkPanel" class="hidden p-4 bg-gray-700 rounded-b-xl space-y-3">
-                    <input type="text" id="vkToken" placeholder="VK Access Token" class="w-full p-2 rounded bg-gray-600 text-white">
-                    <button onclick="saveVkToken()" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 rounded">Сохранить токен</button>
-                    <button onclick="cleanService('vk')" class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded">Очистить стену VK</button>
-                    <div id="vkResult" class="text-sm text-gray-300"></div>
+                <div>
+                    <span id="twitterStatusBadge" class="badge badge-neutral">не авторизован</span>
+                    <span style="margin-left: 8px; font-size: 12px;">▼</span>
                 </div>
             </div>
-
-            <div class="service-card" data-service="instagram">
-                <div class="flex justify-between items-center p-4 bg-gray-800 rounded-t-xl cursor-pointer" onclick="toggleService('instagram')">
-                    <span class="text-xl">📸 Instagram</span>
-                    <span id="instagramStatus" class="text-sm text-gray-400">⚪ не авторизован</span>
-                </div>
-                <div id="instagramPanel" class="hidden p-4 bg-gray-700 rounded-b-xl space-y-3">
-                    <input type="text" id="instaUser" placeholder="Логин" class="w-full p-2 rounded bg-gray-600 text-white mb-2">
-                    <input type="password" id="instaPass" placeholder="Пароль" class="w-full p-2 rounded bg-gray-600 text-white">
-                    <button onclick="saveInstagram()" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 rounded">Сохранить логин/пароль</button>
-                    <button onclick="cleanService('instagram')" class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded">Удалить посты</button>
-                    <div id="instagramResult" class="text-sm text-gray-300"></div>
+            <div id="twitterPanel" class="panel">
+                <div class="panel-inner">
+                    <button id="twitterCleanBtn" class="btn btn-secondary btn-disabled" disabled>🔐 Требуется авторизация</button>
+                    <div id="twitterResult" class="result-block"></div>
                 </div>
             </div>
+        </div>
 
-            <div class="service-card" data-service="other">
-                <div class="flex justify-between items-center p-4 bg-gray-800 rounded-t-xl cursor-pointer" onclick="toggleService('other')">
-                    <span class="text-xl">🛠️ Дополнительно</span>
-                    <span class="text-sm text-gray-400">▼</span>
+        <!-- VK -->
+        <div class="card" style="animation-delay: 0.13s;">
+            <div class="service-row" data-service="vk">
+                <div class="service-name">
+                    <span class="service-icon">🇷🇺</span> VK
                 </div>
-                <div id="otherPanel" class="hidden p-4 bg-gray-700 rounded-b-xl space-y-3">
-                    <div>
-                        <button onclick="checkCard()" class="w-full bg-purple-600 hover:bg-purple-700 py-2 rounded">💳 Проверить карту (загрузить CSV)</button>
-                        <input type="file" id="cardFile" accept=".csv" class="hidden" onchange="uploadCard()">
-                    </div>
-                    <div>
-                        <input type="email" id="emailBreach" placeholder="Email для проверки утечек" class="w-full p-2 rounded bg-gray-600 text-white">
-                        <button onclick="checkBreaches()" class="w-full bg-purple-600 hover:bg-purple-700 py-2 rounded mt-2">🔐 Проверить утечки</button>
-                    </div>
-                    <div>
-                        <input type="text" id="serviceName" placeholder="Название сервиса" class="w-full p-2 rounded bg-gray-600 text-white mb-2">
-                        <input type="email" id="accountEmail" placeholder="Email на сервисе" class="w-full p-2 rounded bg-gray-600 text-white">
-                        <button onclick="generateLetter()" class="w-full bg-purple-600 hover:bg-purple-700 py-2 rounded mt-2">✉️ Сгенерировать письмо для удаления</button>
-                    </div>
-                    <button onclick="getAiAdvice()" class="w-full bg-purple-600 hover:bg-purple-700 py-2 rounded">🧠 ИИ-совет</button>
-                    <div id="otherResult" class="text-sm text-gray-300 mt-2"></div>
+                <div>
+                    <span id="vkStatusBadge" class="badge badge-neutral">не авторизован</span>
+                    <span style="margin-left: 8px; font-size: 12px;">▼</span>
+                </div>
+            </div>
+            <div id="vkPanel" class="panel">
+                <div class="panel-inner">
+                    <input type="text" id="vkTokenInput" class="input-field" placeholder="VK Access Token">
+                    <button id="vkSaveBtn" class="btn btn-secondary" style="margin-bottom: 12px;">💾 Сохранить токен</button>
+                    <button id="vkCleanBtn" class="btn btn-primary">Очистить стену VK</button>
+                    <div id="vkResult" class="result-block"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instagram -->
+        <div class="card" style="animation-delay: 0.15s;">
+            <div class="service-row" data-service="instagram">
+                <div class="service-name">
+                    <span class="service-icon">📸</span> Instagram
+                </div>
+                <div>
+                    <span id="instagramStatusBadge" class="badge badge-neutral">не авторизован</span>
+                    <span style="margin-left: 8px; font-size: 12px;">▼</span>
+                </div>
+            </div>
+            <div id="instagramPanel" class="panel">
+                <div class="panel-inner">
+                    <input type="text" id="instaUser" class="input-field" placeholder="Логин">
+                    <input type="password" id="instaPass" class="input-field" placeholder="Пароль">
+                    <button id="instaSaveBtn" class="btn btn-secondary" style="margin-bottom: 12px;">💾 Сохранить данные</button>
+                    <button id="instaCleanBtn" class="btn btn-primary">Удалить посты</button>
+                    <div id="instagramResult" class="result-block"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Инструменты -->
+        <div class="card" style="animation-delay: 0.17s;">
+            <div class="service-row" data-service="tools">
+                <div class="service-name">
+                    <span class="service-icon">🛠️</span> Инструменты
+                </div>
+                <div><span style="font-size: 12px;">▼</span></div>
+            </div>
+            <div id="toolsPanel" class="panel">
+                <div class="panel-inner">
+                    <button id="cardUploadBtn" class="btn btn-secondary" style="margin-bottom: 8px;">💳 Анализ выписки (CSV)</button>
+                    <input type="file" id="cardFileInput" accept=".csv" hidden>
+                    <div id="cardResult" class="result-block"></div>
+
+                    <input type="email" id="breachEmailInput" class="input-field" placeholder="Email для проверки утечек">
+                    <button id="breachCheckBtn" class="btn btn-secondary" style="margin-bottom: 12px;">🔍 Проверить утечки</button>
+                    <div id="breachResult" class="result-block"></div>
+
+                    <input type="text" id="letterServiceInput" class="input-field" placeholder="Название сервиса (например, spotify)">
+                    <input type="email" id="letterEmailInput" class="input-field" placeholder="Email на сервисе">
+                    <button id="letterGenBtn" class="btn btn-secondary" style="margin-bottom: 12px;">✉️ Сгенерировать письмо для удаления</button>
+                    <div id="letterResult" class="result-block"></div>
+
+                    <button id="aiAdviceBtn" class="btn btn-secondary">🧠 Получить ИИ‑совет</button>
+                    <div id="aiResult" class="result-block"></div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <script src="/static/script.js"></script>
+<script src="/static/script.js"></script>
 </body>
 </html>
