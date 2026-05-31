@@ -1,0 +1,11 @@
+.env
+credentials.json
+*.pickle
+user_data/
+tokens/
+__pycache__/
+*.pyc
+*.log
+twitter_credentials.json
+vk_credentials.json
+insta_credentials.json
