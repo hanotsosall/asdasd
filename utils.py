@@ -24,27 +24,6 @@ def load_creds(user_id: int, service: str):
             return pickle.load(f)
     return None
 
-# Paid users persistence
-PAID_FILE = "paid_users.json"
-
-def load_paid_users():
-    if os.path.exists(PAID_FILE):
-        with open(PAID_FILE, "r") as f:
-            return set(json.load(f))
-    return set()
-
-def save_paid_users(users_set):
-    with open(PAID_FILE, "w") as f:
-        json.dump(list(users_set), f)
-
-def add_paid_user(user_id):
-    users = load_paid_users()
-    users.add(user_id)
-    save_paid_users(users)
-
-def is_paid(user_id):
-    return user_id in load_paid_users()
-
 def check_hibp(email: str) -> str:
     api_key = os.getenv("HIBP_API_KEY")
     url = f"https://haveibeenpwned.com/api/v3/breachedaccount/{email}"
@@ -59,8 +38,8 @@ def check_hibp(email: str) -> str:
             return "✅ Email не найден в известных утечках."
         else:
             return f"❌ Ошибка API: {resp.status_code}"
-    except:
-        return "🔐 Не удалось проверить утечки."
+    except Exception as e:
+        return f"🔐 Не удалось проверить утечки: {e}"
 
 def parse_bank_statement(file_content: bytes, filename: str) -> str:
     try:
