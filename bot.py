@@ -26,6 +26,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("🇷🇺 Очистить VK", callback_data='clean_vk')],
         [InlineKeyboardButton("📸 Очистить Instagram", callback_data='clean_instagram')],
         [InlineKeyboardButton("❓ Помощь", callback_data='help')],
+        [InlineKeyboardButton("📘 Инструкция", callback_data='auth_help')],
     ]
     await update.message.reply_text(
         "🔥 *SlateClean* — профессиональная зачистка цифрового следа.\n\nВыберите действие:",
@@ -41,7 +42,7 @@ async def clean_callback(update: Update, context: ContextTypes.DEFAULT_TYPE, ser
         return
     creds = load_creds(user_id, service)
     if not creds:
-        await query.edit_message_text(f"🔐 Сервис {service} не авторизован. Используйте мини-апп для авторизации.")
+        await query.edit_message_text(f"🔐 Сервис {service} не авторизован. Используйте /auth_help для инструкции.")
         return
     await query.edit_message_text(f"🔄 Запущена очистка {service}...")
     if service == "gmail":
@@ -97,12 +98,43 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "/start — главное меню\n"
             "Мини-апп — все функции с интерфейсом\n"
             "Оплата: 500 ₽ на 4100118620135634 с указанием Telegram ID\n"
-            "После оплаты администратор активирует доступ командой /pay.\n"
-            "Админ-панель: /admin",
+            "После оплаты администратор активирует доступ командой /pay\n"
+            "Админ-панель: /admin\n"
+            "Инструкция по авторизации: /auth_help",
+            parse_mode="Markdown"
+        )
+    elif data == 'auth_help':
+        await query.edit_message_text(
+            "📘 *Инструкция по авторизации*\n\n"
+            "🔐 *Google*: нажмите очистку → перейдите по ссылке → разрешите доступ → скопируйте код → отправьте боту.\n"
+            "🐦 *Twitter*: нажмите очистку → перейдите по ссылке → получите PIN → отправьте боту.\n"
+            "🇷🇺 *VK*: получите токен на vkhost.github.io (права wall) → вставьте в поле в мини-аппе.\n"
+            "📸 *Instagram*: введите логин/пароль → сохраните.\n\n"
+            "📖 Полная версия: /auth_help_full",
             parse_mode="Markdown"
         )
     else:
         await query.edit_message_text("Используйте мини-апп для полного доступа.")
+
+async def auth_help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "📘 *Подробная инструкция по авторизации*\n\n"
+        "1. *Google (Gmail/Drive)*\n"
+        "   - Нажмите кнопку очистки → перейдите по ссылке Google.\n"
+        "   - Разрешите доступ → скопируйте код из адресной строки (часть после `code=`).\n"
+        "   - Отправьте код боту.\n\n"
+        "2. *Twitter*\n"
+        "   - Нажмите кнопку очистки → перейдите по ссылке.\n"
+        "   - Авторизуйтесь → получите PIN-код → отправьте боту.\n\n"
+        "3. *VK*\n"
+        "   - Получите Access Token на [vkhost.github.io](https://vkhost.github.io) (выберите `wall`).\n"
+        "   - Вставьте токен в мини-апп или отправьте боту.\n\n"
+        "4. *Instagram*\n"
+        "   - Введите логин и пароль в мини-аппе.\n"
+        "   - Сохраните данные и запустите очистку.\n\n"
+        "Если возникли проблемы, свяжитесь с поддержкой: @admin",
+        parse_mode="Markdown", disable_web_page_preview=True
+    )
 
 async def pay_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
@@ -132,6 +164,7 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("pay", pay_command))
     app.add_handler(CommandHandler("admin", admin_command))
+    app.add_handler(CommandHandler("auth_help", auth_help_command))
     app.add_handler(CallbackQueryHandler(button_handler))
     logger.info("Бот запущен")
     app.run_polling()
