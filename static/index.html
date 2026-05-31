@@ -226,6 +226,48 @@
         </div>
     </div>
 </div>
+
+<!-- Вкладка Инструкция -->
+<div id="tab-auth" class="tab-content">
+    <div class="card">
+        <div class="card-header" onclick="togglePanel(this)">
+            <span>🔐 Как авторизоваться в сервисах?</span>
+            <span class="badge badge-neutral">Гайд</span>
+        </div>
+        <div class="panel open" style="max-height: none; padding: 20px;">
+            <div class="result" style="background: #0F172A; color: #E2E8F0; font-size: 14px; line-height: 1.5;">
+                <h3 style="color: #6EE7B7; margin-bottom: 12px;">📧 Gmail / Google Drive</h3>
+                <ol style="margin-left: 20px; margin-bottom: 20px;">
+                    <li>Нажмите «Запустить очистку» (кнопка станет активной после оплаты).</li>
+                    <li>Перейдите по ссылке, выберите аккаунт Google.</li>
+                    <li>Разрешите доступ SlateClean (права на чтение/удаление писем и файлов).</li>
+                    <li>Скопируйте код из адресной строки (часть после <code>code=</code>) и вставьте в поле, которое появится.</li>
+                    <li>Готово! Статус изменится на «авторизован».</li>
+                </ol>
+                <h3 style="color: #6EE7B7; margin-bottom: 12px;">🐦 Twitter</h3>
+                <ol style="margin-left: 20px; margin-bottom: 20px;">
+                    <li>Нажмите «Очистить Twitter».</li>
+                    <li>Перейдите по ссылке, авторизуйтесь в Twitter.</li>
+                    <li>Разрешите доступ приложению.</li>
+                    <li>Скопируйте полученный PIN-код и отправьте боту (или вставьте в мини-апп).</li>
+                </ol>
+                <h3 style="color: #6EE7B7; margin-bottom: 12px;">🇷🇺 VK</h3>
+                <ol style="margin-left: 20px; margin-bottom: 20px;">
+                    <li>Получите Access Token на <a href="https://vkhost.github.io" target="_blank" style="color: #3B82F6;">vkhost.github.io</a> (выберите права <code>wall</code>).</li>
+                    <li>Скопируйте токен и вставьте в поле «VK Access Token» в мини-аппе.</li>
+                    <li>Нажмите «Сохранить токен».</li>
+                </ol>
+                <h3 style="color: #6EE7B7; margin-bottom: 12px;">📸 Instagram</h3>
+                <ol style="margin-left: 20px;">
+                    <li>Введите логин и пароль от Instagram.</li>
+                    <li>Нажмите «Сохранить данные».</li>
+                    <li>Если Instagram запросит подтверждение – подтвердите вход в приложении.</li>
+                    <li>После этого можно нажать «Удалить посты».</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
 <script src="/static/script.js"></script>
 </body>
 </html>
