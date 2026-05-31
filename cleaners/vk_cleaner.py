@@ -5,7 +5,7 @@ def clean(user_id, token=None):
     if token is None:
         token = load_creds(user_id, "vk")
         if not token:
-            return "❌ VK не авторизован. Введите access token."
+            return "❌ VK не авторизован."
     try:
         vk_session = vk_api.VkApi(token=token)
         vk = vk_session.get_api()
