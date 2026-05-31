@@ -1,10 +1,8 @@
-import os
-import pickle
+import requests
+from datetime import datetime, timedelta
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-from datetime import datetime, timedelta
-import requests
 from utils import load_creds, save_creds
 
 SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
