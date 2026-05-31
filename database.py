@@ -1,5 +1,6 @@
 import sqlite3
 import json
+import secrets
 from datetime import datetime
 from typing import List, Dict, Any
 
@@ -12,7 +13,6 @@ def get_db():
 
 def init_db():
     with get_db() as conn:
-        # Пользователи
         conn.execute('''
             CREATE TABLE IF NOT EXISTS users (
                 user_id INTEGER PRIMARY KEY,
@@ -24,7 +24,6 @@ def init_db():
                 paid_at TEXT
             )
         ''')
-        # Токены пользователей (можно и в файлах, но для админки удобно видеть)
         conn.execute('''
             CREATE TABLE IF NOT EXISTS user_tokens (
                 user_id INTEGER,
@@ -33,7 +32,6 @@ def init_db():
                 PRIMARY KEY (user_id, service)
             )
         ''')
-        # Логи действий
         conn.execute('''
             CREATE TABLE IF NOT EXISTS logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -43,14 +41,12 @@ def init_db():
                 timestamp TEXT
             )
         ''')
-        # Статистика
         conn.execute('''
             CREATE TABLE IF NOT EXISTS stats (
                 key TEXT PRIMARY KEY,
                 value INTEGER
             )
         ''')
-        # Админ-токен (генерируется при первом запуске)
         conn.execute('''
             CREATE TABLE IF NOT EXISTS admin (
                 id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -58,10 +54,8 @@ def init_db():
                 created_at TEXT
             )
         ''')
-        # Создаём админ-токен, если нет
         row = conn.execute("SELECT token FROM admin WHERE id=1").fetchone()
         if not row:
-            import secrets
             token = secrets.token_urlsafe(32)
             conn.execute("INSERT INTO admin (id, token, created_at) VALUES (1, ?, ?)",
                          (token, datetime.now().isoformat()))
