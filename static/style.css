@@ -1,0 +1,13 @@
+body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+.service-card {
+    transition: all 0.2s ease;
+}
+.hidden {
+    display: none;
+}
+pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
