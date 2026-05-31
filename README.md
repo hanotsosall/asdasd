@@ -1,44 +1,29 @@
-# SlateClean Ultimate – полная зачистка цифрового следа
+# SlateClean — Professional Digital Sanitation
 
-🔥 Бот для Telegram, который удаляет всё: старые письма, дубликаты файлов, посты в соцсетях, находит скрытые подписки и проверяет утечки данных.
+SlateClean is a high‑end Telegram Mini App and Bot for removing digital footprint: clean Gmail, Drive, Twitter, VK, Instagram, find hidden subscriptions, check breaches, generate GDPR deletion letters, and get AI advice.
 
-## Возможности
+## Features
+- **Google Gmail** – delete old emails + mass unsubscribe
+- **Google Drive** – delete duplicates + old files
+- **Twitter** – delete tweets, likes, retweets
+- **VK** – delete wall posts
+- **Instagram** – delete posts
+- **Bank statement analysis** (CSV) – detect recurring payments
+- **Have I Been Pwned** integration
+- **AI‑generated deletion letters** (OpenAI)
+- **AI advice** on digital footprint reduction
 
-- **Очистка Gmail** – удаление всех писем старше 30 дней + автоматическая отписка от рассылок.
-- **Google Drive** – удаление дубликатов (по MD5) и старых файлов.
-- **Twitter** – удаление всех твитов, лайков, ретвитов.
-- **VK** – удаление всех записей со стены.
-- **Instagram** – удаление всех постов.
-- **Проверка карт** – анализ выписки CSV: находит регулярные платежи и подписки.
-- **Проверка утечек** – через Have I Been Pwned.
-- **ИИ-генерация писем** – ChatGPT пишет официальный запрос на удаление аккаунта с любого сайта.
-- **Безопасность** – данные не хранятся, только временные OAuth-токены.
-
-## Как оплатить
-
-- Стоимость доступа: **500 ₽** (разово, навсегда).
-- Кошелёк ЮMoney: `4100118620135634`
-- В комментарии к переводу указать **свой Telegram ID** (узнать можно у @userinfobot).
-- После оплаты написать боту и нажать «Я перевел». Администратор активирует доступ.
-
-## Технологии
-
-- Python 3.10+
-- Google APIs (Gmail, Drive)
-- Tweepy (Twitter)
-- vk-api (VK)
-- instagrapi (Instagram)
+## Tech stack
+- FastAPI + Uvicorn
+- Telegram Bot API (python-telegram-bot)
+- Google OAuth, Tweepy, vk-api, instagrapi
 - OpenAI API
-- Pandas (анализ выписок)
+- Railway deployment ready
 
-## Установка для разработки
+## Deployment
+1. Set environment variables (`.env`)
+2. Place `credentials.json` (Google OAuth)
+3. Deploy on Railway with Dockerfile
 
-1. Клонировать репозиторий
-2. Установить зависимости: `pip install -r requirements.txt`
-3. Создать `.env` по шаблону
-4. Получить `credentials.json` от Google
-5. Запустить: `python bot.py`
-
-## Контакты
-
-Поддержка: @admin (ссылка)
+## License
+Private – for authorized use only.
