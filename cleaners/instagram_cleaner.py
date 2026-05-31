@@ -13,7 +13,7 @@ def clean(user_id, username=None, password=None):
         if creds:
             username, password = creds
         else:
-            return "❌ Instagram не авторизован. Используйте кнопку авторизации."
+            return "❌ Instagram не авторизован."
     try:
         cl = Client()
         cl.login(username, password)
