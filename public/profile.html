@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Мой профиль | SteamFall</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="container" style="max-width: 600px; margin-top: 50px;">
+    <h1>Профиль пользователя</h1>
+    <div id="profileInfo">Загрузка...</div>
+    <button id="logoutProfileBtn" class="btn-outline">Выйти</button>
+    <a href="/" class="btn-primary">На главную</a>
+  </div>
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) location.href = '/login.html';
+    fetch('/api/me', { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => res.json())
+      .then(user => {
+        document.getElementById('profileInfo').innerHTML = `
+          <p><strong>Логин:</strong> ${user.username}</p>
+          <p><strong>Email:</strong> ${user.email}</p>
+          <p><strong>Роль:</strong> ${user.role}</p>
+          <p><strong>Зарегистрирован:</strong> ${new Date(user.createdAt).toLocaleDateString()}</p>
+        `;
+      })
+      .catch(() => { location.href = '/login.html'; });
+    document.getElementById('logoutProfileBtn').onclick = () => {
+      localStorage.removeItem('token');
+      location.href = '/';
+    };
+  </script>
+</body>
+</html>
