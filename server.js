@@ -479,25 +479,24 @@ app.get('/api/logs', auth, adminOnly, (req, res) => {
 });
 
 // ====================== АДМИНКА: РЕКЛАМА ======================
-app.get('/api/ads', (req, res) => {
-  const ads = readJSON(ADS_FILE);
-  res.json(ads.filter(a => a.active));
-});
-app.post('/api/ads', auth, adminOnly, (req, res) => {
-  writeJSON(ADS_FILE, req.body);
-  res.json({ success: true });
+// Реклама
+app.get('/api/ads', (req, res) => { res.json(readJSON(ADS_FILE)); });
+app.post('/api/ads', auth, adminOnly, (req, res) => { writeJSON(ADS_FILE, req.body); res.json({ success: true }); });
+
+// Логи
+app.get('/api/logs', auth, adminOnly, (req, res) => {
+  const logPath = path.join(__dirname, 'logs', 'server.log');
+  if (fs.existsSync(logPath)) {
+    const logs = fs.readFileSync(logPath, 'utf8').split('\n').slice(-200);
+    res.json({ logs });
+  } else res.json({ logs: [] });
 });
 
-// ====================== ЛОГИ ======================
-app.get('/api/logs', auth, adminOnly, (req, res) => {
-  const logFile = path.join(LOGS_DIR, 'server.log');
-  if (fs.existsSync(logFile)) {
-    const logs = fs.readFileSync(logFile, 'utf8');
-    res.json({ logs: logs.split('\n').slice(-200) });
-  } else {
-    res.json({ logs: [] });
-  }
-});
+// Добавление игры
+app.post('/api/games', auth, adminOnly, (req, res) => { ... });
+
+// Удаление игры
+app.delete('/api/games/:id', auth, adminOnly, (req, res) => { ... });
 
 // ====================== ИМПОРТ ======================
 app.post('/api/import', auth, adminOnly, async (req, res) => {
