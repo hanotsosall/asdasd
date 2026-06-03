@@ -1,5 +1,4 @@
-/* public/css/style.css - SteamFall ULTIMATE
-   Полный набор стилей: тёмная тема, неон, анимации, адаптив, карточки, формы, кнопки */
+/* style.css - GoFrag Inspired */
 * {
   margin: 0;
   padding: 0;
@@ -7,12 +6,10 @@
 }
 
 body {
-  font-family: 'Inter', 'Poppins', system-ui, -apple-system, sans-serif;
-  background: #05070A;
-  color: #EDF2F8;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: #0a0c10;
+  color: #e2e8f0;
   line-height: 1.5;
-  scroll-behavior: smooth;
-  overflow-x: hidden;
 }
 
 .container {
@@ -21,11 +18,10 @@ body {
   padding: 0 24px;
 }
 
-/* ====================== HEADER ====================== */
+/* ===== ШАПКА (как на GoFrag) ===== */
 .header {
-  background: rgba(5, 7, 10, 0.85);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(0, 229, 255, 0.2);
+  background: #0f1117;
+  border-bottom: 1px solid #1e293b;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -34,188 +30,144 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 24px;
+  padding: 14px 24px;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 15px;
 }
 .logo {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 800;
-  background: linear-gradient(135deg, #00F2FE, #4FACFE);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
   letter-spacing: -0.5px;
 }
-.logo i {
-  margin-right: 8px;
-  color: #00E5FF;
-  background: none;
-  -webkit-background-clip: unset;
+.logo a {
+  background: linear-gradient(135deg, #c084fc, #60a5fa);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  text-decoration: none;
 }
 .logo span {
-  background: linear-gradient(135deg, #FFD166, #FF9F4A);
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
 }
-.header-actions {
+.nav-links {
   display: flex;
-  gap: 12px;
+  gap: 28px;
   align-items: center;
 }
-.user-menu {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: #0F1219;
-  padding: 6px 16px;
-  border-radius: 60px;
-  border: 1px solid #2C3E50;
+.nav-links a {
+  color: #cbd5e1;
+  text-decoration: none;
+  font-weight: 500;
+  transition: 0.2s;
 }
-.avatar-small {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
+.nav-links a:hover {
+  color: #60a5fa;
+}
+.auth-buttons {
+  display: flex;
+  gap: 12px;
 }
 .btn-outline {
   background: transparent;
-  border: 1px solid #00E5FF;
-  color: #00E5FF;
+  border: 1px solid #3b82f6;
   padding: 8px 20px;
-  border-radius: 60px;
+  border-radius: 40px;
+  color: #60a5fa;
   font-weight: 600;
   cursor: pointer;
-  transition: 0.2s;
 }
 .btn-outline:hover {
-  background: #00E5FF;
-  color: #05070A;
-  box-shadow: 0 0 12px #00E5FF;
+  background: #3b82f6;
+  color: #0f1117;
 }
 .btn-primary {
-  background: linear-gradient(90deg, #00E5FF, #007BFF);
+  background: #3b82f6;
   border: none;
+  padding: 8px 20px;
+  border-radius: 40px;
   color: white;
-  padding: 8px 24px;
-  border-radius: 60px;
   font-weight: 600;
   cursor: pointer;
-  transition: 0.2s;
 }
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px -5px #00E5FF;
-}
-.header-ad {
-  flex: 1;
-  text-align: right;
-}
-.ad-banner {
-  background: #11161F;
-  border: 1px dashed #00E5FF;
-  border-radius: 20px;
-  padding: 10px 20px;
-  font-size: 0.85rem;
-  color: #88A0B0;
+  background: #2563eb;
 }
 
-/* ====================== HERO ====================== */
-.hero {
-  background: radial-gradient(circle at 20% 30%, #0a0f1a, #020408);
-  padding: 60px 0;
-  margin-bottom: 40px;
-  border-bottom: 1px solid rgba(0,229,255,0.1);
-}
-.hero h1 {
-  font-size: 3.2rem;
-  text-align: center;
-  margin-bottom: 16px;
-  letter-spacing: -1px;
-}
-.neon-text {
-  background: linear-gradient(135deg, #fff, #00E5FF);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-}
-.hero-subtitle {
-  text-align: center;
-  color: #94A3B8;
-  margin-bottom: 32px;
-  font-size: 1.1rem;
-}
-.search-filters {
+/* ===== Блок "О нас" (0% рекламы и т.д.) ===== */
+.features {
   display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 40px 0 30px;
   flex-wrap: wrap;
-  gap: 16px;
-  justify-content: center;
-  max-width: 900px;
-  margin: 0 auto;
 }
-.search-filters input, .search-filters select {
-  background: #111A24;
-  border: 1px solid #2C3E50;
-  padding: 14px 24px;
-  border-radius: 60px;
-  color: white;
-  font-size: 16px;
-  outline: none;
-  transition: 0.2s;
+.feature {
+  flex: 1;
+  background: #11151f;
+  border-radius: 24px;
+  padding: 20px;
+  text-align: center;
+  border: 1px solid #1e293b;
 }
-.search-filters input {
-  flex: 2;
-  min-width: 200px;
+.feature i {
+  font-size: 32px;
+  color: #60a5fa;
+  margin-bottom: 12px;
 }
-.search-filters input:focus, .search-filters select:focus {
-  border-color: #00E5FF;
-  box-shadow: 0 0 12px #00E5FF33;
+.feature h3 {
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+}
+.feature p {
+  font-size: 0.85rem;
+  color: #94a3b8;
 }
 
-/* ====================== LAYOUT ====================== */
+/* ===== ГЛАВНАЯ СЕТКА ===== */
 .games-layout {
   display: flex;
   gap: 32px;
-  margin: 40px 0;
+  margin: 30px 0;
 }
 .sidebar {
-  width: 300px;
+  width: 280px;
   flex-shrink: 0;
 }
 .games-grid {
   flex: 1;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 28px;
 }
 
-/* ====================== КАРТОЧКИ ИГР ====================== */
+/* ===== КАРТОЧКА ИГРЫ (как на GoFrag) ===== */
 .game-card {
-  background: linear-gradient(145deg, #0F1219, #0A0D14);
-  border-radius: 28px;
-  border: 1px solid rgba(0, 230, 255, 0.2);
+  background: #11151f;
+  border-radius: 20px;
+  border: 1px solid #1e293b;
   overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-  cursor: pointer;
+  transition: 0.2s;
 }
 .game-card:hover {
-  transform: translateY(-8px);
-  border-color: #00E5FF;
-  box-shadow: 0 20px 35px -12px rgba(0, 229, 255, 0.3);
+  transform: translateY(-4px);
+  border-color: #3b82f6;
+  box-shadow: 0 10px 20px -5px rgba(0,0,0,0.4);
 }
 .card-img {
   width: 100%;
-  height: 160px;
+  height: 140px;
   background-size: cover;
   background-position: center;
-  background-color: #1E2A3A;
+  background-color: #0f1117;
 }
 .card-content {
-  padding: 20px;
+  padding: 16px;
 }
 .game-title {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   font-weight: 700;
   margin-bottom: 8px;
   white-space: nowrap;
@@ -224,37 +176,29 @@ body {
 }
 .genre {
   display: inline-block;
-  background: #00E5FF20;
-  color: #00E5FF;
+  background: #1e293b;
+  color: #94a3b8;
   border-radius: 30px;
-  padding: 4px 14px;
-  font-size: 0.75rem;
+  padding: 4px 12px;
+  font-size: 0.7rem;
   margin-bottom: 12px;
 }
 .details {
   display: flex;
   justify-content: space-between;
-  font-size: 0.8rem;
-  color: #94A3B8;
-  margin: 12px 0;
-}
-.details i {
-  margin-right: 4px;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin: 10px 0;
 }
 .game-short-desc {
-  font-size: 0.85rem;
-  color: #CBD5E1;
-  margin: 12px 0;
+  font-size: 0.8rem;
+  color: #cbd5e1;
+  margin: 10px 0;
   line-height: 1.4;
 }
-.card-buttons {
-  display: flex;
-  gap: 12px;
-  margin: 12px 0;
-}
-.magnet-btn {
-  flex: 1;
-  background: linear-gradient(90deg, #00E5FF, #007BFF);
+.download-btn {
+  width: 100%;
+  background: #3b82f6;
   border: none;
   padding: 10px;
   border-radius: 40px;
@@ -262,154 +206,85 @@ body {
   color: white;
   cursor: pointer;
   transition: 0.2s;
+  margin: 10px 0 8px;
 }
-.magnet-btn:hover {
-  opacity: 0.9;
+.download-btn:hover {
+  background: #2563eb;
   transform: scale(1.02);
-}
-.favorite-card-btn {
-  background: #1E293B;
-  border: none;
-  width: 40px;
-  border-radius: 40px;
-  color: #FF69B4;
-  cursor: pointer;
-  transition: 0.2s;
-}
-.favorite-card-btn.active {
-  background: #FF69B4;
-  color: white;
 }
 .details-link {
   display: block;
   text-align: center;
-  margin-top: 12px;
-  color: #00E5FF;
+  font-size: 0.8rem;
+  color: #60a5fa;
   text-decoration: none;
-  font-size: 0.85rem;
 }
 
-/* ====================== ВИДЖЕТЫ ====================== */
+/* ===== САЙДБАР ===== */
 .widget {
-  background: #0A0E16;
-  border-radius: 28px;
+  background: #11151f;
+  border-radius: 20px;
   padding: 20px;
-  margin-bottom: 32px;
-  border: 1px solid #1E2A3A;
+  margin-bottom: 28px;
+  border: 1px solid #1e293b;
 }
 .widget h3 {
   margin-bottom: 16px;
-  font-size: 1.2rem;
-  border-left: 4px solid #00E5FF;
+  font-size: 1.1rem;
+  border-left: 3px solid #3b82f6;
   padding-left: 12px;
 }
-.stat-row {
-  display: flex;
-  justify-content: space-between;
-  margin: 10px 0;
-  font-size: 0.9rem;
-}
-.top-list {
+.popular-list {
   list-style: none;
-  padding-left: 0;
 }
-.top-list li {
+.popular-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid #1e293b;
   display: flex;
   justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid #1E2A3A;
 }
-.online-count {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #4ade80;
+.popular-list a {
+  color: #e2e8f0;
+  text-decoration: none;
+}
+.popular-list span {
+  color: #60a5fa;
+  font-weight: 600;
 }
 
-/* ====================== ПАГИНАЦИЯ ====================== */
+/* ===== ПАГИНАЦИЯ ===== */
 .pagination {
   display: flex;
   justify-content: center;
   gap: 12px;
   margin: 40px 0;
-  flex-wrap: wrap;
 }
 .page-btn {
-  background: #1E293B;
+  background: #1e293b;
   border: none;
-  padding: 10px 18px;
+  padding: 8px 16px;
   border-radius: 40px;
   color: white;
   cursor: pointer;
-  transition: 0.2s;
 }
 .page-btn.active {
-  background: #00E5FF;
-  color: #05070A;
-  font-weight: bold;
+  background: #3b82f6;
 }
 .page-btn:hover {
   background: #334155;
 }
 
-/* ====================== ТОСТ ====================== */
-.toast {
-  position: fixed;
-  bottom: 30px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #1E293B;
-  color: #00E5FF;
-  padding: 12px 28px;
-  border-radius: 60px;
-  font-size: 14px;
-  font-weight: 500;
-  z-index: 9999;
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
-  border: 1px solid #00E5FF;
-  backdrop-filter: blur(8px);
-  white-space: nowrap;
-}
-.toast.show {
-  opacity: 1;
-}
-
-/* ====================== СКЕЛЕТОНЫ ====================== */
-.skeleton-card {
-  background: linear-gradient(90deg, #0F1219 25%, #1A1F2A 50%, #0F1219 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: 28px;
-  height: 340px;
-}
-.skeleton-text {
-  height: 20px;
-  background: #1E293B;
-  margin: 8px 0;
-  border-radius: 8px;
-  animation: shimmer 1.5s infinite;
-}
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-/* ====================== ФУТЕР ====================== */
+/* ===== ФУТЕР ===== */
 footer {
   text-align: center;
-  padding: 32px;
-  border-top: 1px solid #1E2A3A;
-  margin-top: 48px;
-  font-size: 14px;
-  color: #64748B;
-}
-footer a {
-  color: #00E5FF;
-  text-decoration: none;
+  padding: 30px;
+  border-top: 1px solid #1e293b;
+  margin-top: 50px;
+  font-size: 0.8rem;
+  color: #64748b;
 }
 
-/* ====================== АДАПТИВ ====================== */
+/* ===== АДАПТИВ ===== */
 @media (max-width: 900px) {
   .games-layout {
     flex-direction: column;
@@ -417,30 +292,7 @@ footer a {
   .sidebar {
     width: 100%;
   }
-  .hero h1 {
-    font-size: 2rem;
-  }
-  .search-filters input, .search-filters select {
-    width: 100%;
-  }
-  .container {
-    padding: 0 16px;
-  }
-  .toast {
-    white-space: normal;
-    text-align: center;
-    max-width: 90%;
-  }
-}
-@media (max-width: 600px) {
-  .games-grid {
-    grid-template-columns: 1fr;
-  }
-  .header .container {
+  .features {
     flex-direction: column;
-    text-align: center;
-  }
-  .header-ad {
-    text-align: center;
   }
 }
