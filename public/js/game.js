@@ -1,496 +1,531 @@
-// public/js/game.js - SteamFall 2.0 (550+ строк)
-// Полная логика страницы игры: отзывы, комментарии, чат, избранное, похожие игры
+// public/js/game.js - SteamFall ULTIMATE
+// Полная клиентская логика страницы игры: отображение информации, отзывы, лайки, комментарии, чат WebSocket, избранное, похожие игры
+(function() {
+  // ====================== ПЕРЕМЕННЫЕ ======================
+  let game = null;
+  let reviews = [];
+  let currentUser = null;
+  let token = localStorage.getItem('token');
+  let isFavorite = false;
+  let socket = null;
+  let gameId = null;
 
-// Глобальные переменные
-let currentGame = null;
-let currentReviews = [];
-let socket = null;
-let currentUserId = null;
-let currentUserRole = null;
-let isFavorite = false;
+  // DOM элементы
+  const container = document.getElementById('gameContainer');
+  const toast = document.getElementById('toast');
+  const headerActions = document.getElementById('headerActions');
 
-// DOM элементы
-const gameContainer = document.getElementById('gameContainer');
-const toast = document.getElementById('toast');
-
-// Инициализация при загрузке страницы
-document.addEventListener('DOMContentLoaded', async () => {
-  // Получаем ID игры из URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const gameId = urlParams.get('id');
-  if (!gameId) {
-    showError('ID игры не указан');
-    return;
+  // ====================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ======================
+  function showToast(message, isError = false) {
+    if (!toast) return;
+    toast.textContent = message;
+    toast.style.color = isError ? '#FF6B6B' : '#00E5FF';
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
   }
-  
-  // Загружаем данные пользователя из localStorage
-  const token = localStorage.getItem('token');
-  if (token) {
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    });
+  }
+
+  function formatNumber(num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  }
+
+  // ====================== АВТОРИЗАЦИЯ (шапка) ======================
+  function updateHeaderUI() {
+    if (!headerActions) return;
+    if (currentUser) {
+      headerActions.innerHTML = `
+        <div class="user-menu">
+          <img src="${currentUser.avatar || 'https://i.pravatar.cc/40?img=1'}" class="avatar-small" alt="avatar">
+          <span>${escapeHtml(currentUser.username)}</span>
+          <button id="logoutBtn" class="btn-outline small">Выйти</button>
+        </div>
+      `;
+      document.getElementById('logoutBtn')?.addEventListener('click', logout);
+    } else {
+      headerActions.innerHTML = `
+        <button id="loginBtnGame" class="btn-outline">Войти</button>
+        <button id="registerBtnGame" class="btn-primary">Регистрация</button>
+      `;
+      document.getElementById('loginBtnGame')?.addEventListener('click', () => openAuthModal('login'));
+      document.getElementById('registerBtnGame')?.addEventListener('click', () => openAuthModal('register'));
+    }
+  }
+
+  function openAuthModal(type) {
+    // Простая модалка через prompt, но можно расширить
+    if (type === 'login') {
+      const username = prompt('Логин');
+      const password = prompt('Пароль');
+      if (username && password) login(username, password);
+    } else {
+      const username = prompt('Логин (мин. 3)');
+      const email = prompt('Email');
+      const password = prompt('Пароль (мин. 6)');
+      if (username && email && password) register(username, email, password);
+    }
+  }
+
+  async function login(username, password) {
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      currentUserId = payload.id;
-      currentUserRole = payload.role;
-    } catch(e) { console.error('Ошибка токена'); }
-  }
-  
-  // Инициализация WebSocket
-  initWebSocket(gameId);
-  
-  // Загружаем данные игры
-  await loadGame(gameId);
-  
-  // Загружаем отзывы
-  await loadReviews(gameId);
-  
-  // Проверяем, в избранном ли игра
-  if (currentUserId) await checkFavorite(gameId);
-  
-  // Загружаем похожие игры
-  await loadSimilarGames(currentGame.genre, gameId);
-  
-  // Запускаем обновление пиров через Socket (или через API)
-  startPeerUpdater(gameId);
-});
-
-// ================== ИНИЦИАЛИЗАЦИЯ WEBSOCKET ==================
-function initWebSocket(gameId) {
-  socket = io();
-  socket.on('connect', () => {
-    console.log('WebSocket connected');
-    socket.emit('join-game', gameId);
-  });
-  socket.on('chat-message', (data) => {
-    appendChatMessage(data.author, data.text, data.timestamp);
-  });
-  socket.on('peers-updated', (peersData) => {
-    const gamePeer = peersData.find(p => p.id == gameId);
-    if (gamePeer) {
-      updatePeerDisplay(gamePeer.seeders, gamePeer.leechers);
-    }
-  });
-}
-
-// ================== ЗАГРУЗКА ДАННЫХ ИГРЫ ==================
-async function loadGame(gameId) {
-  try {
-    const response = await fetch(`/api/games/${gameId}`);
-    if (!response.ok) throw new Error('Игра не найдена');
-    currentGame = await response.json();
-    renderGameInfo(currentGame);
-    document.title = `${currentGame.title} | SteamFall`;
-    // Обновляем мета-теги для SEO (динамически)
-    updateMetaTags(currentGame);
-  } catch (error) {
-    showError(error.message);
-  }
-}
-
-function renderGameInfo(game) {
-  const html = `
-    <div class="game-detail">
-      <div class="game-info">
-        <h1>${escapeHtml(game.title)}</h1>
-        <div class="game-meta">
-          <span class="genre">${escapeHtml(game.genre)}</span>
-          <span class="developer">👨‍💻 ${escapeHtml(game.developer)}</span>
-          <span class="publisher">📀 ${escapeHtml(game.publisher || game.developer)}</span>
-          <span class="release">📅 ${new Date(game.releaseDate).toLocaleDateString('ru-RU')}</span>
-        </div>
-        <div class="game-description">${escapeHtml(game.description)}</div>
-        <div class="game-stats">
-          <div class="stat"><span>💾 Размер:</span> ${game.size}</div>
-          <div class="stat"><span>⬆️ Сидеры:</span> <span id="seedersCount">${game.seeders}</span></div>
-          <div class="stat"><span>⬇️ Личеры:</span> <span id="leechersCount">${game.leechers}</span></div>
-          <div class="stat"><span>⭐ Рейтинг:</span> ${game.rating || '—'} / 5</div>
-          <div class="stat"><span>👁️ Просмотров:</span> ${game.views || 0}</div>
-          <div class="stat"><span>📥 Скачиваний:</span> ${(game.downloads || 0).toLocaleString()}</div>
-        </div>
-        <div class="game-actions">
-          <button id="magnetBtn" class="magnet-btn">🧲 Скачать Magnet-ссылку</button>
-          ${game.torrentFile ? `<button id="torrentBtn" class="torrent-btn">📀 Скачать .torrent файл</button>` : ''}
-          ${currentUserId ? `<button id="favoriteBtn" class="favorite-btn ${isFavorite ? 'active' : ''}">❤️ ${isFavorite ? 'В избранном' : 'В избранное'}</button>` : ''}
-        </div>
-        ${currentGame.tags && currentGame.tags.length ? `
-        <div class="game-tags">
-          ${currentGame.tags.map(tag => `<span class="tag">#${escapeHtml(tag)}</span>`).join('')}
-        </div>` : ''}
-      </div>
-      <div class="game-screenshots">
-        <h3>Скриншоты</h3>
-        <div class="screenshot-gallery">
-          ${currentGame.screenshots.map(url => `<img src="${url}" alt="Screenshot" loading="lazy" onclick="openModal('${url}')">`).join('')}
-        </div>
-      </div>
-    </div>
-    <div class="similar-games" id="similarGames"></div>
-    <div class="chat-section" id="chatSection">
-      <h3>💬 Общий чат игры</h3>
-      <div class="chat-messages" id="chatMessages"></div>
-      ${currentUserId ? `
-      <div class="chat-input">
-        <input type="text" id="chatInput" placeholder="Написать сообщение...">
-        <button id="sendChatBtn">➤</button>
-      </div>` : '<p class="login-to-chat"><a href="/login.html">Войдите</a>, чтобы участвовать в чате</p>'}
-    </div>
-    <div class="reviews-section" id="reviewsSection">
-      <h2>Отзывы игроков <span id="reviewsCount">(${currentReviews.length})</span></h2>
-      <div id="reviewsList"></div>
-      ${currentUserId ? `
-      <div class="add-review">
-        <h3>Оставить отзыв</h3>
-        <div class="rating-input">
-          <span>Оценка: </span>
-          <select id="reviewRating">
-            <option value="5">5 ★</option><option value="4">4 ★</option>
-            <option value="3">3 ★</option><option value="2">2 ★</option>
-            <option value="1">1 ★</option>
-          </select>
-        </div>
-        <textarea id="reviewText" rows="4" placeholder="Поделитесь впечатлениями..."></textarea>
-        <button id="submitReview">Отправить отзыв</button>
-      </div>` : '<p><a href="/login.html">Войдите</a>, чтобы оставить отзыв</p>'}
-    </div>
-  `;
-  gameContainer.innerHTML = html;
-  
-  // Навешиваем обработчики
-  document.getElementById('magnetBtn')?.addEventListener('click', () => downloadMagnet());
-  if (game.torrentFile) document.getElementById('torrentBtn')?.addEventListener('click', () => downloadTorrent());
-  if (currentUserId) document.getElementById('favoriteBtn')?.addEventListener('click', () => toggleFavorite());
-  if (currentUserId) document.getElementById('submitReview')?.addEventListener('click', () => submitReview());
-  if (currentUserId) {
-    const sendBtn = document.getElementById('sendChatBtn');
-    const chatInput = document.getElementById('chatInput');
-    if (sendBtn && chatInput) {
-      sendBtn.addEventListener('click', () => sendChatMessage());
-      chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendChatMessage(); });
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Ошибка входа');
+      localStorage.setItem('token', data.token);
+      token = data.token;
+      currentUser = data.user;
+      updateHeaderUI();
+      showToast(`Добро пожаловать, ${currentUser.username}!`);
+      await checkFavorite();
+      loadGameData(); // перезагрузка страницы для обновления UI (кнопка избранного, форма отзыва)
+    } catch (err) {
+      showToast(err.message, true);
     }
   }
-}
 
-// ================== ЗАГРУЗКА ОТЗЫВОВ ==================
-async function loadReviews(gameId) {
-  try {
-    const response = await fetch(`/api/reviews/${gameId}`);
-    currentReviews = await response.json();
-    renderReviews(currentReviews);
-    document.getElementById('reviewsCount').innerText = `(${currentReviews.length})`;
-  } catch (error) {
-    console.error('Ошибка загрузки отзывов', error);
+  async function register(username, email, password) {
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Ошибка регистрации');
+      localStorage.setItem('token', data.token);
+      token = data.token;
+      currentUser = data.user;
+      updateHeaderUI();
+      showToast(`Регистрация успешна! Добро пожаловать, ${currentUser.username}!`);
+      await checkFavorite();
+      loadGameData();
+    } catch (err) {
+      showToast(err.message, true);
+    }
   }
-}
 
-function renderReviews(reviews) {
-  const container = document.getElementById('reviewsList');
-  if (!reviews.length) {
-    container.innerHTML = '<div class="no-reviews">Пока нет отзывов. Будьте первым!</div>';
-    return;
+  async function logout() {
+    localStorage.removeItem('token');
+    token = null;
+    currentUser = null;
+    updateHeaderUI();
+    showToast('Вы вышли из аккаунта');
+    loadGameData();
   }
-  container.innerHTML = reviews.map(rev => `
-    <div class="review-card" data-review-id="${rev.id}">
-      <div class="review-header">
-        <div class="review-author">
-          <img src="https://i.pravatar.cc/40?img=${rev.userId % 70}" class="avatar" alt="avatar">
-          <strong>${escapeHtml(rev.author)}</strong>
-        </div>
-        <div class="review-rating">${'★'.repeat(rev.rating)}${'☆'.repeat(5 - rev.rating)}</div>
-      </div>
-      <div class="review-text">${escapeHtml(rev.text)}</div>
-      <div class="review-footer">
-        <span class="review-date">${new Date(rev.createdAt).toLocaleDateString()}</span>
-        <button class="like-btn" data-id="${rev.id}">👍 <span class="likes-count">${rev.likes || 0}</span></button>
-        <button class="comment-toggle" data-id="${rev.id}">💬 Комментарии</button>
-      </div>
-      <div class="review-comments" id="comments-${rev.id}" style="display:none;">
-        <div class="comments-list" id="comments-list-${rev.id}"></div>
-        ${currentUserId ? `
-        <div class="add-comment">
-          <input type="text" id="comment-input-${rev.id}" placeholder="Ваш комментарий...">
-          <button onclick="addComment(${rev.id})">→</button>
-        </div>` : ''}
-      </div>
-    </div>
-  `).join('');
-  
-  // Обработчики лайков и комментариев
-  document.querySelectorAll('.like-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const reviewId = btn.dataset.id;
-      likeReview(reviewId);
-    });
-  });
-  document.querySelectorAll('.comment-toggle').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const reviewId = btn.dataset.id;
-      const commentsDiv = document.getElementById(`comments-${reviewId}`);
-      if (commentsDiv.style.display === 'none') {
-        commentsDiv.style.display = 'block';
-        loadComments(reviewId);
+
+  async function loadCurrentUser() {
+    if (!token) return;
+    try {
+      const res = await fetch('/api/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        currentUser = await res.json();
+        updateHeaderUI();
       } else {
-        commentsDiv.style.display = 'none';
+        logout();
       }
-    });
-  });
-}
+    } catch (err) {
+      logout();
+    }
+  }
 
-// ================== КОММЕНТАРИИ К ОТЗЫВАМ ==================
-async function loadComments(reviewId) {
-  try {
-    const response = await fetch(`/api/comments/${reviewId}`);
-    const comments = await response.json();
-    const container = document.getElementById(`comments-list-${reviewId}`);
-    if (!comments.length) {
-      container.innerHTML = '<div class="no-comments">Нет комментариев</div>';
+  // ====================== ИЗБРАННОЕ ======================
+  async function checkFavorite() {
+    if (!currentUser || !gameId) return false;
+    try {
+      const res = await fetch('/api/favorites', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const favs = await res.json();
+        isFavorite = favs.some(f => f.gameId == gameId);
+        const favBtn = document.getElementById('favoriteBtn');
+        if (favBtn) {
+          favBtn.innerHTML = isFavorite ? '<i class="fas fa-heart"></i> В избранном' : '<i class="far fa-heart"></i> В избранное';
+          favBtn.classList.toggle('active', isFavorite);
+        }
+        return isFavorite;
+      }
+    } catch (err) {}
+    return false;
+  }
+
+  async function toggleFavorite() {
+    if (!currentUser) {
+      showToast('Войдите, чтобы добавить в избранное', true);
       return;
     }
-    container.innerHTML = comments.map(c => `
-      <div class="comment-item">
-        <strong>${escapeHtml(c.author)}</strong>:
-        <span>${escapeHtml(c.text)}</span>
-        <small>${new Date(c.createdAt).toLocaleString()}</small>
-      </div>
-    `).join('');
-  } catch (error) {
-    console.error('Ошибка загрузки комментариев', error);
-  }
-}
-
-async function addComment(reviewId) {
-  const input = document.getElementById(`comment-input-${reviewId}`);
-  const text = input.value.trim();
-  if (!text) return;
-  try {
-    const response = await fetch('/api/comments', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-      body: JSON.stringify({ reviewId, text })
-    });
-    if (response.ok) {
-      input.value = '';
-      loadComments(reviewId);
-      showToast('Комментарий добавлен');
-    } else {
-      showToast('Ошибка добавления комментария');
+    try {
+      const method = isFavorite ? 'DELETE' : 'POST';
+      const res = await fetch(`/api/favorites/${gameId}`, {
+        method,
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: method === 'POST' ? JSON.stringify({ gameId }) : undefined
+      });
+      if (res.ok) {
+        isFavorite = !isFavorite;
+        const favBtn = document.getElementById('favoriteBtn');
+        if (favBtn) {
+          favBtn.innerHTML = isFavorite ? '<i class="fas fa-heart"></i> В избранном' : '<i class="far fa-heart"></i> В избранное';
+          favBtn.classList.toggle('active', isFavorite);
+        }
+        showToast(isFavorite ? 'Добавлено в избранное' : 'Удалено из избранного');
+      }
+    } catch (err) {
+      showToast('Ошибка', true);
     }
-  } catch (error) {
-    console.error(error);
   }
-}
 
-// ================== ЛАЙКИ ОТЗЫВОВ ==================
-async function likeReview(reviewId) {
-  if (!currentUserId) {
-    showToast('Войдите, чтобы оценивать отзывы');
-    return;
-  }
-  try {
-    const response = await fetch(`/api/reviews/${reviewId}/like`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-    });
-    if (response.ok) {
-      const data = await response.json();
-      const likeSpan = document.querySelector(`.like-btn[data-id="${reviewId}"] .likes-count`);
-      if (likeSpan) likeSpan.innerText = data.likes;
-      showToast('Спасибо за оценку!');
-    } else {
-      showToast('Не удалось оценить');
-    }
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-// ================== ДОБАВЛЕНИЕ ОТЗЫВА ==================
-async function submitReview() {
-  const rating = parseInt(document.getElementById('reviewRating').value);
-  const text = document.getElementById('reviewText').value.trim();
-  if (!text) {
-    showToast('Напишите текст отзыва');
-    return;
-  }
-  try {
-    const response = await fetch('/api/reviews', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-      body: JSON.stringify({ gameId: currentGame.id, text, rating })
-    });
-    if (response.ok) {
-      showToast('Отзыв добавлен!');
-      document.getElementById('reviewText').value = '';
-      await loadReviews(currentGame.id);
-    } else {
-      const err = await response.json();
-      showToast(err.error || 'Ошибка');
-    }
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-// ================== ИЗБРАННОЕ ==================
-async function checkFavorite(gameId) {
-  try {
-    const response = await fetch('/api/profile', {
-      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-    });
-    const data = await response.json();
-    isFavorite = data.favorites.some(f => f.gameId == gameId);
-    const favBtn = document.getElementById('favoriteBtn');
-    if (favBtn) {
-      favBtn.innerHTML = isFavorite ? '❤️ В избранном' : '🤍 В избранное';
-      favBtn.classList.toggle('active', isFavorite);
-    }
-  } catch (error) {}
-}
-
-async function toggleFavorite() {
-  if (!currentUserId) return;
-  try {
-    if (isFavorite) {
-      await fetch(`/api/favorites/${currentGame.id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
-      showToast('Удалено из избранного');
-    } else {
-      await fetch('/api/favorites', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` }, body: JSON.stringify({ gameId: currentGame.id }) });
-      showToast('Добавлено в избранное');
-    }
-    isFavorite = !isFavorite;
-    const favBtn = document.getElementById('favoriteBtn');
-    favBtn.innerHTML = isFavorite ? '❤️ В избранном' : '🤍 В избранное';
-    favBtn.classList.toggle('active', isFavorite);
-  } catch (error) {
-    showToast('Ошибка');
-  }
-}
-
-// ================== ПОХОЖИЕ ИГРЫ ==================
-async function loadSimilarGames(genre, excludeId) {
-  try {
-    const response = await fetch(`/api/games?genre=${encodeURIComponent(genre)}&limit=6`);
-    const data = await response.json();
-    const similar = data.games.filter(g => g.id != excludeId).slice(0, 4);
-    const container = document.getElementById('similarGames');
-    if (!similar.length) {
-      container.innerHTML = '';
+  // ====================== ЗАГРУЗКА ДАННЫХ ИГРЫ ======================
+  async function loadGameData() {
+    const urlParams = new URLSearchParams(window.location.search);
+    gameId = urlParams.get('id');
+    if (!gameId) {
+      container.innerHTML = '<div class="error-message">❌ ID игры не указан</div>';
       return;
     }
-    container.innerHTML = `
-      <h3>🎮 Похожие игры</h3>
-      <div class="similar-grid">
-        ${similar.map(g => `
-          <div class="similar-card">
-            <img src="${g.screenshots[0]}" alt="${g.title}">
-            <div class="similar-info">
-              <a href="/game.html?id=${g.id}">${escapeHtml(g.title)}</a>
-              <span>⭐ ${g.rating || '—'}</span>
-            </div>
+    try {
+      const [gameRes, reviewsRes] = await Promise.all([
+        fetch(`/api/games/${gameId}`),
+        fetch(`/api/reviews/${gameId}`)
+      ]);
+      if (!gameRes.ok) throw new Error('Игра не найдена');
+      game = await gameRes.json();
+      reviews = await reviewsRes.json();
+      document.title = `${game.title} | SteamFall ULTIMATE`;
+      renderGamePage();
+      await checkFavorite();
+      initSocket();
+      loadSimilarGames();
+    } catch (err) {
+      container.innerHTML = `<div class="error-message">⚠️ ${err.message}</div>`;
+    }
+  }
+
+  // ====================== ОТРИСОВКА СТРАНИЦЫ ======================
+  function renderGamePage() {
+    const avgRating = reviews.length ? (reviews.reduce((s,r)=>s+r.rating,0)/reviews.length).toFixed(1) : game.rating || '—';
+    const screenshotsHtml = game.screenshots && game.screenshots.length ? 
+      `<div class="screenshots-grid">
+        ${game.screenshots.map(url => `<div class="screenshot-item" onclick="window.openModal('${url}')"><img src="${url}" alt="screenshot"></div>`).join('')}
+      </div>` : '<p>Нет скриншотов</p>';
+
+    const html = `
+      <div class="game-header">
+        <div class="game-cover">
+          <img src="${game.screenshots?.[0] || 'https://picsum.photos/id/0/400/300'}" alt="${escapeHtml(game.title)}">
+        </div>
+        <div class="game-info">
+          <h1 class="game-title">${escapeHtml(game.title)}</h1>
+          <div class="game-meta">
+            <span><i class="fas fa-tag"></i> ${escapeHtml(game.genre)}</span>
+            <span><i class="fas fa-code-branch"></i> ${escapeHtml(game.developer || 'Unknown')}</span>
+            <span><i class="fas fa-calendar"></i> ${new Date(game.releaseDate).toLocaleDateString('ru-RU')}</span>
           </div>
-        `).join('')}
+          <div class="game-description">${escapeHtml(game.description)}</div>
+          <div class="game-stats-grid">
+            <div class="stat-item"><div class="stat-value">${game.size}</div><span>Размер</span></div>
+            <div class="stat-item"><div class="stat-value" id="seedersValue">${game.seeders}</div><span>Сидеры</span></div>
+            <div class="stat-item"><div class="stat-value" id="leechersValue">${game.leechers}</div><span>Личеры</span></div>
+            <div class="stat-item"><div class="stat-value">${avgRating} / 5</div><span>Рейтинг</span></div>
+            <div class="stat-item"><div class="stat-value">${formatNumber(game.downloads || 0)}</div><span>Скачиваний</span></div>
+            <div class="stat-item"><div class="stat-value">${formatNumber(game.views || 0)}</div><span>Просмотров</span></div>
+          </div>
+          <div class="game-actions">
+            <button id="magnetBtn" class="btn-magnet"><i class="fas fa-magnet"></i> Скачать Magnet</button>
+            <button id="favoriteBtn" class="btn-favorite">${isFavorite ? '<i class="fas fa-heart"></i> В избранном' : '<i class="far fa-heart"></i> В избранное'}</button>
+          </div>
+          ${game.tags && game.tags.length ? `<div class="game-tags">${game.tags.map(t => `<span class="tag">#${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+        </div>
+      </div>
+      <div class="screenshots-section">
+        <h2><i class="fas fa-images"></i> Скриншоты</h2>
+        ${screenshotsHtml}
+      </div>
+      <div class="chat-section">
+        <h2><i class="fas fa-comments"></i> Общий чат игры</h2>
+        <div class="chat-messages" id="chatMessages"></div>
+        ${currentUser ? `
+        <div class="chat-input-area">
+          <input type="text" id="chatInput" placeholder="Написать сообщение...">
+          <button id="sendChatBtn" class="btn-magnet" style="padding: 10px 24px;">Отправить</button>
+        </div>` : '<p><a href="#" id="loginToChat">Войдите</a>, чтобы участвовать в чате</p>'}
+      </div>
+      <div class="reviews-section">
+        <h2><i class="fas fa-star"></i> Отзывы игроков (${reviews.length})</h2>
+        <div id="reviewsList"></div>
+        ${currentUser ? `
+        <div class="add-review-form" style="background:#0F172A; padding:20px; border-radius:24px; margin-top:30px;">
+          <h3>Оставить отзыв</h3>
+          <select id="reviewRating" style="margin:10px 0; padding:10px; background:#1F2A3A; border:none; border-radius:20px; color:white;">
+            <option value="5">5 ★</option><option value="4">4 ★</option><option value="3">3 ★</option>
+            <option value="2">2 ★</option><option value="1">1 ★</option>
+          </select>
+          <textarea id="reviewText" rows="3" placeholder="Ваш отзыв..." style="width:100%; background:#1F2A3A; border:none; padding:12px; border-radius:20px; color:white;"></textarea>
+          <button id="submitReviewBtn" class="btn-magnet" style="margin-top:12px;">Отправить отзыв</button>
+        </div>` : '<p><a href="#" id="loginToReview">Войдите</a>, чтобы оставить отзыв</p>'}
+      </div>
+      <div class="similar-games" id="similarGamesSection">
+        <h2><i class="fas fa-gamepad"></i> Похожие игры</h2>
+        <div id="similarGamesGrid" class="similar-grid">Загрузка...</div>
       </div>
     `;
-  } catch (error) {}
-}
-
-// ================== ЧАТ (WEBSOCKET) ==================
-function sendChatMessage() {
-  const input = document.getElementById('chatInput');
-  const text = input.value.trim();
-  if (!text) return;
-  if (!socket) return;
-  socket.emit('chat-message', {
-    gameId: currentGame.id,
-    author: localStorage.getItem('username') || 'User',
-    text: text
-  });
-  input.value = '';
-}
-
-function appendChatMessage(author, text, timestamp) {
-  const messagesDiv = document.getElementById('chatMessages');
-  if (!messagesDiv) return;
-  const msgDiv = document.createElement('div');
-  msgDiv.className = 'chat-message';
-  msgDiv.innerHTML = `<strong>${escapeHtml(author)}</strong> <small>${new Date(timestamp).toLocaleTimeString()}</small><br>${escapeHtml(text)}`;
-  messagesDiv.appendChild(msgDiv);
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
-}
-
-// ================== СКАЧИВАНИЕ ==================
-function downloadMagnet() {
-  if (currentGame.magnet) {
-    window.open(currentGame.magnet, '_blank');
-    showToast('Magnet-ссылка скопирована в буфер? Открыт торрент-клиент');
-    // Логируем скачивание (опционально)
-    fetch('/api/track-download', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gameId: currentGame.id }) }).catch(e=>{});
-  } else {
-    showToast('Magnet-ссылка отсутствует');
+    container.innerHTML = html;
+    // Обработчики
+    document.getElementById('magnetBtn')?.addEventListener('click', () => {
+      if (game.magnet) {
+        window.open(game.magnet, '_blank');
+        showToast('Magnet-ссылка открыта в торрент-клиенте');
+      } else showToast('Magnet-ссылка отсутствует', true);
+    });
+    document.getElementById('favoriteBtn')?.addEventListener('click', toggleFavorite);
+    document.getElementById('submitReviewBtn')?.addEventListener('click', submitReview);
+    if (currentUser) {
+      const sendBtn = document.getElementById('sendChatBtn');
+      const chatInput = document.getElementById('chatInput');
+      if (sendBtn && chatInput) {
+        sendBtn.addEventListener('click', sendChatMessage);
+        chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendChatMessage(); });
+      }
+    } else {
+      document.getElementById('loginToChat')?.addEventListener('click', (e) => { e.preventDefault(); openAuthModal('login'); });
+      document.getElementById('loginToReview')?.addEventListener('click', (e) => { e.preventDefault(); openAuthModal('login'); });
+    }
+    renderReviews();
   }
-}
 
-function downloadTorrent() {
-  if (currentGame.torrentFile) {
-    window.open(`/torrents/${currentGame.torrentFile}`, '_blank');
-    showToast('Скачивание .torrent файла');
-  } else {
-    showToast('Торрент-файл не найден');
+  function renderReviews() {
+    const containerReviews = document.getElementById('reviewsList');
+    if (!containerReviews) return;
+    if (!reviews.length) {
+      containerReviews.innerHTML = '<div class="no-reviews">Пока нет отзывов. Будьте первым!</div>';
+      return;
+    }
+    containerReviews.innerHTML = reviews.map(rev => `
+      <div class="review-card" data-review-id="${rev.id}">
+        <div class="review-header">
+          <div class="review-author">
+            <img src="https://i.pravatar.cc/40?img=${rev.userId % 70}" alt="avatar">
+            <strong>${escapeHtml(rev.author)}</strong>
+          </div>
+          <div class="review-rating">${'★'.repeat(rev.rating)}${'☆'.repeat(5-rev.rating)}</div>
+        </div>
+        <div class="review-text">${escapeHtml(rev.text)}</div>
+        <div class="review-footer">
+          <span class="review-date">${new Date(rev.createdAt).toLocaleDateString()}</span>
+          <button class="like-btn" data-id="${rev.id}">👍 <span class="likes-count">${rev.likes || 0}</span></button>
+          <button class="comments-toggle" data-id="${rev.id}">💬 Комментарии (0)</button>
+        </div>
+        <div class="comments-section" id="comments-${rev.id}"></div>
+      </div>
+    `).join('');
+    // Обработчики лайков
+    document.querySelectorAll('.like-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        likeReview(btn.dataset.id);
+      });
+    });
+    // Обработчики комментариев
+    document.querySelectorAll('.comments-toggle').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const reviewId = btn.dataset.id;
+        const commentsDiv = document.getElementById(`comments-${reviewId}`);
+        if (commentsDiv.style.display === 'none' || !commentsDiv.style.display) {
+          commentsDiv.style.display = 'block';
+          await loadComments(reviewId);
+        } else {
+          commentsDiv.style.display = 'none';
+        }
+      });
+    });
   }
-}
 
-// ================== ОБНОВЛЕНИЕ ПИРОВ ==================
-function updatePeerDisplay(seeders, leechers) {
-  const seedersSpan = document.getElementById('seedersCount');
-  const leechersSpan = document.getElementById('leechersCount');
-  if (seedersSpan) seedersSpan.innerText = seeders;
-  if (leechersSpan) leechersSpan.innerText = leechers;
-}
-
-function startPeerUpdater(gameId) {
-  // Если WebSocket не обновляет, то периодически запрашиваем через API
-  setInterval(async () => {
+  // ====================== ОТЗЫВЫ ======================
+  async function submitReview() {
+    const rating = parseInt(document.getElementById('reviewRating').value);
+    const text = document.getElementById('reviewText').value.trim();
+    if (!text) {
+      showToast('Напишите текст отзыва', true);
+      return;
+    }
     try {
-      const response = await fetch(`/api/games/${gameId}`);
-      const game = await response.json();
-      updatePeerDisplay(game.seeders, game.leechers);
-    } catch(e) {}
-  }, 30000);
-}
-
-// ================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==================
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
-}
-
-function showToast(message) {
-  const toastEl = document.getElementById('toast');
-  if (!toastEl) return;
-  toastEl.innerText = message;
-  toastEl.classList.add('show');
-  setTimeout(() => toastEl.classList.remove('show'), 3000);
-}
-
-function showError(message) {
-  gameContainer.innerHTML = `<div class="error-message">❌ ${message}</div>`;
-}
-
-function updateMetaTags(game) {
-  let metaDesc = document.querySelector('meta[name="description"]');
-  if (!metaDesc) {
-    metaDesc = document.createElement('meta');
-    metaDesc.name = 'description';
-    document.head.appendChild(metaDesc);
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ gameId: parseInt(gameId), text, rating })
+      });
+      if (res.ok) {
+        showToast('Отзыв добавлен!');
+        document.getElementById('reviewText').value = '';
+        await loadGameData();
+      } else {
+        const err = await res.json();
+        showToast(err.error || 'Ошибка', true);
+      }
+    } catch (err) {
+      showToast('Ошибка отправки', true);
+    }
   }
-  metaDesc.content = game.description.substring(0, 160);
-}
 
-window.openModal = (url) => {
-  const modal = document.createElement('div');
-  modal.className = 'image-modal';
-  modal.innerHTML = `<div class="modal-content"><img src="${url}"><span class="close">&times;</span></div>`;
-  document.body.appendChild(modal);
-  modal.querySelector('.close').onclick = () => modal.remove();
-};
+  async function likeReview(reviewId) {
+    if (!currentUser) {
+      showToast('Войдите, чтобы оценивать', true);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/reviews/${reviewId}/like`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const likeSpan = document.querySelector(`.like-btn[data-id="${reviewId}"] .likes-count`);
+        if (likeSpan) likeSpan.innerText = data.likes;
+        showToast('Спасибо за оценку!');
+      }
+    } catch (err) {}
+  }
 
-// Экспортируем функцию addComment для глобального вызова
-window.addComment = addComment;
+  // ====================== КОММЕНТАРИИ ======================
+  async function loadComments(reviewId) {
+    try {
+      const res = await fetch(`/api/comments/${reviewId}`);
+      const comments = await res.json();
+      const container = document.getElementById(`comments-${reviewId}`);
+      if (!container) return;
+      if (!comments.length) {
+        container.innerHTML = '<div class="no-comments">Нет комментариев</div>';
+      } else {
+        container.innerHTML = comments.map(c => `
+          <div class="comment">
+            <strong>${escapeHtml(c.author)}</strong>: ${escapeHtml(c.text)}
+            <small>${new Date(c.createdAt).toLocaleString()}</small>
+          </div>
+        `).join('');
+      }
+      if (currentUser) {
+        container.innerHTML += `
+          <div class="add-comment">
+            <input type="text" id="commentInput-${reviewId}" placeholder="Ваш комментарий...">
+            <button class="btn-magnet" onclick="window.addComment(${reviewId})">→</button>
+          </div>
+        `;
+      }
+    } catch (err) {}
+  }
+
+  window.addComment = async function(reviewId) {
+    const input = document.getElementById(`commentInput-${reviewId}`);
+    const text = input?.value.trim();
+    if (!text) return;
+    try {
+      const res = await fetch('/api/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ reviewId, text })
+      });
+      if (res.ok) {
+        input.value = '';
+        await loadComments(reviewId);
+        showToast('Комментарий добавлен');
+      }
+    } catch (err) {}
+  };
+
+  // ====================== ЧАТ WEBSOCKET ======================
+  function initSocket() {
+    if (socket) socket.disconnect();
+    socket = io();
+    socket.on('connect', () => {
+      console.log('Socket connected');
+      socket.emit('join-game', gameId);
+    });
+    socket.on('chat-message', (data) => {
+      addChatMessage(data.author, data.text, data.timestamp);
+    });
+    socket.on('peers-updated', (peers) => {
+      const peer = peers.find(p => p.id == gameId);
+      if (peer) {
+        const seedersSpan = document.getElementById('seedersValue');
+        const leechersSpan = document.getElementById('leechersValue');
+        if (seedersSpan) seedersSpan.innerText = peer.seeders;
+        if (leechersSpan) leechersSpan.innerText = peer.leechers;
+      }
+    });
+  }
+
+  function sendChatMessage() {
+    const input = document.getElementById('chatInput');
+    const text = input?.value.trim();
+    if (!text) return;
+    socket.emit('chat-message', {
+      gameId: gameId,
+      author: currentUser?.username || 'Гость',
+      text: text
+    });
+    input.value = '';
+  }
+
+  function addChatMessage(author, text, timestamp) {
+    const messagesDiv = document.getElementById('chatMessages');
+    if (!messagesDiv) return;
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'chat-message';
+    msgDiv.innerHTML = `<strong>${escapeHtml(author)}</strong> <small>${new Date(timestamp).toLocaleTimeString()}</small><br>${escapeHtml(text)}`;
+    messagesDiv.appendChild(msgDiv);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+
+  // ====================== ПОХОЖИЕ ИГРЫ ======================
+  async function loadSimilarGames() {
+    try {
+      const res = await fetch(`/api/games?genre=${encodeURIComponent(game.genre)}&limit=6`);
+      const data = await res.json();
+      const similar = data.games.filter(g => g.id != gameId).slice(0, 4);
+      const grid = document.getElementById('similarGamesGrid');
+      if (!grid) return;
+      if (!similar.length) {
+        grid.innerHTML = '<p>Нет похожих игр</p>';
+        return;
+      }
+      grid.innerHTML = similar.map(g => `
+        <div class="similar-card">
+          <img src="${g.screenshots?.[0] || 'https://picsum.photos/id/0/200/120'}" alt="${escapeHtml(g.title)}">
+          <div class="info">
+            <a href="/game.html?id=${g.id}">${escapeHtml(g.title)}</a>
+            <div>⭐ ${g.rating || '—'}</div>
+          </div>
+        </div>
+      `).join('');
+    } catch (err) {}
+  }
+
+  // ====================== ЗАПУСК ======================
+  async function init() {
+    await loadCurrentUser();
+    await loadGameData();
+    setInterval(async () => {
+      if (gameId) {
+        try {
+          await fetch('/api/update-peers', { method: 'POST' });
+        } catch (err) {}
+      }
+    }, 30000);
+  }
+
+  init();
+})();
