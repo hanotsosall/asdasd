@@ -20,6 +20,16 @@
   const toast = document.getElementById('toast');
 
   // ====================== ВСПОМОГАТЕЛЬНЫЕ ======================
+
+const token = localStorage.getItem('token');
+if (!token) {
+  const pwd = prompt('Пароль администратора:');
+  if (pwd === 'admin123') {
+    // Имитация токена – в реальном проекте получи с бэка
+    localStorage.setItem('token', 'fake_admin_token');
+  } else location.href = '/';
+}
+  
   function showToast(msg, isError = false) {
     if (!toast) return;
     toast.textContent = msg;
