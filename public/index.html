@@ -2,74 +2,225 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SteamFall — скачать игры торрентом бесплатно</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <meta name="description" content="SteamFall — скачивайте игры через торрент бесплатно, без регистрации и без вирусов. Более 12 000 игр. Свежие версии, честные отзывы, быстрая загрузка.">
+  <meta name="keywords" content="скачать игры торрентом, игры на пк, торрент игры, steamfall, игры бесплатно">
+  <meta name="author" content="SteamFall Team">
+  <meta name="theme-color" content="#0a0c10">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://steamfall.ru/">
+  <!-- Open Graph для соцсетей -->
+  <meta property="og:title" content="SteamFall — скачать игры торрентом бесплатно">
+  <meta property="og:description" content="Более 12 000 игр. Свежие версии, честные отзывы, быстрая загрузка.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://steamfall.ru/">
+  <meta property="og:image" content="https://steamfall.ru/og-image.jpg">
+  <meta property="og:site_name" content="SteamFall">
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SteamFall — торрент-трекер игр">
+  <meta name="twitter:description" content="Скачивай игры без ограничений">
+  <!-- Preconnect для шрифтов и CDN -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="stylesheet" href="/css/style.css">
   <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+  <title>SteamFall — скачать игры бесплатно на ПК через торрент</title>
+  <style>
+    /* Дополнительные незначительные стили для гарантии отображения */
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1f2937; color: #3b82f6; padding: 10px 20px; border-radius: 40px; z-index: 9999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+    .toast.show { opacity: 1; }
+    .skeleton-card { background: #111827; border-radius: 20px; height: 340px; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+  </style>
 </head>
 <body>
-
-<header class="header">
-  <div class="container">
-    <div class="logo"><a href="/">🎮 Steam<span>Fall</span></a></div>
-    <div class="nav-links">
-      <a href="/">Главная</a>
-      <a href="/#">Новинки</a>
-      <a href="/#">Топ игр</a>
-    </div>
-    <div class="auth-buttons" id="authButtons">
-      <a href="/login.html" class="btn-outline">Войти</a>
-      <a href="/login.html?register=1" class="btn-primary">Регистрация</a>
-    </div>
-  </div>
-</header>
-
-<div class="container">
-  <div class="features">
-    <div class="feature"><i class="fas fa-ban"></i><h3>0% Рекламы</h3><p>Мы ценим твоё время</p></div>
-    <div class="feature"><i class="fas fa-sync-alt"></i><h3>Свежие версии</h3><p>Обновляем сразу после патчей</p></div>
-    <div class="feature"><i class="fas fa-star"></i><h3>Честные отзывы</h3><p>Рейтинги игроков из Steam</p></div>
-    <div class="feature"><i class="fas fa-download"></i><h3>Удобная загрузка</h3><p>Торрент или прямой загрузчик</p></div>
-  </div>
-
-  <div class="games-layout">
-    <aside class="sidebar">
-      <div class="widget">
-        <h3>🔍 Поиск</h3>
-        <input type="text" id="searchInput" placeholder="Название игры...">
-        <select id="genreFilter">
-          <option value="all">Все жанры</option>
-          <option value="RPG">RPG</option>
-          <option value="Action">Action</option>
-          <option value="Adventure">Adventure</option>
-          <option value="Indie">Indie</option>
-          <option value="Survival">Survival</option>
-          <option value="Strategy">Strategy</option>
-        </select>
-        <select id="sortSelect">
-          <option value="date">Новые</option>
-          <option value="downloads">Популярные</option>
-          <option value="rating">По рейтингу</option>
-          <option value="size">По размеру</option>
-        </select>
+  <!-- ======================== ХЕДЕР (как на GoFrag, без котов) ======================== -->
+  <header class="header">
+    <div class="container">
+      <div class="logo">
+        <a href="/">🎮 Steam<span>Fall</span></a>
       </div>
-      <div class="widget">
-        <h3>🔥 Сейчас популярно</h3>
-        <ul class="popular-list" id="popularGamesList">Загрузка...</ul>
+      <div class="nav-links">
+        <a href="/">Главная</a>
+        <a href="/new.html">Новинки</a>
+        <a href="/top.html">Топ игр</a>
+        <a href="/reviews.html">Отзывы</a>
+        <a href="/faq.html">Помощь</a>
       </div>
-    </aside>
+      <div class="auth-buttons" id="authButtons">
+        <a href="/login.html" class="btn-outline">Войти</a>
+        <a href="/login.html?register=1" class="btn-primary">Регистрация</a>
+      </div>
+    </div>
+  </header>
 
-    <div class="games-grid" id="gamesGrid"></div>
+  <!-- ======================== ОСНОВНОЙ КОНТЕЙНЕР ======================== -->
+  <main class="container">
+    <!-- Блок преимуществ (4 колонки) -->
+    <div class="features">
+      <div class="feature">
+        <i class="fas fa-ban"></i>
+        <h3>0% Рекламы</h3>
+        <p>Мы ценим твоё время, никаких назойливых баннеров</p>
+      </div>
+      <div class="feature">
+        <i class="fas fa-sync-alt"></i>
+        <h3>Свежие версии</h3>
+        <p>Обновляем сразу после выхода патчей</p>
+      </div>
+      <div class="feature">
+        <i class="fas fa-star"></i>
+        <h3>Честные отзывы</h3>
+        <p>Рейтинги игроков из Steam и нашего сайта</p>
+      </div>
+      <div class="feature">
+        <i class="fas fa-download"></i>
+        <h3>Удобная загрузка</h3>
+        <p>Торрент или прямой загрузчик — выбор за тобой</p>
+      </div>
+    </div>
+
+    <!-- Основной лэйаут: сайдбар + сетка игр -->
+    <div class="games-layout">
+      <!-- ЛЕВЫЙ САЙДБАР -->
+      <aside class="sidebar">
+        <!-- Поиск и фильтры -->
+        <div class="widget">
+          <h3><i class="fas fa-search"></i> Поиск игры</h3>
+          <input type="text" id="searchInput" placeholder="Название игры..." autocomplete="off">
+          <select id="genreFilter" style="margin-top: 12px;">
+            <option value="all">Все жанры</option>
+            <option value="RPG">RPG</option>
+            <option value="Action">Action</option>
+            <option value="Adventure">Adventure</option>
+            <option value="Indie">Indie</option>
+            <option value="Survival">Survival</option>
+            <option value="Strategy">Strategy</option>
+            <option value="Sport">Sport</option>
+          </select>
+          <select id="sortSelect" style="margin-top: 12px;">
+            <option value="date">📅 По дате (новые)</option>
+            <option value="downloads">🔥 По популярности</option>
+            <option value="rating">⭐ По рейтингу</option>
+            <option value="size">💾 По размеру</option>
+          </select>
+        </div>
+
+        <!-- Популярные игры (динамическая загрузка через JS) -->
+        <div class="widget">
+          <h3><i class="fas fa-fire"></i> Сейчас популярно</h3>
+          <ul class="popular-list" id="popularGamesList">
+            <li><div class="skeleton-text"></div></li>
+            <li><div class="skeleton-text"></div></li>
+            <li><div class="skeleton-text"></div></li>
+          </ul>
+        </div>
+
+        <!-- РЕКЛАМНЫЙ БЛОК (заметный, но интегрированный в сайдбар) -->
+        <div class="ad-widget">
+          <div class="ad-label">Реклама</div>
+          <div class="ad-content">
+            <i class="fas fa-gamepad"></i> Игровой бустинг<br>
+            Ускорь прокачку в любых играх!
+          </div>
+          <button class="ad-button" id="fakeAdBtn">Узнать больше →</button>
+        </div>
+
+        <!-- Виджет статистики (заглушка, но реальные данные подтянутся) -->
+        <div class="widget">
+          <h3><i class="fas fa-chart-line"></i> Статистика</h3>
+          <div id="statsWidgetContent">
+            <div class="skeleton-text"></div>
+            <div class="skeleton-text"></div>
+            <div class="skeleton-text"></div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- СЕТКА ИГР (карточки) -->
+      <div class="games-grid" id="gamesGrid">
+        <!-- Скелетоны загрузки (8 штук) -->
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+      </div>
+    </div>
+
+    <!-- РЕКЛАМА МЕЖДУ КОНТЕНТОМ (infeed) -->
+    <div class="infeed-ad" id="infeedAd">
+      <div class="ad-label">Рекомендуем</div>
+      <div class="ad-content">
+        <strong>ВПН для безопасного торрентинга</strong> — скрывай свой IP и скачивай без ограничений. Скидка 20% по коду STEAMFALL
+      </div>
+      <button class="ad-button" id="infeedAdBtn">Подробнее</button>
+    </div>
+
+    <!-- ПАГИНАЦИЯ -->
+    <div id="pagination" class="pagination"></div>
+  </main>
+
+  <!-- ======================== ФУТЕР ======================== -->
+  <footer>
+    <div class="container">
+      <p>© 2025 SteamFall — бесплатные игры через торрент. Более 12 000 раздач. <a href="/sitemap.xml">Карта сайта</a> | <a href="/rules.html">Правила</a> | <a href="/dmca.html">DMCA</a></p>
+      <p style="margin-top: 12px; font-size: 0.75rem;">Все материалы предоставлены для ознакомления. Правообладателям: <a href="/contacts.html">связь</a></p>
+    </div>
+  </footer>
+
+  <!-- ======================== МОДАЛКИ (ЛОГИН/РЕГИСТРАЦИЯ) ======================== -->
+  <div id="loginModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h2><i class="fas fa-sign-in-alt"></i> Вход</h2>
+      <input type="text" id="loginUsername" placeholder="Логин">
+      <input type="password" id="loginPassword" placeholder="Пароль">
+      <button id="doLoginBtn">Войти</button>
+      <p style="text-align:center; margin-top:16px;">Нет аккаунта? <a href="#" id="switchToRegisterLink">Зарегистрируйтесь</a></p>
+    </div>
   </div>
-  <div id="pagination" class="pagination"></div>
-</div>
+  <div id="registerModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h2><i class="fas fa-user-plus"></i> Регистрация</h2>
+      <input type="text" id="regUsername" placeholder="Логин (мин. 3)">
+      <input type="email" id="regEmail" placeholder="Email">
+      <input type="password" id="regPassword" placeholder="Пароль (мин. 6)">
+      <input type="password" id="regPasswordConfirm" placeholder="Повторите пароль">
+      <button id="doRegisterBtn">Создать аккаунт</button>
+      <p style="text-align:center; margin-top:16px;">Уже есть аккаунт? <a href="#" id="switchToLoginLink">Войти</a></p>
+    </div>
+  </div>
 
-<footer>
-  <p>© 2025 SteamFall — скачивайте игры бесплатно, без регистрации и вирусов. Более 12 000 раздач.</p>
-</footer>
+  <!-- ТОСТ УВЕДОМЛЕНИЙ -->
+  <div id="toast" class="toast"></div>
 
-<script src="/js/main.js"></script>
+  <!-- ======================== ГЛАВНЫЙ СКРИПТ ======================== -->
+  <script src="/js/main.js"></script>
+
+  <!-- Дополнительный inline-скрипт для обработки переходов (не основной, просто подстраховка) -->
+  <script>
+    (function() {
+      // Обработка параметров URL для открытия модалки регистрации
+      if (window.location.search.includes('register=1')) {
+        setTimeout(() => {
+          const regModal = document.getElementById('registerModal');
+          if (regModal) regModal.classList.add('active');
+        }, 500);
+      }
+      // Простая обработка рекламных кнопок (демо)
+      document.getElementById('fakeAdBtn')?.addEventListener('click', () => alert('Спасибо за интерес! (демо-реклама)'));
+      document.getElementById('infeedAdBtn')?.addEventListener('click', () => alert('Переход на страницу с VPN-предложением (демо)'));
+    })();
+  </script>
 </body>
 </html>
