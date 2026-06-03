@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <meta name="description" content="SteamFall – крупнейший торрент-трекер игр. Скачивай новинки и классику на максимальной скорости. Отзывы, рейтинги, обсуждения.">
+  <meta name="keywords" content="торрент игры, скачать игры, steamfall, игры через торрент">
+  <meta name="theme-color" content="#05070A">
+  <title>SteamFall – торрент игры нового поколения</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+  <!-- Socket.IO клиент -->
+  <script src="/socket.io/socket.io.js"></script>
+  <!-- Chart.js для графиков (опционально) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="container">
+      <div class="logo">🎮 Steam<span>Fall</span></div>
+      <div class="header-ad" id="headerAd"></div>
+      <div class="header-actions" id="headerActions">
+        <!-- Динамически заполняется через JS: если авторизован – ссылка на профиль, иначе кнопки входа/регистрации -->
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO С ПОИСКОМ -->
+  <section class="hero">
+    <div class="container">
+      <h1>Скачивай игры на максимальной скорости</h1>
+      <div class="search-filters">
+        <input type="text" id="searchInput" placeholder="Поиск игры... (например, Cyberpunk)">
+        <select id="genreFilter">
+          <option value="all">Все жанры</option>
+          <option value="RPG">RPG</option>
+          <option value="Action">Action</option>
+          <option value="Adventure">Adventure</option>
+          <option value="Survival">Survival</option>
+          <option value="Indie">Indie</option>
+          <option value="Sport">Sport</option>
+          <option value="Strategy">Strategy</option>
+        </select>
+        <select id="sortSelect">
+          <option value="date">📅 Новые</option>
+          <option value="downloads">🔥 Популярные</option>
+          <option value="rating">⭐ По рейтингу</option>
+          <option value="size">💾 По размеру</option>
+          <option value="views">👁️ По просмотрам</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <!-- ОСНОВНОЙ КОНТЕНТ -->
+  <main class="container">
+    <div class="games-layout">
+      <!-- ЛЕВАЯ/ПРАВАЯ САЙДБАР (слева для рекламы и виджетов) -->
+      <aside class="sidebar">
+        <div class="widget" id="statsWidget">
+          <h3>📊 Статистика SteamFall</h3>
+          <div id="statsContent">
+            <div class="skeleton-text"></div>
+            <div class="skeleton-text"></div>
+          </div>
+        </div>
+        <div class="widget" id="sidebarAd">
+          <h3>🎯 Реклама</h3>
+          <div class="ad-placeholder">Загрузка...</div>
+        </div>
+        <div class="widget" id="onlineWidget">
+          <h3>🎧 Сейчас играют</h3>
+          <div id="onlinePeers">— сидеров онлайн</div>
+          <div id="topGameToday" style="margin-top: 12px; font-size: 0.9rem;"></div>
+        </div>
+        <div class="widget">
+          <h3>🏆 Топ-5 игр недели</h3>
+          <ul id="topGamesList" style="list-style: none; padding-left: 0;"></ul>
+        </div>
+      </aside>
+
+      <!-- СЕТКА ИГР -->
+      <div class="games-grid" id="gamesGrid">
+        <!-- Скелетоны загрузки -->
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+      </div>
+    </div>
+
+    <!-- РЕКЛАМНЫЙ БЛОК МЕЖДУ КОНТЕНТОМ -->
+    <div id="infeedAd" class="infeed-ads"></div>
+
+    <!-- ПАГИНАЦИЯ -->
+    <div id="pagination" class="pagination"></div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <p>© 2025 SteamFall — только для ознакомления. Все торговые марки принадлежат их владельцам. <a href="/sitemap.xml" style="color:#00E5FF;">Sitemap</a></p>
+    </div>
+  </footer>
+
+  <!-- МОДАЛКИ АВТОРИЗАЦИИ И РЕГИСТРАЦИИ (невидимые, вызываются из main.js) -->
+  <div id="loginModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h2>Вход в SteamFall</h2>
+      <input type="text" id="loginUsername" placeholder="Логин">
+      <input type="password" id="loginPassword" placeholder="Пароль">
+      <button id="doLogin">Войти</button>
+      <p>Нет аккаунта? <a href="#" id="showRegister">Зарегистрироваться</a></p>
+    </div>
+  </div>
+  <div id="registerModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h2>Регистрация</h2>
+      <input type="text" id="regUsername" placeholder="Логин (мин. 3 символа)">
+      <input type="email" id="regEmail" placeholder="Email">
+      <input type="password" id="regPassword" placeholder="Пароль (мин. 6 символов)">
+      <button id="doRegister">Зарегистрироваться</button>
+    </div>
+  </div>
+
+  <!-- ТОСТ УВЕДОМЛЕНИЙ -->
+  <div id="toast"></div>
+
+  <!-- ГЛАВНЫЙ СКРИПТ -->
+  <script src="/js/main.js"></script>
+  <style>
+    /* Дополнительные стили для модалок и скелетонов */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: #0F1219;
+      border-radius: 32px;
+      padding: 32px;
+      max-width: 400px;
+      width: 90%;
+      border: 1px solid #00E5FF;
+      position: relative;
+    }
+    .modal-content h2 {
+      margin-bottom: 20px;
+      color: #00E5FF;
+    }
+    .modal-content input {
+      width: 100%;
+      padding: 12px;
+      margin: 12px 0;
+      background: #1F2A3A;
+      border: none;
+      border-radius: 40px;
+      color: white;
+    }
+    .modal-content button {
+      width: 100%;
+      padding: 12px;
+      background: #00E5FF;
+      border: none;
+      border-radius: 40px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+    .close-modal {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      font-size: 28px;
+      cursor: pointer;
+      color: #94A3B8;
+    }
+    .skeleton-text {
+      height: 20px;
+      background: #1E293B;
+      margin: 8px 0;
+      border-radius: 8px;
+      animation: pulse 1.5s infinite;
+    }
+    .infeed-ads {
+      margin: 40px 0;
+    }
+    .header-ad .ad-banner {
+      font-size: 12px;
+      padding: 8px 16px;
+      display: inline-block;
+    }
+    @media (max-width: 700px) {
+      .modal-content { padding: 20px; }
+    }
+  </style>
+</body>
+</html>

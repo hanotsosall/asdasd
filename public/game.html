@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>SteamFall — игра</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <header class="header"><div class="container"><div class="logo">🎮 Steam<span>Fall</span></div><div class="user-nav"><span id="userGreeting"></span><button id="logoutBtn" class="btn-outline">Выйти</button></div></div></header>
+  <main class="container" id="gameContainer"><div class="loading">Загрузка...</div></main>
+  <div id="toast" class="toast"></div>
+  <script src="/js/game.js"></script>
+</body>
+</html>
