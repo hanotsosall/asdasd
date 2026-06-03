@@ -1,389 +1,485 @@
-// public/js/admin.js - SteamFall 2.0 Админ-панель (700+ строк)
-// Управление: игры, пользователи, реклама, модерация отзывов, статистика, логи
+// public/js/admin.js - SteamFall ULTIMATE Админ-панель
+(function() {
+  let token = localStorage.getItem('token');
+  let currentUser = null;
+  let currentGamesPage = 1;
+  let totalGamesPages = 1;
+  let gamesData = [];
+  let statsChart = null;
 
-// Глобальные переменные
-let token = null;
-let currentUserRole = null;
-let currentPage = 1;
-let gamesTotalPages = 1;
-let usersTotalPages = 1;
-let currentGames = [];
-let currentUsers = [];
+  // DOM элементы
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panes = document.querySelectorAll('.tab-pane');
+  const gamesTableBody = document.getElementById('gamesTableBody');
+  const usersTableBody = document.getElementById('usersTableBody');
+  const adminGameSearch = document.getElementById('adminGameSearch');
+  const gamesPagination = document.getElementById('gamesPagination');
+  const statsGrid = document.getElementById('statsGrid');
+  const adminTopGamesList = document.getElementById('adminTopGamesList');
+  const logsContent = document.getElementById('logsContent');
+  const toast = document.getElementById('toast');
 
-// Проверка авторизации при загрузке
-document.addEventListener('DOMContentLoaded', async () => {
-  token = localStorage.getItem('token');
-  if (!token) {
-    const pwd = prompt('Введите пароль администратора:');
-    if (pwd === 'admin123') {
-      // Имитация токена для админа (в реальности должен быть получен с бэка)
-      localStorage.setItem('token', 'fake_admin_token');
-      token = 'fake_admin_token';
-      currentUserRole = 'admin';
+  // ====================== ВСПОМОГАТЕЛЬНЫЕ ======================
+  function showToast(msg, isError = false) {
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.style.color = isError ? '#FF6B6B' : '#00E5FF';
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
+  }
+
+  function formatNumber(num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  }
+
+  // ====================== АВТОРИЗАЦИЯ (проверка админа) ======================
+  async function checkAdmin() {
+    if (!token) {
+      const pwd = prompt('Введите пароль администратора:');
+      if (pwd === 'admin123') {
+        // эмуляция токена для админа (в реальности получили бы с бэка)
+        localStorage.setItem('token', 'fake_admin_token');
+        token = 'fake_admin_token';
+        currentUser = { username: 'admin', role: 'admin' };
+      } else {
+        alert('Доступ запрещён');
+        window.location.href = '/';
+        return false;
+      }
     } else {
-      alert('Доступ запрещён');
-      window.location.href = '/';
+      try {
+        const res = await fetch('/api/me', { headers: { 'Authorization': `Bearer ${token}` } });
+        if (res.ok) {
+          currentUser = await res.json();
+          if (currentUser.role !== 'admin') {
+            alert('Недостаточно прав');
+            window.location.href = '/';
+            return false;
+          }
+        } else {
+          throw new Error();
+        }
+      } catch (err) {
+        localStorage.removeItem('token');
+        token = null;
+        window.location.href = '/';
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // ====================== ТАБЫ ======================
+  function initTabs() {
+    tabs.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tabId = btn.dataset.tab;
+        tabs.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        panes.forEach(pane => pane.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+      });
+    });
+  }
+
+  // ====================== СТАТИСТИКА И ГРАФИКИ ======================
+  async function loadStats() {
+    try {
+      const res = await fetch('/api/stats');
+      const stats = await res.json();
+      document.getElementById('statGames').innerText = stats.totalGames;
+      document.getElementById('statUsers').innerText = stats.totalUsers;
+      document.getElementById('statDownloads').innerText = formatNumber(stats.totalDownloads);
+      document.getElementById('statSeeders').innerText = formatNumber(stats.totalSeeders);
+      if (adminTopGamesList) {
+        adminTopGamesList.innerHTML = stats.topGames.map(g => `
+          <li><strong>${escapeHtml(g.title)}</strong> — ${formatNumber(g.downloads)} скачиваний, рейтинг ${g.rating}</li>
+        `).join('');
+      }
+      // график
+      const ctx = document.getElementById('adminChart')?.getContext('2d');
+      if (ctx && stats.topGames.length) {
+        if (statsChart) statsChart.destroy();
+        statsChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: stats.topGames.map(g => g.title.length > 15 ? g.title.slice(0,12)+'…' : g.title),
+            datasets: [{
+              label: 'Скачивания',
+              data: stats.topGames.map(g => g.downloads),
+              backgroundColor: '#00E5FF',
+              borderRadius: 10
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: true }
+        });
+      }
+    } catch (err) {
+      console.error('Ошибка загрузки статистики', err);
+    }
+  }
+
+  // ====================== УПРАВЛЕНИЕ ИГРАМИ ======================
+  async function loadGames(page = 1) {
+    const search = adminGameSearch?.value || '';
+    try {
+      const res = await fetch(`/api/games?page=${page}&limit=10&search=${encodeURIComponent(search)}`);
+      const data = await res.json();
+      gamesData = data.games;
+      totalGamesPages = data.totalPages;
+      currentGamesPage = page;
+      renderGamesTable();
+      renderGamesPagination();
+    } catch (err) {
+      showToast('Ошибка загрузки игр', true);
+    }
+  }
+
+  function renderGamesTable() {
+    if (!gamesTableBody) return;
+    gamesTableBody.innerHTML = gamesData.map(game => `
+      <tr>
+        <td>${game.id}</td>
+        <td>${escapeHtml(game.title)}</td>
+        <td>${escapeHtml(game.genre)}</td>
+        <td>${game.size}</td>
+        <td>⭐ ${game.rating || '—'}</td>
+        <td>
+          <button class="edit-game" data-id="${game.id}"><i class="fas fa-edit"></i> Edit</button>
+          <button class="delete-game" data-id="${game.id}"><i class="fas fa-trash"></i> Del</button>
+        </td>
+      </tr>
+    `).join('');
+    document.querySelectorAll('.edit-game').forEach(btn => {
+      btn.addEventListener('click', () => editGame(btn.dataset.id));
+    });
+    document.querySelectorAll('.delete-game').forEach(btn => {
+      btn.addEventListener('click', () => deleteGame(btn.dataset.id));
+    });
+  }
+
+  function renderGamesPagination() {
+    if (!gamesPagination) return;
+    if (totalGamesPages <= 1) {
+      gamesPagination.innerHTML = '';
       return;
     }
-  } else {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      currentUserRole = payload.role;
-    } catch(e) { currentUserRole = 'user'; }
-  }
-  if (currentUserRole !== 'admin') {
-    alert('Недостаточно прав');
-    window.location.href = '/';
-    return;
-  }
-  
-  // Загружаем все разделы
-  await loadStats();
-  await loadGames(1);
-  await loadUsers(1);
-  await loadReviewsModeration();
-  await loadAds();
-  await loadLogs();
-  
-  // Навешиваем обработчики табов
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
-      document.getElementById(btn.dataset.tab).classList.add('active');
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    });
-  });
-});
-
-// ================== СТАТИСТИКА И ГРАФИКИ ==================
-async function loadStats() {
-  try {
-    const res = await fetch('/api/stats');
-    const stats = await res.json();
-    document.getElementById('statGames').innerText = stats.totalGames;
-    document.getElementById('statUsers').innerText = stats.totalUsers;
-    document.getElementById('statDownloads').innerText = stats.totalDownloads.toLocaleString();
-    document.getElementById('statSeeders').innerText = stats.totalSeeders;
-    document.getElementById('statLeechers').innerText = stats.totalLeechers;
-    
-    // Топ-5 игр по скачиваниям
-    const topList = document.getElementById('topGamesList');
-    topList.innerHTML = stats.topGames.map(g => `<li>${escapeHtml(g.title)} — ${g.downloads.toLocaleString()} скач., рейтинг ${g.rating}</li>`).join('');
-    
-    // График популярности (можно расширить)
-    drawDummyChart(stats.topGames);
-  } catch(e) { console.error(e); }
-}
-
-function drawDummyChart(topGames) {
-  const ctx = document.getElementById('downloadsChart')?.getContext('2d');
-  if (!ctx) return;
-  // Если есть Chart.js - рисуем, иначе просто заглушка
-  if (typeof Chart !== 'undefined') {
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: topGames.map(g => g.title.substring(0, 15)),
-        datasets: [{
-          label: 'Скачивания',
-          data: topGames.map(g => g.downloads),
-          backgroundColor: '#00E5FF'
-        }]
-      },
-      options: { responsive: true, plugins: { legend: { labels: { color: '#fff' } } } }
-    });
-  } else {
-    ctx.fillStyle = '#00E5FF';
-    ctx.fillRect(0, 0, 400, 200);
-  }
-}
-
-// ================== УПРАВЛЕНИЕ ИГРАМИ ==================
-async function loadGames(page = 1) {
-  const search = document.getElementById('gameSearch')?.value || '';
-  const res = await fetch(`/api/games?page=${page}&limit=10&search=${encodeURIComponent(search)}`);
-  const data = await res.json();
-  currentGames = data.games;
-  gamesTotalPages = data.totalPages;
-  currentPage = page;
-  renderGamesTable();
-}
-
-function renderGamesTable() {
-  const tbody = document.getElementById('gamesTableBody');
-  if (!tbody) return;
-  tbody.innerHTML = currentGames.map(game => `
-    <tr>
-      <td>${game.id}</td>
-      <td>${escapeHtml(game.title)}</td>
-      <td>${game.genre}</td>
-      <td>${game.size}</td>
-      <td>⭐ ${game.rating || '—'}</td>
-      <td>${game.downloads || 0}</td>
-      <td>
-        <button class="edit-game" data-id="${game.id}">✏️</button>
-        <button class="delete-game" data-id="${game.id}">🗑️</button>
-      </td>
-    </tr>
-  `).join('');
-  
-  document.querySelectorAll('.edit-game').forEach(btn => {
-    btn.addEventListener('click', () => editGame(btn.dataset.id));
-  });
-  document.querySelectorAll('.delete-game').forEach(btn => {
-    btn.addEventListener('click', () => deleteGame(btn.dataset.id));
-  });
-  
-  // Пагинация
-  const pagination = document.getElementById('gamesPagination');
-  if (gamesTotalPages > 1) {
     let html = '';
-    for (let i = 1; i <= gamesTotalPages; i++) {
-      html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    for (let i = 1; i <= totalGamesPages; i++) {
+      html += `<button class="page-btn ${i === currentGamesPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
     }
-    pagination.innerHTML = html;
+    gamesPagination.innerHTML = html;
     document.querySelectorAll('#gamesPagination .page-btn').forEach(btn => {
       btn.addEventListener('click', () => loadGames(parseInt(btn.dataset.page)));
     });
-  } else {
-    pagination.innerHTML = '';
   }
-}
 
-// Добавление игры (форма)
-document.getElementById('addGameBtn')?.addEventListener('click', async () => {
-  const game = {
-    title: document.getElementById('gameTitle').value,
-    genre: document.getElementById('gameGenre').value,
-    description: document.getElementById('gameDesc').value,
-    size: document.getElementById('gameSize').value,
-    magnet: document.getElementById('gameMagnet').value,
-    developer: document.getElementById('gameDeveloper').value,
-    releaseDate: document.getElementById('gameReleaseDate').value,
-    screenshots: document.getElementById('gameScreenshots').value.split(',').map(s => s.trim()),
-    tags: document.getElementById('gameTags').value.split(',').map(t => t.trim())
-  };
-  if (!game.title || !game.genre) {
-    alert('Название и жанр обязательны');
-    return;
-  }
-  const res = await fetch('/api/games', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-    body: JSON.stringify(game)
-  });
-  if (res.ok) {
-    alert('Игра добавлена');
-    loadGames(currentPage);
-    document.getElementById('addGameForm').reset();
-  } else {
-    alert('Ошибка');
-  }
-});
-
-// Импорт игры по URL
-document.getElementById('importBtn')?.addEventListener('click', async () => {
-  const url = document.getElementById('importUrl').value;
-  if (!url) return alert('Введите URL');
-  const res = await fetch('/api/import', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-    body: JSON.stringify({ url })
-  });
-  if (res.ok) {
-    const imported = await res.json();
-    // Заполняем форму добавления
-    document.getElementById('gameTitle').value = imported.title;
-    document.getElementById('gameGenre').value = imported.genre;
-    document.getElementById('gameDesc').value = imported.description;
-    document.getElementById('gameSize').value = imported.size;
-    document.getElementById('gameMagnet').value = imported.magnet;
-    document.getElementById('gameDeveloper').value = imported.developer;
-    document.getElementById('gameReleaseDate').value = imported.releaseDate;
-    document.getElementById('gameScreenshots').value = imported.screenshots.join(',');
-    document.getElementById('gameTags').value = imported.tags.join(',');
-    alert('Данные импортированы, проверьте и нажмите "Добавить игру"');
-  } else {
-    alert('Ошибка импорта');
-  }
-});
-
-async function editGame(id) {
-  const game = currentGames.find(g => g.id == id);
-  if (!game) return;
-  // Простое редактирование через prompt
-  const newTitle = prompt('Новое название', game.title);
-  if (newTitle) {
-    game.title = newTitle;
-    const res = await fetch(`/api/games/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify(game)
-    });
-    if (res.ok) loadGames(currentPage);
-  }
-}
-
-async function deleteGame(id) {
-  if (confirm('Удалить игру навсегда?')) {
-    const res = await fetch(`/api/games/${id}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (res.ok) loadGames(currentPage);
-  }
-}
-
-// Поиск игр
-document.getElementById('gameSearch')?.addEventListener('input', () => loadGames(1));
-
-// ================== УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ ==================
-async function loadUsers(page = 1) {
-  const res = await fetch('/api/admin/users', {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  const users = await res.json();
-  currentUsers = users;
-  renderUsersTable(users);
-}
-
-function renderUsersTable(users) {
-  const tbody = document.getElementById('usersTableBody');
-  tbody.innerHTML = users.map(user => `
-    <tr>
-      <td>${user.id}</td>
-      <td>${escapeHtml(user.username)}</td>
-      <td>${escapeHtml(user.email)}</td>
-      <td>${user.role}</td>
-      <td>${user.banned ? '<span class="badge banned">Забанен</span>' : '<span class="badge active">Активен</span>'}</td>
-      <td>${new Date(user.lastSeen).toLocaleString()}</td>
-      <td>
-        ${!user.banned ? `<button class="ban-user" data-id="${user.id}">🔨 Бан</button>` : `<button class="unban-user" data-id="${user.id}">🔓 Разбан</button>`}
-      </td>
-    </tr>
-  `).join('');
-  
-  document.querySelectorAll('.ban-user').forEach(btn => {
-    btn.addEventListener('click', () => banUser(btn.dataset.id));
-  });
-  document.querySelectorAll('.unban-user').forEach(btn => {
-    btn.addEventListener('click', () => unbanUser(btn.dataset.id));
-  });
-}
-
-async function banUser(userId) {
-  const reason = prompt('Причина бана:');
-  if (!reason) return;
-  const res = await fetch(`/api/admin/users/${userId}/ban`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-    body: JSON.stringify({ reason })
-  });
-  if (res.ok) loadUsers();
-}
-
-async function unbanUser(userId) {
-  const res = await fetch(`/api/admin/users/${userId}/unban`, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  if (res.ok) loadUsers();
-}
-
-// ================== МОДЕРАЦИЯ ОТЗЫВОВ ==================
-async function loadReviewsModeration() {
-  // Получаем все отзывы (можно через отдельный эндпоинт, но для простоты через игры)
-  const res = await fetch('/api/games?limit=100');
-  const data = await res.json();
-  let allReviews = [];
-  for (let game of data.games) {
-    const revRes = await fetch(`/api/reviews/${game.id}`);
-    const reviews = await revRes.json();
-    allReviews.push(...reviews.map(r => ({ ...r, gameTitle: game.title })));
-  }
-  const container = document.getElementById('moderationReviews');
-  if (!container) return;
-  container.innerHTML = allReviews.map(rev => `
-    <div class="review-item">
-      <strong>${escapeHtml(rev.author)}</strong> на <em>${escapeHtml(rev.gameTitle)}</em>:<br>
-      ${escapeHtml(rev.text)}<br>
-      <small>Оценка: ${rev.rating} ★ | 👍 ${rev.likes}</small>
-      <button class="delete-review" data-id="${rev.id}">🗑️ Удалить отзыв</button>
-    </div>
-  `).join('');
-  document.querySelectorAll('.delete-review').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      if (confirm('Удалить отзыв?')) {
-        // Здесь нужен эндпоинт DELETE /api/reviews/:id — расширь сервер
-        alert('Функция удаления отзыва требует доработки на бэкенде');
+  async function editGame(id) {
+    const game = gamesData.find(g => g.id == id);
+    if (!game) return;
+    const newTitle = prompt('Новое название', game.title);
+    if (!newTitle) return;
+    const newGenre = prompt('Новый жанр', game.genre);
+    try {
+      const updated = { ...game, title: newTitle, genre: newGenre };
+      const res = await fetch(`/api/games/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(updated)
+      });
+      if (res.ok) {
+        showToast('Игра обновлена');
+        loadGames(currentGamesPage);
+      } else {
+        showToast('Ошибка обновления', true);
       }
+    } catch (err) {}
+  }
+
+  async function deleteGame(id) {
+    if (!confirm('Удалить игру навсегда?')) return;
+    try {
+      const res = await fetch(`/api/games/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        showToast('Игра удалена');
+        loadGames(currentGamesPage);
+      } else {
+        showToast('Ошибка удаления', true);
+      }
+    } catch (err) {}
+  }
+
+  // Добавление игры
+  document.getElementById('addGameBtn')?.addEventListener('click', async () => {
+    const game = {
+      title: document.getElementById('gameTitle').value,
+      genre: document.getElementById('gameGenre').value,
+      description: document.getElementById('gameDesc').value,
+      size: document.getElementById('gameSize').value,
+      magnet: document.getElementById('gameMagnet').value,
+      developer: document.getElementById('gameDeveloper').value,
+      releaseDate: document.getElementById('gameReleaseDate').value,
+      screenshots: document.getElementById('gameScreenshots').value.split(',').map(s => s.trim()),
+      tags: document.getElementById('gameTags').value.split(',').map(t => t.trim())
+    };
+    if (!game.title || !game.genre) {
+      showToast('Название и жанр обязательны', true);
+      return;
+    }
+    try {
+      const res = await fetch('/api/games', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(game)
+      });
+      if (res.ok) {
+        showToast('Игра добавлена');
+        loadGames(1);
+        document.getElementById('addGameForm')?.reset();
+      } else {
+        showToast('Ошибка добавления', true);
+      }
+    } catch (err) {}
+  });
+
+  // Импорт
+  document.getElementById('importBtn')?.addEventListener('click', async () => {
+    const url = document.getElementById('importUrl').value;
+    if (!url) {
+      showToast('Введите URL', true);
+      return;
+    }
+    try {
+      const res = await fetch('/api/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ url })
+      });
+      if (res.ok) {
+        const imported = await res.json();
+        document.getElementById('gameTitle').value = imported.title;
+        document.getElementById('gameGenre').value = imported.genre;
+        document.getElementById('gameDesc').value = imported.description;
+        document.getElementById('gameSize').value = imported.size;
+        document.getElementById('gameMagnet').value = imported.magnet;
+        document.getElementById('gameDeveloper').value = imported.developer;
+        document.getElementById('gameReleaseDate').value = imported.releaseDate;
+        document.getElementById('gameScreenshots').value = imported.screenshots.join(',');
+        document.getElementById('gameTags').value = imported.tags.join(',');
+        showToast('Данные импортированы, проверьте и нажмите "Добавить"');
+      } else {
+        showToast('Ошибка импорта', true);
+      }
+    } catch (err) {}
+  });
+
+  // Загрузка торрент-файла
+  document.getElementById('uploadTorrent')?.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('torrent', file);
+    try {
+      const res = await fetch('/api/upload-torrent', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+      if (res.ok) {
+        const data = await res.json();
+        showToast(`Файл загружен: ${data.filename}`);
+      } else {
+        showToast('Ошибка загрузки', true);
+      }
+    } catch (err) {}
+  });
+
+  // ====================== УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ ======================
+  async function loadUsers() {
+    try {
+      const res = await fetch('/api/admin/users', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const users = await res.json();
+      renderUsersTable(users);
+    } catch (err) {
+      showToast('Ошибка загрузки пользователей', true);
+    }
+  }
+
+  function renderUsersTable(users) {
+    if (!usersTableBody) return;
+    usersTableBody.innerHTML = users.map(user => `
+      <tr>
+        <td>${user.id}</td>
+        <td>${escapeHtml(user.username)}</td>
+        <td>${escapeHtml(user.email)}</td>
+        <td>${user.role}</td>
+        <td><span class="badge ${user.banned ? 'badge-banned' : 'badge-active'}">${user.banned ? 'Забанен' : 'Активен'}</span></td>
+        <td>
+          ${!user.banned ? `<button class="ban-user" data-id="${user.id}">🔨 Бан</button>` : `<button class="unban-user" data-id="${user.id}">🔓 Разбан</button>`}
+        </td>
+      </tr>
+    `).join('');
+    document.querySelectorAll('.ban-user').forEach(btn => {
+      btn.addEventListener('click', () => banUser(btn.dataset.id));
     });
-  });
-}
-
-// ================== УПРАВЛЕНИЕ РЕКЛАМОЙ ==================
-async function loadAds() {
-  const res = await fetch('/api/ads');
-  const ads = await res.json();
-  const editor = document.getElementById('adsEditor');
-  if (!editor) return;
-  editor.innerHTML = ads.map(ad => `
-    <div class="ad-block">
-      <h4>${ad.position}</h4>
-      <textarea class="ad-code" data-id="${ad.id}" rows="3">${escapeHtml(ad.code)}</textarea>
-      <label><input type="checkbox" class="ad-active" data-id="${ad.id}" ${ad.active ? 'checked' : ''}> Активен</label>
-    </div>
-  `).join('');
-}
-
-document.getElementById('saveAdsBtn')?.addEventListener('click', async () => {
-  const ads = [];
-  document.querySelectorAll('.ad-code').forEach(ta => {
-    const id = parseInt(ta.dataset.id);
-    const code = ta.value;
-    const active = document.querySelector(`.ad-active[data-id="${id}"]`).checked;
-    const position = ta.closest('.ad-block').querySelector('h4').innerText;
-    ads.push({ id, position, code, active });
-  });
-  const res = await fetch('/api/ads', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-    body: JSON.stringify(ads)
-  });
-  if (res.ok) alert('Реклама сохранена');
-});
-
-// ================== ЛОГИ СЕРВЕРА ==================
-async function loadLogs() {
-  // Для логов нужен эндпоинт /api/logs, но для демо пока заглушка
-  const logsDiv = document.getElementById('logsContent');
-  if (logsDiv) {
-    logsDiv.innerHTML = '<p>Логи будут доступны после настройки бэкенда</p><pre>Пример: user admin добавил игру Cyberpunk</pre>';
+    document.querySelectorAll('.unban-user').forEach(btn => {
+      btn.addEventListener('click', () => unbanUser(btn.dataset.id));
+    });
   }
-}
 
-// ================== ЗАГРУЗКА ТОРРЕНТ-ФАЙЛА ==================
-document.getElementById('uploadTorrentBtn')?.addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const formData = new FormData();
-  formData.append('torrent', file);
-  const res = await fetch('/api/upload-torrent', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${token}` },
-    body: formData
-  });
-  if (res.ok) {
-    const data = await res.json();
-    alert(`Файл загружен: ${data.filename}`);
-  } else {
-    alert('Ошибка загрузки');
+  async function banUser(userId) {
+    const reason = prompt('Причина бана:');
+    if (!reason) return;
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/ban`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ reason })
+      });
+      if (res.ok) {
+        showToast('Пользователь забанен');
+        loadUsers();
+      } else {
+        showToast('Ошибка', true);
+      }
+    } catch (err) {}
   }
-});
 
-// ================== ВСПОМОГАТЕЛЬНЫЕ ==================
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
-}
+  async function unbanUser(userId) {
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/unban`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        showToast('Пользователь разбанен');
+        loadUsers();
+      } else {
+        showToast('Ошибка', true);
+      }
+    } catch (err) {}
+  }
+
+  // ====================== МОДЕРАЦИЯ ОТЗЫВОВ ======================
+  async function loadReviewsModeration() {
+    try {
+      const res = await fetch('/api/games?limit=100');
+      const data = await res.json();
+      let allReviews = [];
+      for (let game of data.games) {
+        const revRes = await fetch(`/api/reviews/${game.id}`);
+        const reviews = await revRes.json();
+        allReviews.push(...reviews.map(r => ({ ...r, gameTitle: game.title })));
+      }
+      const container = document.getElementById('reviewsModerationList');
+      if (!container) return;
+      container.innerHTML = allReviews.map(rev => `
+        <div class="review-item" style="background:#0F172A; padding:16px; border-radius:20px; margin-bottom:16px;">
+          <strong>${escapeHtml(rev.author)}</strong> на <em>${escapeHtml(rev.gameTitle)}</em><br>
+          Оценка: ${'★'.repeat(rev.rating)} (${rev.rating})<br>
+          "${escapeHtml(rev.text)}"<br>
+          <small>👍 ${rev.likes || 0} | ${new Date(rev.createdAt).toLocaleString()}</small><br>
+          <button class="delete-review" data-id="${rev.id}">🗑️ Удалить отзыв</button>
+        </div>
+      `).join('');
+      document.querySelectorAll('.delete-review').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (confirm('Удалить отзыв?')) {
+            // нужен эндпоинт DELETE /api/reviews/:id
+            showToast('Функция удаления отзыва требует доработки бэкенда');
+          }
+        });
+      });
+    } catch (err) {}
+  }
+
+  // ====================== РЕКЛАМА ======================
+  async function loadAds() {
+    try {
+      const res = await fetch('/api/ads');
+      const ads = await res.json();
+      const editor = document.getElementById('adsEditor');
+      if (!editor) return;
+      editor.innerHTML = ads.map(ad => `
+        <div class="ad-block">
+          <h4>${ad.position}</h4>
+          <textarea class="ad-code" data-id="${ad.id}" rows="3" style="width:100%; background:#1F2A3A; border:none; padding:12px; border-radius:16px; color:white;">${escapeHtml(ad.code)}</textarea>
+          <label><input type="checkbox" class="ad-active" data-id="${ad.id}" ${ad.active ? 'checked' : ''}> Активен</label>
+        </div>
+      `).join('');
+    } catch (err) {}
+  }
+
+  document.getElementById('saveAdsBtn')?.addEventListener('click', async () => {
+    const ads = [];
+    document.querySelectorAll('.ad-block').forEach(block => {
+      const textarea = block.querySelector('.ad-code');
+      const checkbox = block.querySelector('.ad-active');
+      const id = parseInt(textarea.dataset.id);
+      const code = textarea.value;
+      const active = checkbox.checked;
+      const position = block.querySelector('h4').innerText;
+      ads.push({ id, position, code, active });
+    });
+    try {
+      const res = await fetch('/api/ads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(ads)
+      });
+      if (res.ok) {
+        showToast('Реклама сохранена');
+      } else {
+        showToast('Ошибка сохранения', true);
+      }
+    } catch (err) {}
+  });
+
+  // ====================== ЛОГИ ======================
+  async function loadLogs() {
+    try {
+      const res = await fetch('/api/logs', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (logsContent) logsContent.innerText = data.logs.join('\n');
+      } else {
+        logsContent.innerText = 'Нет доступа к логам или они не настроены';
+      }
+    } catch (err) {
+      logsContent.innerText = 'Ошибка загрузки логов';
+    }
+  }
+
+  document.getElementById('refreshLogsBtn')?.addEventListener('click', loadLogs);
+
+  // ====================== ПОИСК ИГР В АДМИНКЕ ======================
+  adminGameSearch?.addEventListener('input', () => loadGames(1));
+
+  // ====================== ЗАПУСК ======================
+  async function init() {
+    const isAdmin = await checkAdmin();
+    if (!isAdmin) return;
+    initTabs();
+    await loadStats();
+    await loadGames(1);
+    await loadUsers();
+    await loadReviewsModeration();
+    await loadAds();
+    await loadLogs();
+    setInterval(loadStats, 60000);
+  }
+
+  init();
+})();
