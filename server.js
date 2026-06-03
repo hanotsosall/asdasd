@@ -478,6 +478,32 @@ app.get('/api/logs', auth, adminOnly, (req, res) => {
   }
 });
 
+// ====================== АДМИНКА: РЕКЛАМА ======================
+app.get('/api/ads', (req, res) => {
+  const ads = readJSON(ADS_FILE);
+  res.json(ads.filter(a => a.active));
+});
+app.post('/api/ads', auth, adminOnly, (req, res) => {
+  writeJSON(ADS_FILE, req.body);
+  res.json({ success: true });
+});
+
+// ====================== ЛОГИ ======================
+app.get('/api/logs', auth, adminOnly, (req, res) => {
+  const logFile = path.join(LOGS_DIR, 'server.log');
+  if (fs.existsSync(logFile)) {
+    const logs = fs.readFileSync(logFile, 'utf8');
+    res.json({ logs: logs.split('\n').slice(-200) });
+  } else {
+    res.json({ logs: [] });
+  }
+});
+
+// ====================== ИМПОРТ ======================
+app.post('/api/import', auth, adminOnly, async (req, res) => {
+  // ... (код из предыдущего server.js)
+});
+
 // ====================== ЗАПУСК ======================
 server.listen(PORT, () => {
   logToFile(`🔥 SteamFall ULTIMATE запущен на порту ${PORT}`);
