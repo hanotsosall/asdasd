@@ -16,8 +16,8 @@
     <div class="logo"><a href="/">🎮 Steam<span>Fall</span></a></div>
     <div class="nav-links">
       <a href="/">Главная</a>
-      <a href="/games.html">Новинки</a>
-      <a href="/top.html">Топ игр</a>
+      <a href="/#">Новинки</a>
+      <a href="/#">Топ игр</a>
     </div>
     <div class="auth-buttons" id="authButtons">
       <a href="/login.html" class="btn-outline">Войти</a>
@@ -38,16 +38,21 @@
     <aside class="sidebar">
       <div class="widget">
         <h3>🔍 Поиск</h3>
-        <input type="text" id="searchInput" placeholder="Название игры..." style="width:100%; padding:10px; background:#0f1117; border:1px solid #1e293b; border-radius:40px; color:white;">
-        <select id="genreFilter" style="width:100%; margin-top:12px; padding:10px; background:#0f1117; border:1px solid #1e293b; border-radius:40px; color:white;">
+        <input type="text" id="searchInput" placeholder="Название игры...">
+        <select id="genreFilter">
           <option value="all">Все жанры</option>
-          <option value="RPG">RPG</option><option value="Action">Action</option>
-          <option value="Adventure">Adventure</option><option value="Indie">Indie</option>
+          <option value="RPG">RPG</option>
+          <option value="Action">Action</option>
+          <option value="Adventure">Adventure</option>
+          <option value="Indie">Indie</option>
+          <option value="Survival">Survival</option>
+          <option value="Strategy">Strategy</option>
         </select>
-        <select id="sortSelect" style="width:100%; margin-top:12px; padding:10px; background:#0f1117; border:1px solid #1e293b; border-radius:40px;">
+        <select id="sortSelect">
           <option value="date">Новые</option>
           <option value="downloads">Популярные</option>
           <option value="rating">По рейтингу</option>
+          <option value="size">По размеру</option>
         </select>
       </div>
       <div class="widget">
