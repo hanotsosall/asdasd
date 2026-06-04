@@ -3,13 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <meta name="description" content="Подробная информация об игре: описание, скриншоты, отзывы игроков, magnet-ссылка. SteamFall — торрент-трекер игр.">
-  <meta name="keywords" content="игра, торрент, скачать, описание, отзывы, скриншоты">
-  <meta name="author" content="SteamFall">
-  <meta property="og:title" content="SteamFall — страница игры">
-  <meta property="og:description" content="Скачивайте игры через торрент, читайте отзывы, участвуйте в обсуждениях.">
-  <meta property="og:type" content="website">
-  <meta name="twitter:card" content="summary_large_image">
+  <meta name="description" content="Подробная информация об игре: описание, скриншоты, системные требования, отзывы, magnet-ссылка, альтернативные раздачи.">
   <title>SteamFall — детали игры</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,14 +12,10 @@
   <link rel="stylesheet" href="/css/style.css">
   <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
   <style>
-    /* Дополнительные стили для страницы игры, специфичные элементы */
+    /* Дополнительные стили для страницы игры */
     .game-detail {
       margin: 40px 0;
       animation: fadeInUp 0.4s ease;
-    }
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(15px); }
-      to { opacity: 1; transform: translateY(0); }
     }
     .game-header {
       display: flex;
@@ -54,7 +44,7 @@
       flex: 2;
     }
     .game-title {
-      font-size: 2.2rem;
+      font-size: 2rem;
       font-weight: 700;
       margin-bottom: 12px;
       background: linear-gradient(135deg, #fff, #a78bfa);
@@ -82,10 +72,9 @@
     }
     .game-stats {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
       gap: 16px;
       background: rgba(0,0,0,0.2);
-      backdrop-filter: blur(4px);
       border-radius: var(--radius-xl);
       padding: 20px;
       margin: 20px 0;
@@ -116,21 +105,44 @@
       color: white;
       border: none;
     }
-    .game-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 16px;
+    .system-requirements {
+      background: rgba(0,0,0,0.3);
+      border-radius: var(--radius-xl);
+      padding: 20px;
+      margin: 20px 0;
     }
-    .tag {
-      background: rgba(109,40,217,0.15);
-      padding: 4px 12px;
-      border-radius: 30px;
-      font-size: 0.7rem;
+    .req-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .req-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .req-label {
+      font-weight: 500;
       color: #a78bfa;
     }
-    .screenshots-section {
-      margin: 40px 0;
+    .alternative-block {
+      margin: 20px 0;
+      background: rgba(0,0,0,0.2);
+      border-radius: var(--radius-xl);
+      padding: 20px;
+    }
+    .alternative-block ul {
+      list-style: none;
+      margin-top: 12px;
+    }
+    .alternative-block li {
+      margin: 8px 0;
+    }
+    .alternative-block a {
+      color: #a78bfa;
+      word-break: break-all;
     }
     .screenshots-grid {
       display: grid;
@@ -293,14 +305,14 @@
       height: 400px;
       margin: 40px 0;
     }
-    @keyframes shimmer {
-      0% { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
-    }
     @media (max-width: 700px) {
       .game-header { flex-direction: column; }
       .game-title { font-size: 1.6rem; }
       .screenshots-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
@@ -315,10 +327,7 @@
       <a href="/reviews.html">Отзывы</a>
       <a href="/faq.html">FAQ</a>
     </div>
-    <div class="auth-buttons" id="authButtons">
-      <a href="/login.html" class="btn-outline">Войти</a>
-      <a href="/login.html?register=1" class="btn-primary">Регистрация</a>
-    </div>
+    <div class="auth-buttons" id="authButtons"></div>
   </div>
 </header>
 
@@ -328,7 +337,7 @@
 
 <footer>
   <div class="container">
-    <p>© 2025 SteamFall — торрент-трекер игр. Все права защищены.</p>
+    <p>© 2025 SteamFall — торрент-трекер игр. Подробная информация, системные требования, альтернативные раздачи.</p>
   </div>
 </footer>
 
