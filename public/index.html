@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <meta name="description" content="SteamFall — торрент-трекер игр с современным дизайном, стеклянными карточками и высокой скоростью загрузки.">
-  <title>SteamFall — скачать игры торрентом</title>
+  <meta name="description" content="SteamFall — торрент-трекер игр с профессиональным дизайном, стеклянными карточками, новинками и ожидаемыми релизами.">
+  <title>SteamFall — торрент-трекер игр</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -21,10 +21,8 @@
       <a href="/">Главная</a>
       <a href="/top.html">Топ</a>
       <a href="/reviews.html">Отзывы</a>
-      <a href="/rules.html">Правила</a>
-      <a href="/contacts.html">Контакты</a>
       <a href="/faq.html">FAQ</a>
-      <a href="/dmca.html">Жалоба</a>
+      <a href="/contacts.html">Контакты</a>
     </div>
     <div class="auth-buttons" id="authButtons">
       <a href="/login.html" class="btn-outline">Войти</a>
@@ -33,65 +31,90 @@
   </div>
 </header>
 
-<!-- Блок преимуществ (стеклянные карточки) -->
-<div class="container">
-  <div class="features">
-    <div class="feature"><i class="fas fa-tachometer-alt"></i><h3>Высокая скорость</h3><p>Скачивай на максимальной скорости</p></div>
-    <div class="feature"><i class="fas fa-shield-alt"></i><h3>Безопасность</h3><p>Проверенные раздачи без вирусов</p></div>
-    <div class="feature"><i class="fas fa-sync-alt"></i><h3>Свежие версии</h3><p>Обновляем сразу после патчей</p></div>
-    <div class="feature"><i class="fas fa-star"></i><h3>Честные отзывы</h3><p>Реальные оценки игроков</p></div>
-  </div>
-</div>
-
-<!-- Основной контент -->
 <main class="container">
-  <div class="games-layout">
-    <!-- Левый сайдбар -->
-    <aside class="sidebar">
-      <div class="widget">
-        <h3><i class="fas fa-search"></i> Поиск</h3>
-        <input type="text" id="searchInput" placeholder="Название игры..." style="width:100%; padding:10px; background:rgba(0,0,0,0.3); border:1px solid var(--color-border); border-radius:40px; color:white; margin-bottom:12px;">
-        <select id="genreFilter" style="width:100%; padding:10px; background:rgba(0,0,0,0.3); border:1px solid var(--color-border); border-radius:40px; color:white; margin-bottom:12px;">
-          <option value="all">Все жанры</option>
-          <option value="RPG">RPG</option>
-          <option value="Action">Action</option>
-          <option value="Adventure">Adventure</option>
-          <option value="Indie">Indie</option>
-          <option value="Survival">Survival</option>
-        </select>
-        <select id="sortSelect" style="width:100%; padding:10px; background:rgba(0,0,0,0.3); border:1px solid var(--color-border); border-radius:40px; color:white;">
-          <option value="date">Новые</option>
-          <option value="downloads">Популярные</option>
-          <option value="rating">По рейтингу</option>
-        </select>
-      </div>
-      <div class="widget">
-        <h3><i class="fas fa-fire"></i> Популярные игры</h3>
-        <ul class="popular-list" id="popularGamesList"><li>Загрузка...</li></ul>
-      </div>
-      <div class="widget" id="sidebarAd">
-        <h3><i class="fas fa-ad"></i> Реклама</h3>
-        <div style="text-align:center; padding:12px;">✨ Здесь может быть ваш баннер</div>
-      </div>
-    </aside>
+  <!-- Панель статистики (как на byrutgame) -->
+  <div class="stats-bar" id="statsBar">
+    <div class="stat-item">Всего игр: <strong id="statGames">0</strong></div>
+    <div class="stat-item">Обновлений за неделю: <strong id="statUpdates">0</strong></div>
+    <div class="stat-item">Пользователей: <strong id="statUsers">0</strong></div>
+    <div class="stat-item">Комментариев: <strong id="statComments">0</strong></div>
+  </div>
 
-    <!-- Сетка игр -->
-    <div class="games-grid" id="gamesGrid">
-      <div class="skeleton-card"></div>
-      <div class="skeleton-card"></div>
-      <div class="skeleton-card"></div>
+  <!-- Вкладки: Вышедшие новинки / Ожидаемые релизы -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="released">Вышедшие новинки</button>
+    <button class="tab-btn" data-tab="upcoming">Ожидаемые релизы</button>
+  </div>
+
+  <!-- Контейнер для вышедших новинок -->
+  <div id="releasedTab" class="tab-pane active">
+    <div class="games-grid" id="releasedGamesGrid">
       <div class="skeleton-card"></div>
       <div class="skeleton-card"></div>
       <div class="skeleton-card"></div>
     </div>
   </div>
 
-  <div id="pagination" class="pagination"></div>
+  <!-- Контейнер для ожидаемых релизов -->
+  <div id="upcomingTab" class="tab-pane">
+    <div class="games-grid" id="upcomingGamesGrid">
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+    </div>
+  </div>
+
+  <!-- Рекламная вставка между блоками -->
+  <div id="infeedAd" class="ad-banner" style="margin: 20px 0; text-align: center; padding: 16px;">✨ Рекламное место</div>
+
+  <!-- Секция с полным каталогом (поиск, фильтры, пагинация) -->
+  <div style="margin: 40px 0 20px;">
+    <h2><i class="fas fa-search"></i> Весь каталог</h2>
+  </div>
+  <div class="games-layout">
+    <aside class="sidebar">
+      <div class="widget">
+        <h3><i class="fas fa-filter"></i> Фильтры</h3>
+        <input type="text" id="searchInput" placeholder="Название игры" style="width:100%; margin-bottom:12px;">
+        <select id="genreFilter" style="width:100%; margin-bottom:12px;">
+          <option value="all">Все жанры</option>
+          <option value="RPG">RPG</option>
+          <option value="Action">Action</option>
+          <option value="Adventure">Adventure</option>
+          <option value="Indie">Indie</option>
+        </select>
+        <select id="sortSelect" style="width:100%;">
+          <option value="date">Новые</option>
+          <option value="downloads">Популярные</option>
+          <option value="rating">По рейтингу</option>
+          <option value="views">По просмотрам</option>
+        </select>
+      </div>
+      <div class="widget">
+        <h3><i class="fas fa-fire"></i> Популярные игры</h3>
+        <ul class="popular-list" id="popularGamesList">
+          <li>Загрузка...</li>
+        </ul>
+      </div>
+      <div class="widget" id="sidebarAd">
+        <h3><i class="fas fa-ad"></i> Реклама</h3>
+        <div style="text-align:center; padding:12px;">📢 Здесь может быть ваш баннер</div>
+      </div>
+    </aside>
+    <div>
+      <div class="games-grid" id="allGamesGrid">
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+      </div>
+      <div id="pagination" class="pagination"></div>
+    </div>
+  </div>
 </main>
 
 <footer>
   <div class="container">
-    <p>© 2025 SteamFall — торрент-трекер игр. Все права защищены.</p>
+    <p>© 2025 SteamFall — торрент-трекер игр. Скачивай новинки и классику бесплатно.</p>
   </div>
 </footer>
 
@@ -99,7 +122,6 @@
 
 <script src="/js/main.js"></script>
 <script>
-  // Анимация хедера при скролле
   window.addEventListener('scroll', function() {
     const header = document.getElementById('header');
     if (window.scrollY > 50) header.classList.add('scrolled');
