@@ -1,9 +1,371 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head><meta charset="UTF-8"><title>DMCA | SteamFall</title><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"></head>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DMCA | Жалоба правообладателя | SteamFall</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', 'Space Grotesk', sans-serif;
+      background: #0a0c10;
+      color: #e2e8f0;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+    .animated-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -2;
+      background: radial-gradient(circle at 20% 30%, #0f172a, #020617);
+    }
+    .animated-bg::before {
+      content: '';
+      position: absolute;
+      width: 200%;
+      height: 200%;
+      top: -50%;
+      left: -50%;
+      background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, rgba(0,0,0,0) 70%);
+      animation: rotateBg 25s linear infinite;
+    }
+    @keyframes rotateBg {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      pointer-events: none;
+    }
+    .particle {
+      position: absolute;
+      background: rgba(59,130,246,0.3);
+      border-radius: 50%;
+      filter: blur(2px);
+      animation: floatParticle 15s infinite ease-in-out;
+    }
+    @keyframes floatParticle {
+      0% { transform: translateY(100vh) translateX(0) scale(0); opacity: 0; }
+      50% { opacity: 0.5; }
+      100% { transform: translateY(-20vh) translateX(100px) scale(1); opacity: 0; }
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 2;
+    }
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 12, 16, 0.6);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(59,130,246,0.2);
+    }
+    .header .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .logo {
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #60a5fa, #c084fc, #f472b6);
+      background-size: 200% auto;
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      animation: gradientShift 6s ease infinite;
+    }
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+    }
+    .nav-links a {
+      color: #cbd5e1;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover {
+      color: #60a5fa;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid #3b82f6;
+      padding: 8px 20px;
+      border-radius: 40px;
+      color: #3b82f6;
+      font-weight: 600;
+      text-decoration: none;
+      transition: 0.2s;
+    }
+    .btn-outline:hover {
+      background: rgba(59,130,246,0.1);
+      transform: translateY(-2px);
+    }
+    .dmca-hero {
+      text-align: center;
+      margin: 40px 0 30px;
+      animation: fadeInUp 0.6s ease;
+    }
+    .dmca-hero h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff, #ef4444);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+    .dmca-hero p {
+      color: #94a3b8;
+      margin-top: 12px;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .dmca-card {
+      background: rgba(17, 24, 39, 0.5);
+      backdrop-filter: blur(12px);
+      border-radius: 32px;
+      padding: 32px;
+      margin: 30px 0;
+      border: 1px solid rgba(59,130,246,0.2);
+    }
+    .dmca-card h2 {
+      margin-bottom: 20px;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .dmca-card h2 i {
+      color: #ef4444;
+    }
+    .dmca-card p {
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+    .dmca-card ul {
+      margin: 16px 0 16px 24px;
+    }
+    .dmca-card li {
+      margin: 8px 0;
+    }
+    .notice-box {
+      background: rgba(239,68,68,0.1);
+      border-left: 4px solid #ef4444;
+      padding: 16px;
+      border-radius: 16px;
+      margin: 20px 0;
+    }
+    .btn-submit {
+      background: linear-gradient(90deg, #3b82f6, #2563eb);
+      border: none;
+      padding: 12px 28px;
+      border-radius: 60px;
+      font-weight: 700;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
+      margin-top: 16px;
+    }
+    .btn-submit:hover {
+      transform: scale(1.02);
+      box-shadow: 0 0 15px #3b82f6;
+    }
+    input, textarea {
+      width: 100%;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid #1e293b;
+      border-radius: 20px;
+      padding: 12px 16px;
+      color: white;
+      margin-bottom: 16px;
+    }
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      color: #3b82f6;
+      padding: 12px 28px;
+      border-radius: 60px;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast.show {
+      opacity: 1;
+    }
+    footer {
+      text-align: center;
+      padding: 30px;
+      border-top: 1px solid #1e293b;
+      margin-top: 50px;
+    }
+    @media (max-width: 700px) {
+      .dmca-card { padding: 20px; }
+    }
+  </style>
+</head>
 <body>
-<header class="header"><div class="container"><div class="logo"><a href="/">🎮 Steam<span>Fall</span></a></div><div class="nav-links"><a href="/">Главная</a><a href="/dmca.html">DMCA</a></div></div></header>
-<main class="container"><h1>DMCA / Жалоба правообладателя</h1><p>Если вы являетесь владельцем авторских прав и считаете, что ваш материал опубликован без разрешения, свяжитесь с нами по email: <strong>dmca@steamfall.com</strong>. Мы удалим материал в течение 24 часов.</p></main>
-<footer><div class="container"><p>© 2025 SteamFall</p></div></footer>
+<div class="animated-bg"></div>
+<div class="particles" id="particles"></div>
+<header class="header">
+  <div class="container">
+    <div class="logo"><i class="fas fa-skull"></i> Steam<span>Fall</span></div>
+    <div class="nav-links">
+      <a href="/">Главная</a>
+      <a href="/top.html">Топ</a>
+      <a href="/reviews.html">Отзывы</a>
+      <a href="/faq.html">FAQ</a>
+      <a href="/rules.html">Правила</a>
+      <a href="/dmca.html">DMCA</a>
+    </div>
+    <div class="auth-buttons">
+      <a href="/login.html" class="btn-outline">Войти</a>
+    </div>
+  </div>
+</header>
+<main class="container">
+  <div class="dmca-hero">
+    <h1><i class="fas fa-balance-scale"></i> DMCA / Жалоба правообладателя</h1>
+    <p>Уважаем авторские права и готовы оперативно реагировать на обоснованные жалобы</p>
+  </div>
+  <div class="dmca-card">
+    <h2><i class="fas fa-info-circle"></i> Что такое DMCA?</h2>
+    <p>Digital Millennium Copyright Act (DMCA) — закон США, защищающий авторские права в интернете. Мы следуем его принципам и удаляем контент по первому требованию правообладателя.</p>
+    <div class="notice-box">
+      <strong><i class="fas fa-exclamation-triangle"></i> Важно:</strong> SteamFall не хранит торрент-файлы или игровые установщики на своих серверах. Мы предоставляем только magnet-ссылки, которые находятся в открытом доступе и ссылаются на внешние торрент-трекеры. Однако по запросу правообладателя мы удаляем ссылки на конкретные игры.
+    </div>
+  </div>
+  <div class="dmca-card">
+    <h2><i class="fas fa-envelope"></i> Как подать жалобу?</h2>
+    <p>Если вы являетесь владельцем авторских прав и считаете, что ваш материал размещён без разрешения, направьте нам уведомление по электронной почте:</p>
+    <p style="text-align:center; font-size:1.2rem;"><i class="fas fa-at"></i> <strong>dmca@steamfall.com</strong></p>
+    <p>В письме обязательно укажите:</p>
+    <ul>
+      <li>Ваши контактные данные (имя, адрес, телефон, email).</li>
+      <li>Точное описание защищённого авторским правом материала, который был нарушен.</li>
+      <li>URL-адреса страниц SteamFall, содержащие ссылки на ваш контент.</li>
+      <li>Заявление о добросовестной вере в то, что использование материала не разрешено правообладателем, его агентом или законом.</li>
+      <li>Заявление под присягой о достоверности предоставленной информации.</li>
+      <li>Вашу электронную или физическую подпись.</li>
+    </ul>
+    <p>Мы рассмотрим жалобу в течение 2 рабочих дней и удалим указанные ссылки.</p>
+  </div>
+  <div class="dmca-card">
+    <h2><i class="fas fa-reply"></i> Контр-уведомление (Counter-Notice)</h2>
+    <p>Если вы считаете, что ваш материал был удалён ошибочно, вы можете отправить контр-уведомление. Оно должно содержать:</p>
+    <ul>
+      <li>Идентификацию удалённого материала и его местоположение до удаления.</li>
+      <li>Заявление под присягой о том, что вы добросовестно полагаете, что материал был удалён по ошибке.</li>
+      <li>Ваши контактные данные и согласие на юрисдикцию федерального суда.</li>
+      <li>Подпись.</li>
+    </ul>
+    <p>После получения контр-уведомления мы можем восстановить материал, если правообладатель не подаст иск в течение 10–14 рабочих дней.</p>
+  </div>
+  <div class="dmca-card">
+    <h2><i class="fas fa-shield-alt"></i> Наша политика повторных нарушений</h2>
+    <p>Мы серьёзно относимся к авторским правам. Пользователи, неоднократно нарушающие DMCA, могут быть заблокированы. Администрация также оставляет за собой право удалять любые ссылки по собственному усмотрению.</p>
+  </div>
+  <div class="dmca-card">
+    <h2><i class="fas fa-paper-plane"></i> Отправить жалобу онлайн (демо-форма)</h2>
+    <p>Вы также можете воспользоваться формой ниже. Сообщение будет отправлено на dmca@steamfall.com (демонстрационный режим).</p>
+    <input type="text" id="complainantName" placeholder="Ваше имя / Название организации">
+    <input type="email" id="complainantEmail" placeholder="Email для связи">
+    <input type="text" id="gameUrl" placeholder="Ссылка на страницу игры на SteamFall">
+    <textarea rows="4" id="complaintText" placeholder="Опишите нарушение, укажите авторские права..."></textarea>
+    <button id="submitDMCA" class="btn-submit">Отправить жалобу</button>
+    <div id="formMessage" style="margin-top:16px; color:#4ade80;"></div>
+  </div>
+</main>
+<footer>
+  <div class="container"><p>© 2025 SteamFall — DMCA / Уважаем авторское право. Все претензии рассматриваются в течение 48 часов.</p></div>
+</footer>
+<div id="toast" class="toast"></div>
+<script>
+  (function() {
+    function createParticles() {
+      const container = document.getElementById('particles');
+      if (!container) return;
+      for (let i = 0; i < 40; i++) {
+        const p = document.createElement('div');
+        p.classList.add('particle');
+        const size = Math.random() * 6 + 2;
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.animationDuration = Math.random() * 20 + 10 + 's';
+        p.style.animationDelay = Math.random() * 20 + 's';
+        container.appendChild(p);
+      }
+    }
+    createParticles();
+    if (typeof anime !== 'undefined') {
+      anime({
+        targets: '.dmca-card',
+        opacity: [0, 1],
+        translateY: [20, 0],
+        delay: anime.stagger(100),
+        duration: 600,
+        easing: 'easeOutQuad'
+      });
+    }
+    const toast = document.getElementById('toast');
+    function showToast(msg, isError = false) {
+      toast.textContent = msg;
+      toast.style.color = isError ? '#ef4444' : '#3b82f6';
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+    document.getElementById('submitDMCA').addEventListener('click', () => {
+      const name = document.getElementById('complainantName').value;
+      const email = document.getElementById('complainantEmail').value;
+      const url = document.getElementById('gameUrl').value;
+      const text = document.getElementById('complaintText').value;
+      if (!name || !email || !url || !text) {
+        showToast('Заполните все поля', true);
+        return;
+      }
+      // Демо-отправка (в реальности - POST на /api/dmca)
+      showToast('Жалоба отправлена (демо-режим). Наш юрист свяжется с вами в течение 48 часов.');
+      document.getElementById('complaintText').value = '';
+      document.getElementById('gameUrl').value = '';
+    });
+  })();
+</script>
 </body>
 </html>
