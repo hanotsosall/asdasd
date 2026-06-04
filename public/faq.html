@@ -2,161 +2,31 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Часто задаваемые вопросы | SteamFall</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <meta name="description" content="Ответы на частые вопросы о SteamFall: скачивание, безопасность, отзывы, избранное, реклама и другое.">
+  <title>FAQ | SteamFall — ответы на вопросы</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  <link rel="stylesheet" href="/css/style.css">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: 'Inter', 'Space Grotesk', sans-serif;
-      background: #0a0c10;
-      color: #e2e8f0;
-      line-height: 1.5;
-      overflow-x: hidden;
-    }
-    /* Анимированный фон */
-    .animated-bg {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -2;
-      background: radial-gradient(circle at 20% 30%, #0f172a, #020617);
-    }
-    .animated-bg::before {
-      content: '';
-      position: absolute;
-      width: 200%;
-      height: 200%;
-      top: -50%;
-      left: -50%;
-      background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, rgba(0,0,0,0) 70%);
-      animation: rotateBg 25s linear infinite;
-    }
-    @keyframes rotateBg {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    .particles {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -1;
-      pointer-events: none;
-    }
-    .particle {
-      position: absolute;
-      background: rgba(59,130,246,0.3);
-      border-radius: 50%;
-      filter: blur(2px);
-      animation: floatParticle 15s infinite ease-in-out;
-    }
-    @keyframes floatParticle {
-      0% { transform: translateY(100vh) translateX(0) scale(0); opacity: 0; }
-      50% { opacity: 0.5; }
-      100% { transform: translateY(-20vh) translateX(100px) scale(1); opacity: 0; }
-    }
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 24px;
-      position: relative;
-      z-index: 2;
-    }
-    /* Хедер */
-    .header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: rgba(10, 12, 16, 0.6);
-      backdrop-filter: blur(16px);
-      border-bottom: 1px solid rgba(59,130,246,0.2);
-    }
-    .header .container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 24px;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-    .logo {
-      font-size: 28px;
-      font-weight: 800;
-      background: linear-gradient(135deg, #60a5fa, #c084fc, #f472b6);
-      background-size: 200% auto;
-      background-clip: text;
-      -webkit-background-clip: text;
-      color: transparent;
-      animation: gradientShift 6s ease infinite;
-    }
-    @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    .nav-links {
-      display: flex;
-      gap: 32px;
-      align-items: center;
-    }
-    .nav-links a {
-      color: #cbd5e1;
-      text-decoration: none;
-      font-weight: 500;
-      transition: color 0.2s;
-    }
-    .nav-links a:hover {
-      color: #60a5fa;
-    }
-    .btn-outline {
-      background: transparent;
-      border: 1px solid #3b82f6;
-      padding: 8px 20px;
-      border-radius: 40px;
-      color: #3b82f6;
-      font-weight: 600;
-      text-decoration: none;
-      transition: 0.2s;
-    }
-    .btn-outline:hover {
-      background: rgba(59,130,246,0.1);
-      transform: translateY(-2px);
-    }
-    /* Основной контент */
     .faq-hero {
       text-align: center;
       margin: 40px 0 30px;
-      animation: fadeInUp 0.6s ease;
+      animation: fadeInUp 0.4s ease;
     }
     .faq-hero h1 {
-      font-size: 2.5rem;
-      font-weight: 800;
-      background: linear-gradient(135deg, #fff, #60a5fa);
+      font-size: 2.2rem;
+      background: linear-gradient(135deg, #fff, #a78bfa);
       background-clip: text;
       -webkit-background-clip: text;
       color: transparent;
     }
     .faq-hero p {
-      color: #94a3b8;
+      color: var(--color-text-secondary);
       margin-top: 12px;
     }
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    /* Сетка вопросов */
     .faq-grid {
       display: flex;
       flex-direction: column;
@@ -164,16 +34,15 @@
       margin: 40px 0 60px;
     }
     .faq-item {
-      background: rgba(17, 24, 39, 0.5);
-      backdrop-filter: blur(12px);
-      border-radius: 28px;
-      border: 1px solid rgba(59,130,246,0.2);
+      background: var(--color-surface);
+      backdrop-filter: var(--blur-glass);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--color-border);
       overflow: hidden;
-      transition: all 0.3s;
+      transition: all 0.2s;
     }
     .faq-item:hover {
-      border-color: #3b82f6;
-      transform: translateX(5px);
+      border-color: var(--color-accent);
     }
     .faq-question {
       padding: 20px 24px;
@@ -184,18 +53,17 @@
       user-select: none;
     }
     .faq-question h3 {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       font-weight: 600;
       display: flex;
       align-items: center;
       gap: 12px;
     }
     .faq-question h3 i {
-      color: #3b82f6;
-      font-size: 1.3rem;
+      color: #a78bfa;
     }
     .faq-question i.fa-chevron-down {
-      color: #60a5fa;
+      color: #a78bfa;
       transition: transform 0.3s;
     }
     .faq-item.active .faq-question i.fa-chevron-down {
@@ -212,66 +80,44 @@
       padding: 0 24px 20px 24px;
     }
     .faq-answer p {
-      color: #cbd5e1;
+      color: var(--color-text-secondary);
       line-height: 1.6;
     }
     .faq-answer a {
-      color: #60a5fa;
+      color: #a78bfa;
       text-decoration: none;
     }
-    .faq-answer a:hover {
-      text-decoration: underline;
-    }
-    .toast {
-      position: fixed;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #1e293b;
-      color: #3b82f6;
-      padding: 12px 28px;
-      border-radius: 60px;
-      z-index: 9999;
-      opacity: 0;
-      transition: opacity 0.3s;
-      pointer-events: none;
-    }
-    .toast.show {
-      opacity: 1;
-    }
-    footer {
-      text-align: center;
-      padding: 30px;
-      border-top: 1px solid #1e293b;
-      margin-top: 50px;
-    }
-    @media (max-width: 700px) {
-      .faq-question h3 { font-size: 1rem; }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
-<div class="animated-bg"></div>
-<div class="particles" id="particles"></div>
-<header class="header">
+
+<header class="header" id="header">
   <div class="container">
-    <div class="logo"><i class="fas fa-skull"></i> Steam<span>Fall</span></div>
+    <div class="logo"><i class="fas fa-dragon"></i> Steam<span style="background: linear-gradient(135deg, #a78bfa, #6366f1); background-clip: text; -webkit-background-clip: text; color: transparent;">Fall</span></div>
     <div class="nav-links">
       <a href="/">Главная</a>
       <a href="/top.html">Топ</a>
       <a href="/reviews.html">Отзывы</a>
       <a href="/faq.html">FAQ</a>
+      <a href="/contacts.html">Контакты</a>
     </div>
     <div class="auth-buttons">
       <a href="/login.html" class="btn-outline">Войти</a>
+      <a href="/login.html?register=1" class="btn-primary">Регистрация</a>
     </div>
   </div>
 </header>
+
 <main class="container">
   <div class="faq-hero">
     <h1><i class="fas fa-question-circle"></i> Часто задаваемые вопросы</h1>
-    <p>Ответы на самые популярные вопросы о SteamFall</p>
+    <p>Всё, что вы хотели знать о SteamFall</p>
   </div>
+
   <div class="faq-grid">
     <div class="faq-item">
       <div class="faq-question">
@@ -279,7 +125,7 @@
         <i class="fas fa-chevron-down"></i>
       </div>
       <div class="faq-answer">
-        <p>Нажмите на кнопку «Скачать торрент» на карточке игры или на её странице. Откроется magnet-ссылка, которую нужно открыть в вашем торрент-клиенте (qBittorrent, uTorrent, Transmission и т.д.). После добавления раздачи начнётся загрузка.</p>
+        <p>Нажмите на кнопку «Скачать торрент» на карточке игры или на её странице. Откроется magnet-ссылка, которую нужно открыть в вашем торрент-клиенте (qBittorrent, uTorrent, Transmission). После добавления раздачи начнётся загрузка.</p>
       </div>
     </div>
     <div class="faq-item">
@@ -288,7 +134,7 @@
         <i class="fas fa-chevron-down"></i>
       </div>
       <div class="faq-answer">
-        <p>Нет, скачивать игры можно без регистрации. Аккаунт нужен только для добавления игр в избранное, оставления отзывов и комментариев в чате.</p>
+        <p>Нет, скачивать игры можно без регистрации. Аккаунт нужен только для добавления игр в избранное, оставления отзывов и комментариев.</p>
       </div>
     </div>
     <div class="faq-item">
@@ -297,7 +143,7 @@
         <i class="fas fa-chevron-down"></i>
       </div>
       <div class="faq-answer">
-        <p>Мы проверяем все раздачи на вирусы перед публикацией. Однако рекомендуем всегда использовать антивирус и проверять загруженные файлы. Отзывы других пользователей также помогают выявить проблемные раздачи.</p>
+        <p>Мы проверяем все раздачи на вирусы перед публикацией. Однако рекомендуем использовать антивирус и проверять загруженные файлы. Отзывы других пользователей также помогают выявить проблемные раздачи.</p>
       </div>
     </div>
     <div class="faq-item">
@@ -351,51 +197,35 @@
         <i class="fas fa-chevron-down"></i>
       </div>
       <div class="faq-answer">
-        <p>Вы можете написать нам на почту <a href="mailto:support@steamfall.com">support@steamfall.com</a> или воспользоваться формой обратной связи (в разработке). Также мы отвечаем в Telegram-канале.</p>
+        <p>Вы можете написать нам на почту <a href="mailto:support@steamfall.com">support@steamfall.com</a> или воспользоваться <a href="/contacts.html">формой обратной связи</a>. Также мы отвечаем в Telegram-канале.</p>
       </div>
     </div>
   </div>
 </main>
-<footer>
-  <div class="container"><p>© 2025 SteamFall — торрент-трекер игр. Ответы на все вопросы здесь.</p></div>
-</footer>
-<div id="toast" class="toast"></div>
-<script>
-  (function() {
-    // Генерация частиц
-    function createParticles() {
-      const container = document.getElementById('particles');
-      if (!container) return;
-      for (let i = 0; i < 40; i++) {
-        const p = document.createElement('div');
-        p.classList.add('particle');
-        const size = Math.random() * 6 + 2;
-        p.style.width = size + 'px';
-        p.style.height = size + 'px';
-        p.style.left = Math.random() * 100 + '%';
-        p.style.animationDuration = Math.random() * 20 + 10 + 's';
-        p.style.animationDelay = Math.random() * 20 + 's';
-        container.appendChild(p);
-      }
-    }
-    createParticles();
 
-    // Анимация раскрытия FAQ
-    document.querySelectorAll('.faq-item').forEach(item => {
-      const question = item.querySelector('.faq-question');
-      question.addEventListener('click', () => {
-        item.classList.toggle('active');
-        if (typeof anime !== 'undefined') {
-          anime({
-            targets: item,
-            scale: [0.98, 1],
-            duration: 200,
-            easing: 'easeOutQuad'
-          });
-        }
-      });
+<footer>
+  <div class="container">
+    <p>© 2025 SteamFall — торрент-трекер игр. Ответы на все вопросы здесь.</p>
+  </div>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script>
+  // Анимация хедера
+  window.addEventListener('scroll', function() {
+    const header = document.getElementById('header');
+    if (window.scrollY > 50) header.classList.add('scrolled');
+    else header.classList.remove('scrolled');
+  });
+
+  // Аккордеон FAQ
+  document.querySelectorAll('.faq-item').forEach(item => {
+    const question = item.querySelector('.faq-question');
+    question.addEventListener('click', () => {
+      item.classList.toggle('active');
     });
-  })();
+  });
 </script>
 </body>
 </html>
