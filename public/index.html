@@ -3,219 +3,470 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <meta name="description" content="SteamFall — скачивайте игры через торрент бесплатно, без регистрации и без вирусов. Более 12 000 игр. Свежие версии, честные отзывы, быстрая загрузка.">
-  <meta name="keywords" content="скачать игры торрентом, игры на пк, торрент игры, steamfall, игры бесплатно">
-  <meta name="author" content="SteamFall Team">
+  <meta name="description" content="SteamFall — торрент-трекер игр с анимациями, неоном и высокой скоростью. Скачивай новинки и классику.">
   <meta name="theme-color" content="#0a0c10">
-  <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://steamfall.ru/">
-  <!-- Open Graph для соцсетей -->
-  <meta property="og:title" content="SteamFall — скачать игры торрентом бесплатно">
-  <meta property="og:description" content="Более 12 000 игр. Свежие версии, честные отзывы, быстрая загрузка.">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://steamfall.ru/">
-  <meta property="og:image" content="https://steamfall.ru/og-image.jpg">
-  <meta property="og:site_name" content="SteamFall">
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="SteamFall — торрент-трекер игр">
-  <meta name="twitter:description" content="Скачивай игры без ограничений">
-  <!-- Preconnect для шрифтов и CDN -->
+  <title>SteamFall — анимированный торрент-трекер игр</title>
+  <!-- Preconnect для шрифтов -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+  <!-- Google Fonts с несколькими вариантами -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Font Awesome 6 (иконки) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="stylesheet" href="/css/style.css">
+  <!-- Anime.js для сложных анимаций -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  <!-- Socket.IO -->
   <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
-  <!-- Favicon -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
-  <title>SteamFall — скачать игры бесплатно на ПК через торрент</title>
   <style>
-    /* Дополнительные незначительные стили для гарантии отображения */
-    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1f2937; color: #3b82f6; padding: 10px 20px; border-radius: 40px; z-index: 9999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
-    .toast.show { opacity: 1; }
-    .skeleton-card { background: #111827; border-radius: 20px; height: 340px; animation: pulse 1.5s infinite; }
-    @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+    /* ----------------------------------------------
+      ГЛОБАЛЬНЫЕ СТИЛИ И АНИМАЦИИ
+    ------------------------------------------------ */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', 'Space Grotesk', sans-serif;
+      background: #0a0c10;
+      color: #e2e8f0;
+      line-height: 1.5;
+      overflow-x: hidden;
+      cursor: default;
+    }
+    /* Кастомный скроллбар */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #11151f;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #3b82f6;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #60a5fa;
+    }
+    /* Анимированный градиентный фон */
+    .animated-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -2;
+      background: radial-gradient(circle at 20% 30%, #0f172a, #020617);
+    }
+    .animated-bg::before {
+      content: '';
+      position: absolute;
+      width: 200%;
+      height: 200%;
+      top: -50%;
+      left: -50%;
+      background: radial-gradient(circle, rgba(59,130,246,0.1) 0%, rgba(0,0,0,0) 70%);
+      animation: rotateBg 30s linear infinite;
+    }
+    @keyframes rotateBg {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    /* Контейнер */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 2;
+    }
+    /* ----------------------------------------------
+      ХЕДЕР С АНИМАЦИЕЙ ПРИ СКРОЛЛЕ
+    ---------------------------------------------- */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 12, 16, 0.7);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(59,130,246,0.3);
+      transition: all 0.3s cubic-bezier(0.2,0.9,0.4,1.1);
+    }
+    .header.scrolled {
+      background: rgba(10, 12, 16, 0.95);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .header .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    /* Логотип с анимацией градиента */
+    .logo {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #60a5fa, #c084fc, #f472b6);
+      background-size: 200% auto;
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      animation: gradientShift 6s ease infinite;
+    }
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .logo i {
+      margin-right: 6px;
+      background: none;
+      -webkit-background-clip: unset;
+      color: #60a5fa;
+    }
+    /* Навигация с анимированным подчёркиванием */
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      align-items: center;
+    }
+    .nav-links a {
+      color: #cbd5e1;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      position: relative;
+      transition: color 0.2s;
+    }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #3b82f6, #c084fc);
+      transition: width 0.3s ease;
+    }
+    .nav-links a:hover {
+      color: #fff;
+    }
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+    /* Кнопки с ripple-эффектом */
+    .btn-outline, .btn-primary {
+      position: relative;
+      overflow: hidden;
+      padding: 8px 20px;
+      border-radius: 40px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: none;
+      font-size: 0.9rem;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid #3b82f6;
+      color: #3b82f6;
+    }
+    .btn-outline:hover {
+      background: rgba(59,130,246,0.1);
+      transform: translateY(-2px);
+    }
+    .btn-primary {
+      background: linear-gradient(90deg, #3b82f6, #2563eb);
+      color: white;
+      box-shadow: 0 2px 8px rgba(59,130,246,0.4);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(59,130,246,0.5);
+    }
+    /* Ripple-эффект */
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.5);
+      transform: scale(0);
+      animation: rippleAnim 0.6s linear;
+      pointer-events: none;
+    }
+    @keyframes rippleAnim {
+      to { transform: scale(4); opacity: 0; }
+    }
+    /* ----------------------------------------------
+      HERO С АНИМИРОВАННЫМИ ЧАСТИЦАМИ
+    ---------------------------------------------- */
+    .hero {
+      position: relative;
+      padding: 80px 0 60px;
+      text-align: center;
+      overflow: hidden;
+    }
+    .hero h1 {
+      font-size: 3.8rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #fff, #94a3b8);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      animation: fadeInUp 0.8s ease;
+    }
+    .hero-subtitle {
+      font-size: 1.2rem;
+      color: #94a3b8;
+      margin-top: 16px;
+      animation: fadeInUp 0.8s ease 0.1s both;
+    }
+    /* Поиск с анимацией */
+    .search-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+      max-width: 800px;
+      margin: 40px auto 0;
+    }
+    .search-filters input, .search-filters select {
+      background: rgba(17, 24, 39, 0.8);
+      backdrop-filter: blur(4px);
+      border: 1px solid #1e293b;
+      padding: 14px 24px;
+      border-radius: 60px;
+      color: white;
+      font-size: 1rem;
+      transition: all 0.2s;
+      outline: none;
+    }
+    .search-filters input:focus, .search-filters select:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.3);
+    }
+    /* Анимация появления */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    /* ----------------------------------------------
+      КАРТОЧКИ ИГР С 3D-ЭФФЕКТОМ
+    ---------------------------------------------- */
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 28px;
+      margin: 40px 0;
+    }
+    .game-card {
+      background: rgba(17, 24, 39, 0.6);
+      backdrop-filter: blur(8px);
+      border-radius: 28px;
+      border: 1px solid rgba(59,130,246,0.2);
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.2,0.9,0.4,1.1);
+      transform-style: preserve-3d;
+      perspective: 1000px;
+    }
+    .game-card:hover {
+      transform: translateY(-10px) rotateX(2deg);
+      border-color: #3b82f6;
+      box-shadow: 0 20px 35px -12px rgba(59,130,246,0.3);
+    }
+    .card-img {
+      width: 100%;
+      height: 160px;
+      background-size: cover;
+      background-position: center;
+      transition: transform 0.5s;
+    }
+    .game-card:hover .card-img {
+      transform: scale(1.05);
+    }
+    .card-content {
+      padding: 20px;
+    }
+    .game-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .genre {
+      display: inline-block;
+      background: rgba(59,130,246,0.2);
+      color: #60a5fa;
+      border-radius: 30px;
+      padding: 4px 12px;
+      font-size: 0.7rem;
+      margin-bottom: 12px;
+    }
+    .details {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin: 12px 0;
+    }
+    .download-btn {
+      width: 100%;
+      background: linear-gradient(90deg, #3b82f6, #2563eb);
+      border: none;
+      padding: 10px;
+      border-radius: 40px;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .download-btn:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 12px #3b82f6;
+    }
+    /* Skeleton loader */
+    .skeleton-card {
+      background: linear-gradient(90deg, #111827 25%, #1f2937 50%, #111827 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 28px;
+      height: 340px;
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    /* ----------------------------------------------
+      САЙДБАР И ВИДЖЕТЫ
+    ---------------------------------------------- */
+    .games-layout {
+      display: flex;
+      gap: 32px;
+    }
+    .sidebar {
+      width: 300px;
+      flex-shrink: 0;
+    }
+    .widget {
+      background: rgba(17, 24, 39, 0.6);
+      backdrop-filter: blur(8px);
+      border-radius: 24px;
+      padding: 20px;
+      margin-bottom: 28px;
+      border: 1px solid #1e293b;
+    }
+    .popular-list li {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #1e293b;
+    }
+    /* Тост */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      color: #3b82f6;
+      padding: 12px 24px;
+      border-radius: 60px;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      backdrop-filter: blur(8px);
+    }
+    .toast.show {
+      opacity: 1;
+    }
+    /* Адаптив */
+    @media (max-width: 900px) {
+      .games-layout { flex-direction: column; }
+      .sidebar { width: 100%; }
+      .hero h1 { font-size: 2.2rem; }
+    }
   </style>
 </head>
 <body>
-  <!-- ======================== ХЕДЕР (как на GoFrag, без котов) ======================== -->
-  <header class="header">
-    <div class="container">
-      <div class="logo">
-        <a href="/">🎮 Steam<span>Fall</span></a>
-      </div>
-        <div class="nav-links">
-          <a href="/">Главная</a>
-          <a href="/new.html">Новинки</a>
-          <a href="/top.html">Топ игр</a>
-          <a href="/reviews.html">Отзывы</a>
-          <a href="/faq.html">FAQ</a>
-          <a href="/rules.html">Правила</a>
-        </div>
-      <div class="auth-buttons" id="authButtons">
-        <a href="/login.html" class="btn-outline">Войти</a>
-        <a href="/login.html?register=1" class="btn-primary">Регистрация</a>
-      </div>
+<div class="animated-bg"></div>
+<header class="header" id="header">
+  <div class="container">
+    <div class="logo"><i class="fas fa-skull"></i> Steam<span>Fall</span></div>
+    <div class="nav-links">
+      <a href="/">Главная</a>
+      <a href="/top.html">Топ</a>
+      <a href="/reviews.html">Отзывы</a>
     </div>
-  </header>
-
-  <!-- ======================== ОСНОВНОЙ КОНТЕЙНЕР ======================== -->
-  <main class="container">
-    <div class="features">
-      <div class="feature">
-        <i class="fas fa-sync-alt"></i>
-        <h3>Свежие версии</h3>
-        <p>Обновляем сразу после выхода патчей</p>
-      </div>
-      <div class="feature">
-        <i class="fas fa-star"></i>
-        <h3>Честные отзывы</h3>
-        <p>Рейтинги игроков из Steam и нашего сайта</p>
-      </div>
-      <div class="feature">
-        <i class="fas fa-download"></i>
-        <h3>Удобная загрузка</h3>
-        <p>Торрент или прямой загрузчик — выбор за тобой</p>
-      </div>
-    </div>
-
-    <!-- Основной лэйаут: сайдбар + сетка игр -->
-    <div class="games-layout">
-      <!-- ЛЕВЫЙ САЙДБАР -->
-      <aside class="sidebar">
-        <!-- Поиск и фильтры -->
-        <div class="widget">
-          <h3><i class="fas fa-search"></i> Поиск игры</h3>
-          <input type="text" id="searchInput" placeholder="Название игры..." autocomplete="off">
-          <select id="genreFilter" style="margin-top: 12px;">
-            <option value="all">Все жанры</option>
-            <option value="RPG">RPG</option>
-            <option value="Action">Action</option>
-            <option value="Adventure">Adventure</option>
-            <option value="Indie">Indie</option>
-            <option value="Survival">Survival</option>
-            <option value="Strategy">Strategy</option>
-            <option value="Sport">Sport</option>
-          </select>
-          <select id="sortSelect" style="margin-top: 12px;">
-            <option value="date">📅 По дате (новые)</option>
-            <option value="downloads">🔥 По популярности</option>
-            <option value="rating">⭐ По рейтингу</option>
-            <option value="size">💾 По размеру</option>
-          </select>
-        </div>
-
-        <!-- Популярные игры (динамическая загрузка через JS) -->
-        <div class="widget">
-          <h3><i class="fas fa-fire"></i> Сейчас популярно</h3>
-          <ul class="popular-list" id="popularGamesList">
-            <li><div class="skeleton-text"></div></li>
-            <li><div class="skeleton-text"></div></li>
-            <li><div class="skeleton-text"></div></li>
-          </ul>
-        </div>
-
-        <!-- РЕКЛАМНЫЙ БЛОК (заметный, но интегрированный в сайдбар) -->
-        <div class="ad-widget">
-          <div class="ad-label">Реклама</div>
-          <div class="ad-content">
-            <i class="fas fa-gamepad"></i> Игровой бустинг<br>
-            Ускорь прокачку в любых играх!
-          </div>
-          <button class="ad-button" id="fakeAdBtn">Узнать больше →</button>
-        </div>
-
-        <!-- Виджет статистики (заглушка, но реальные данные подтянутся) -->
-        <div class="widget">
-          <h3><i class="fas fa-chart-line"></i> Статистика</h3>
-          <div id="statsWidgetContent">
-            <div class="skeleton-text"></div>
-            <div class="skeleton-text"></div>
-            <div class="skeleton-text"></div>
-          </div>
-        </div>
-      </aside>
-
-      <!-- СЕТКА ИГР (карточки) -->
-      <div class="games-grid" id="gamesGrid">
-        <!-- Скелетоны загрузки (8 штук) -->
-        <div class="skeleton-card"></div>
-        <div class="skeleton-card"></div>
-        <div class="skeleton-card"></div>
-        <div class="skeleton-card"></div>
-        <div class="skeleton-card"></div>
-        <div class="skeleton-card"></div>
-        <div class="skeleton-card"></div>
-        <div class="skeleton-card"></div>
-      </div>
-    </div>
-
-    <!-- РЕКЛАМА МЕЖДУ КОНТЕНТОМ (infeed) -->
-    <div class="infeed-ad" id="infeedAd">
-      <div class="ad-label">Рекомендуем</div>
-      <div class="ad-content">
-        <strong>ВПН для безопасного торрентинга</strong> — скрывай свой IP и скачивай без ограничений. Скидка 20% по коду STEAMFALL
-      </div>
-      <button class="ad-button" id="infeedAdBtn">Подробнее</button>
-    </div>
-
-    <!-- ПАГИНАЦИЯ -->
-    <div id="pagination" class="pagination"></div>
-  </main>
-
-  <!-- ======================== ФУТЕР ======================== -->
-  <footer>
-    <div class="container">
-      <p>© 2025 SteamFall — бесплатные игры через торрент. Более 12 000 раздач. <a href="/sitemap.xml">Карта сайта</a> | <a href="/rules.html">Правила</a> | <a href="/dmca.html">DMCA</a></p>
-      <p style="margin-top: 12px; font-size: 0.75rem;">Все материалы предоставлены для ознакомления. Правообладателям: <a href="/contacts.html">связь</a></p>
-    </div>
-  </footer>
-
-  <!-- ======================== МОДАЛКИ (ЛОГИН/РЕГИСТРАЦИЯ) ======================== -->
-  <div id="loginModal" class="modal">
-    <div class="modal-content">
-      <span class="close-modal">&times;</span>
-      <h2><i class="fas fa-sign-in-alt"></i> Вход</h2>
-      <input type="text" id="loginUsername" placeholder="Логин">
-      <input type="password" id="loginPassword" placeholder="Пароль">
-      <button id="doLoginBtn">Войти</button>
-      <p style="text-align:center; margin-top:16px;">Нет аккаунта? <a href="#" id="switchToRegisterLink">Зарегистрируйтесь</a></p>
+    <div class="auth-buttons" id="authButtons">
+      <a href="/login.html" class="btn-outline">Войти</a>
+      <a href="/login.html?register=1" class="btn-primary">Регистрация</a>
     </div>
   </div>
-  <div id="registerModal" class="modal">
-    <div class="modal-content">
-      <span class="close-modal">&times;</span>
-      <h2><i class="fas fa-user-plus"></i> Регистрация</h2>
-      <input type="text" id="regUsername" placeholder="Логин (мин. 3)">
-      <input type="email" id="regEmail" placeholder="Email">
-      <input type="password" id="regPassword" placeholder="Пароль (мин. 6)">
-      <input type="password" id="regPasswordConfirm" placeholder="Повторите пароль">
-      <button id="doRegisterBtn">Создать аккаунт</button>
-      <p style="text-align:center; margin-top:16px;">Уже есть аккаунт? <a href="#" id="switchToLoginLink">Войти</a></p>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <h1>Скачивай игры <span class="neon">на максимальной скорости</span></h1>
+    <p class="hero-subtitle">Более 12 000 раздач. Анимации, неон, высокая скорость.</p>
+    <div class="search-filters">
+      <input type="text" id="searchInput" placeholder="Поиск игры...">
+      <select id="genreFilter"><option value="all">Все жанры</option><option value="RPG">RPG</option><option value="Action">Action</option></select>
+      <select id="sortSelect"><option value="date">Новые</option><option value="downloads">Популярные</option></select>
     </div>
   </div>
+</section>
 
-  <!-- ТОСТ УВЕДОМЛЕНИЙ -->
-  <div id="toast" class="toast"></div>
+<main class="container">
+  <div class="games-layout">
+    <aside class="sidebar">
+      <div class="widget"><h3>Популярные игры</h3><ul id="popularList" class="popular-list"><li>Загрузка...</li></ul></div>
+      <div class="widget"><h3>Реклама</h3><div id="sidebarAd">Тут могла быть ваша реклама</div></div>
+    </aside>
+    <div class="games-grid" id="gamesGrid"><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div></div>
+  </div>
+  <div id="pagination" class="pagination"></div>
+</main>
 
-  <!-- ======================== ГЛАВНЫЙ СКРИПТ ======================== -->
-  <script src="/js/main.js"></script>
+<footer><div class="container"><p>© 2025 SteamFall — анимированный торрент-трекер</p></div></footer>
+<div id="toast" class="toast"></div>
 
-  <!-- Дополнительный inline-скрипт для обработки переходов (не основной, просто подстраховка) -->
-  <script>
-    (function() {
-      // Обработка параметров URL для открытия модалки регистрации
-      if (window.location.search.includes('register=1')) {
-        setTimeout(() => {
-          const regModal = document.getElementById('registerModal');
-          if (regModal) regModal.classList.add('active');
-        }, 500);
-      }
-      // Простая обработка рекламных кнопок (демо)
-      document.getElementById('fakeAdBtn')?.addEventListener('click', () => alert('Спасибо за интерес! (демо-реклама)'));
-      document.getElementById('infeedAdBtn')?.addEventListener('click', () => alert('Переход на страницу с VPN-предложением (демо)'));
-    })();
-  </script>
+<script src="/js/main.js"></script>
+<script>
+  // Ripple эффект на кнопках
+  document.querySelectorAll('.btn-outline, .btn-primary, .download-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      const rect = this.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const ripple = document.createElement('span');
+      ripple.className = 'ripple';
+      ripple.style.left = x + 'px';
+      ripple.style.top = y + 'px';
+      this.style.position = 'relative';
+      this.style.overflow = 'hidden';
+      this.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    });
+  });
+  // Анимация header при скролле
+  window.addEventListener('scroll', () => {
+    const header = document.getElementById('header');
+    if (window.scrollY > 50) header.classList.add('scrolled');
+    else header.classList.remove('scrolled');
+  });
+</script>
 </body>
 </html>
