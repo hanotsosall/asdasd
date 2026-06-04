@@ -2,15 +2,307 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Подробная информация об игре: описание, системные требования, скриншоты, отзывы, magnet-ссылка.">
-  <title>SteamFall — страница игры</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <meta name="description" content="Подробная информация об игре: описание, скриншоты, отзывы игроков, magnet-ссылка. SteamFall — торрент-трекер игр.">
+  <meta name="keywords" content="игра, торрент, скачать, описание, отзывы, скриншоты">
+  <meta name="author" content="SteamFall">
+  <meta property="og:title" content="SteamFall — страница игры">
+  <meta property="og:description" content="Скачивайте игры через торрент, читайте отзывы, участвуйте в обсуждениях.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <title>SteamFall — детали игры</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="stylesheet" href="/css/style.css">
   <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+  <style>
+    /* Дополнительные стили для страницы игры, специфичные элементы */
+    .game-detail {
+      margin: 40px 0;
+      animation: fadeInUp 0.4s ease;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .game-header {
+      display: flex;
+      gap: 40px;
+      flex-wrap: wrap;
+      background: var(--color-surface);
+      backdrop-filter: var(--blur-glass);
+      border-radius: var(--radius-2xl);
+      padding: 30px;
+      border: 1px solid var(--color-border);
+      margin-bottom: 40px;
+    }
+    .game-cover {
+      flex: 1;
+      min-width: 250px;
+    }
+    .game-cover img {
+      width: 100%;
+      border-radius: var(--radius-lg);
+      transition: transform 0.2s;
+    }
+    .game-cover img:hover {
+      transform: scale(1.02);
+    }
+    .game-info {
+      flex: 2;
+    }
+    .game-title {
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #fff, #a78bfa);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+    .game-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .game-meta span {
+      background: rgba(109,40,217,0.15);
+      padding: 6px 14px;
+      border-radius: 40px;
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+    }
+    .game-description {
+      line-height: 1.6;
+      margin: 20px 0;
+      color: var(--color-text-secondary);
+    }
+    .game-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 16px;
+      background: rgba(0,0,0,0.2);
+      backdrop-filter: blur(4px);
+      border-radius: var(--radius-xl);
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #a78bfa;
+    }
+    .game-actions {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin: 24px 0;
+    }
+    .favorite-btn {
+      background: rgba(109,40,217,0.2);
+      border: 1px solid #a78bfa;
+      padding: 10px 24px;
+      border-radius: 40px;
+      font-weight: 600;
+      color: #a78bfa;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .favorite-btn.active {
+      background: linear-gradient(135deg, #6d28d9, #4f46e5);
+      color: white;
+      border: none;
+    }
+    .game-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .tag {
+      background: rgba(109,40,217,0.15);
+      padding: 4px 12px;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      color: #a78bfa;
+    }
+    .screenshots-section {
+      margin: 40px 0;
+    }
+    .screenshots-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .screenshot-item {
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .screenshot-item img {
+      width: 100%;
+      height: 130px;
+      object-fit: cover;
+      transition: 0.3s;
+    }
+    .screenshot-item:hover img {
+      transform: scale(1.05);
+    }
+    .chat-section {
+      background: var(--color-surface);
+      backdrop-filter: var(--blur-glass);
+      border-radius: var(--radius-2xl);
+      padding: 24px;
+      margin: 40px 0;
+      border: 1px solid var(--color-border);
+    }
+    .chat-messages {
+      height: 300px;
+      overflow-y: auto;
+      background: rgba(0,0,0,0.2);
+      border-radius: var(--radius-xl);
+      padding: 16px;
+      margin: 16px 0;
+    }
+    .chat-message {
+      margin-bottom: 12px;
+      padding: 8px;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .chat-input-area {
+      display: flex;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .chat-input-area input {
+      flex: 1;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--color-border);
+      border-radius: 60px;
+      padding: 12px 16px;
+      color: var(--color-text-primary);
+    }
+    .reviews-section {
+      margin: 40px 0;
+    }
+    .review-card {
+      background: var(--color-surface);
+      backdrop-filter: var(--blur-glass);
+      border-radius: var(--radius-xl);
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid var(--color-border);
+    }
+    .review-header {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .review-author {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .review-author img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+    .review-rating {
+      color: #fbbf24;
+      letter-spacing: 2px;
+    }
+    .like-btn, .comments-toggle {
+      background: none;
+      border: none;
+      color: var(--color-accent);
+      cursor: pointer;
+      margin-left: 16px;
+    }
+    .comments-section {
+      margin-top: 16px;
+      padding-left: 20px;
+      border-left: 2px solid var(--color-accent);
+      display: none;
+    }
+    .comment {
+      background: rgba(0,0,0,0.2);
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+      margin: 8px 0;
+    }
+    .add-review-form {
+      background: rgba(0,0,0,0.2);
+      border-radius: var(--radius-xl);
+      padding: 20px;
+      margin-top: 30px;
+    }
+    .add-review-form select, .add-review-form textarea {
+      width: 100%;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      color: var(--color-text-primary);
+      margin: 8px 0;
+    }
+    .similar-games {
+      margin: 40px 0;
+    }
+    .similar-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .similar-card {
+      background: var(--color-surface);
+      backdrop-filter: var(--blur-glass);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: 0.2s;
+    }
+    .similar-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--color-accent);
+    }
+    .similar-card img {
+      width: 100%;
+      height: 110px;
+      object-fit: cover;
+    }
+    .similar-card .info {
+      padding: 12px;
+      text-align: center;
+    }
+    .similar-card a {
+      color: var(--color-accent);
+      text-decoration: none;
+    }
+    .loading-skeleton {
+      background: linear-gradient(90deg, #1a1a2a 25%, #252535 50%, #1a1a2a 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: var(--radius-2xl);
+      height: 400px;
+      margin: 40px 0;
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    @media (max-width: 700px) {
+      .game-header { flex-direction: column; }
+      .game-title { font-size: 1.6rem; }
+      .screenshots-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+    }
+  </style>
 </head>
 <body>
 
@@ -31,12 +323,12 @@
 </header>
 
 <main class="container" id="gameContainer">
-  <div style="text-align: center; padding: 60px;" class="loading-skeleton">Загрузка данных об игре...</div>
+  <div class="loading-skeleton"></div>
 </main>
 
 <footer>
   <div class="container">
-    <p>© 2025 SteamFall — торрент-трекер игр</p>
+    <p>© 2025 SteamFall — торрент-трекер игр. Все права защищены.</p>
   </div>
 </footer>
 
@@ -44,7 +336,6 @@
 
 <script src="/js/game.js"></script>
 <script>
-  // Анимация хедера при скролле
   window.addEventListener('scroll', function() {
     const header = document.getElementById('header');
     if (window.scrollY > 50) header.classList.add('scrolled');
