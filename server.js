@@ -181,26 +181,25 @@ app.post('/api/comments', auth, (req, res) => {
     res.json(newComment);
 });
 
-// ========== ИЗБРАННОЕ ==========
+// Избранное
 app.get('/api/favorites', auth, (req, res) => {
-    let favs = readJSON(FAVORITES_FILE);
-    favs = favs.filter(f => f.userId === req.user.id);
-    res.json(favs);
+  const favs = readJSON(FAVORITES_FILE);
+  res.json(favs.filter(f => f.userId === req.user.id));
 });
 app.post('/api/favorites', auth, (req, res) => {
-    const { gameId } = req.body;
-    let favs = readJSON(FAVORITES_FILE);
-    if (!favs.find(f => f.userId === req.user.id && f.gameId == gameId)) {
-        favs.push({ userId: req.user.id, gameId, addedAt: new Date().toISOString() });
-        writeJSON(FAVORITES_FILE, favs);
-    }
-    res.json({ success: true });
+  const { gameId } = req.body;
+  let favs = readJSON(FAVORITES_FILE);
+  if (!favs.find(f => f.userId === req.user.id && f.gameId == gameId)) {
+    favs.push({ userId: req.user.id, gameId, addedAt: new Date().toISOString() });
+    writeJSON(FAVORITES_FILE, favs);
+  }
+  res.json({ success: true });
 });
 app.delete('/api/favorites/:gameId', auth, (req, res) => {
-    let favs = readJSON(FAVORITES_FILE);
-    favs = favs.filter(f => !(f.userId === req.user.id && f.gameId == req.params.gameId));
-    writeJSON(FAVORITES_FILE, favs);
-    res.json({ success: true });
+  let favs = readJSON(FAVORITES_FILE);
+  favs = favs.filter(f => !(f.userId === req.user.id && f.gameId == req.params.gameId));
+  writeJSON(FAVORITES_FILE, favs);
+  res.json({ success: true });
 });
 
 // ========== АДМИНКА ==========
