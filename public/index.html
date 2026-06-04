@@ -2,516 +2,24 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <meta name="description" content="SteamFall — торрент-трекер игр с высокой скоростью загрузки. Скачивай новинки бесплатно.">
-  <title>SteamFall | Анимированный торрент-трекер игр</title>
-  <!-- Preconnect для шрифтов -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SteamFall — торрент игры в стиле glassmorphism</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <!-- Anime.js для сложных анимаций -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
-  <!-- Socket.IO -->
-  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
-  <style>
-    /* -------------------------------------------------------------------------- */
-    /*                               RESET & GLOBAL                               */
-    /* -------------------------------------------------------------------------- */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Inter', 'Space Grotesk', sans-serif;
-      background: #0a0c10;
-      color: #e2e8f0;
-      line-height: 1.5;
-      overflow-x: hidden;
-      cursor: default;
-    }
-
-    /* Кастомный скроллбар (тонкий, неон) */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #11151f;
-      border-radius: 10px;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #3b82f6;
-      border-radius: 10px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #60a5fa;
-    }
-
-    /* Анимированный градиентный фон (живой, движущийся) */
-    .animated-bg {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -2;
-      background: radial-gradient(circle at 20% 30%, #0f172a, #020617);
-    }
-    .animated-bg::before {
-      content: '';
-      position: absolute;
-      width: 200%;
-      height: 200%;
-      top: -50%;
-      left: -50%;
-      background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, rgba(0,0,0,0) 70%);
-      animation: rotateBg 25s linear infinite;
-    }
-    @keyframes rotateBg {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    /* Дополнительные плавающие частицы (CSS only) */
-    .particles {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -1;
-      pointer-events: none;
-    }
-    .particle {
-      position: absolute;
-      background: rgba(59,130,246,0.3);
-      border-radius: 50%;
-      filter: blur(2px);
-      animation: floatParticle 15s infinite ease-in-out;
-    }
-    @keyframes floatParticle {
-      0% { transform: translateY(100vh) translateX(0) scale(0); opacity: 0; }
-      50% { opacity: 0.5; }
-      100% { transform: translateY(-20vh) translateX(100px) scale(1); opacity: 0; }
-    }
-
-    /* Контейнер */
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 0 24px;
-      position: relative;
-      z-index: 2;
-    }
-
-    /* -------------------------------------------------------------------------- */
-    /*                                  HEADER                                    */
-    /* -------------------------------------------------------------------------- */
-    .header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: rgba(10, 12, 16, 0.6);
-      backdrop-filter: blur(16px);
-      border-bottom: 1px solid rgba(59,130,246,0.2);
-      transition: all 0.3s cubic-bezier(0.2,0.9,0.4,1.1);
-    }
-    .header.scrolled {
-      background: rgba(10, 12, 16, 0.9);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-      border-bottom-color: #3b82f6;
-    }
-    .header .container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 24px;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-
-    /* Логотип с анимированным градиентом */
-    .logo {
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      background: linear-gradient(135deg, #60a5fa, #c084fc, #f472b6);
-      background-size: 200% auto;
-      background-clip: text;
-      -webkit-background-clip: text;
-      color: transparent;
-      animation: gradientShift 6s ease infinite;
-    }
-    @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    .logo i {
-      margin-right: 8px;
-      background: none;
-      color: #60a5fa;
-    }
-
-    /* Навигация */
-    .nav-links {
-      display: flex;
-      gap: 32px;
-      align-items: center;
-    }
-    .nav-links a {
-      color: #cbd5e1;
-      text-decoration: none;
-      font-weight: 500;
-      font-size: 0.95rem;
-      position: relative;
-      transition: color 0.2s;
-    }
-    .nav-links a::after {
-      content: '';
-      position: absolute;
-      bottom: -6px;
-      left: 0;
-      width: 0;
-      height: 2px;
-      background: linear-gradient(90deg, #3b82f6, #c084fc);
-      transition: width 0.3s ease;
-    }
-    .nav-links a:hover {
-      color: #fff;
-    }
-    .nav-links a:hover::after {
-      width: 100%;
-    }
-
-    /* Кнопки с ripple и неоном */
-    .btn-outline, .btn-primary {
-      position: relative;
-      overflow: hidden;
-      padding: 8px 24px;
-      border-radius: 40px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.25s;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      border: none;
-      font-size: 0.9rem;
-    }
-    .btn-outline {
-      background: transparent;
-      border: 1px solid #3b82f6;
-      color: #3b82f6;
-    }
-    .btn-outline:hover {
-      background: rgba(59,130,246,0.1);
-      transform: translateY(-2px);
-      box-shadow: 0 0 12px rgba(59,130,246,0.5);
-    }
-    .btn-primary {
-      background: linear-gradient(90deg, #3b82f6, #2563eb);
-      color: white;
-      box-shadow: 0 2px 8px rgba(59,130,246,0.4);
-    }
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(59,130,246,0.6);
-    }
-    .ripple {
-      position: absolute;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.5);
-      transform: scale(0);
-      animation: rippleAnim 0.6s linear;
-      pointer-events: none;
-    }
-    @keyframes rippleAnim {
-      to { transform: scale(6); opacity: 0; }
-    }
-
-    /* -------------------------------------------------------------------------- */
-    /*                                   HERO                                     */
-    /* -------------------------------------------------------------------------- */
-    .hero {
-      position: relative;
-      padding: 100px 0 80px;
-      text-align: center;
-      overflow: hidden;
-    }
-    .hero h1 {
-      font-size: 4rem;
-      font-weight: 800;
-      letter-spacing: -1.5px;
-      background: linear-gradient(135deg, #fff, #94a3b8, #60a5fa);
-      background-clip: text;
-      -webkit-background-clip: text;
-      color: transparent;
-      animation: fadeInUp 0.8s ease;
-    }
-    .hero-subtitle {
-      font-size: 1.3rem;
-      color: #94a3b8;
-      margin-top: 20px;
-      animation: fadeInUp 0.8s ease 0.1s both;
-    }
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Поиск и фильтры — стеклянный эффект */
-    .search-filters {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      justify-content: center;
-      max-width: 900px;
-      margin: 50px auto 0;
-    }
-    .search-filters input, .search-filters select {
-      background: rgba(17, 24, 39, 0.7);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(59,130,246,0.3);
-      padding: 14px 28px;
-      border-radius: 60px;
-      color: white;
-      font-size: 1rem;
-      transition: all 0.2s;
-      outline: none;
-    }
-    .search-filters input:focus, .search-filters select:focus {
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59,130,246,0.3);
-      background: rgba(17, 24, 39, 0.9);
-    }
-
-    /* -------------------------------------------------------------------------- */
-    /*                               КАРТОЧКИ ИГР                                 */
-    /* -------------------------------------------------------------------------- */
-    .games-layout {
-      display: flex;
-      gap: 32px;
-      margin: 40px 0;
-    }
-    .sidebar {
-      width: 300px;
-      flex-shrink: 0;
-    }
-    .games-grid {
-      flex: 1;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 28px;
-    }
-
-    /* Карточка с 3D-эффектом и стеклом */
-    .game-card {
-      background: rgba(17, 24, 39, 0.5);
-      backdrop-filter: blur(12px);
-      border-radius: 28px;
-      border: 1px solid rgba(59,130,246,0.2);
-      overflow: hidden;
-      transition: all 0.4s cubic-bezier(0.2,0.9,0.4,1.1);
-      transform-style: preserve-3d;
-      perspective: 1000px;
-    }
-    .game-card:hover {
-      transform: translateY(-12px) rotateX(3deg);
-      border-color: #3b82f6;
-      box-shadow: 0 25px 40px -12px rgba(59,130,246,0.4);
-    }
-    .card-img {
-      width: 100%;
-      height: 170px;
-      background-size: cover;
-      background-position: center;
-      transition: transform 0.5s;
-    }
-    .game-card:hover .card-img {
-      transform: scale(1.05);
-    }
-    .card-content {
-      padding: 20px;
-    }
-    .game-title {
-      font-size: 1.3rem;
-      font-weight: 700;
-      margin-bottom: 8px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .genre {
-      display: inline-block;
-      background: rgba(59,130,246,0.2);
-      color: #60a5fa;
-      border-radius: 30px;
-      padding: 4px 14px;
-      font-size: 0.7rem;
-      margin-bottom: 12px;
-    }
-    .details {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.8rem;
-      color: #94a3b8;
-      margin: 12px 0;
-    }
-    .download-btn {
-      width: 100%;
-      background: linear-gradient(90deg, #3b82f6, #2563eb);
-      border: none;
-      padding: 10px 0;
-      border-radius: 40px;
-      font-weight: 600;
-      color: white;
-      cursor: pointer;
-      transition: 0.2s;
-      margin: 8px 0;
-    }
-    .download-btn:hover {
-      transform: scale(1.02);
-      box-shadow: 0 4px 12px #3b82f6;
-    }
-    .details-link {
-      display: block;
-      text-align: center;
-      font-size: 0.8rem;
-      color: #60a5fa;
-      text-decoration: none;
-      margin-top: 8px;
-    }
-
-    /* Skeleton loader */
-    .skeleton-card {
-      background: linear-gradient(90deg, #111827 25%, #1f2937 50%, #111827 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-      border-radius: 28px;
-      height: 340px;
-    }
-    @keyframes shimmer {
-      0% { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
-    }
-
-    /* Виджеты сайдбара */
-    .widget {
-      background: rgba(17, 24, 39, 0.5);
-      backdrop-filter: blur(12px);
-      border-radius: 24px;
-      padding: 20px;
-      margin-bottom: 28px;
-      border: 1px solid rgba(59,130,246,0.2);
-    }
-    .widget h3 {
-      font-size: 1.2rem;
-      margin-bottom: 16px;
-      border-left: 3px solid #3b82f6;
-      padding-left: 12px;
-    }
-    .popular-list {
-      list-style: none;
-    }
-    .popular-list li {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px 0;
-      border-bottom: 1px solid #1e293b;
-    }
-    .popular-list a {
-      color: #e2e8f0;
-      text-decoration: none;
-    }
-    .popular-list a:hover {
-      color: #60a5fa;
-    }
-
-    /* Пагинация */
-    .pagination {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin: 50px 0;
-    }
-    .page-btn {
-      background: rgba(17, 24, 39, 0.7);
-      border: 1px solid #1e293b;
-      padding: 10px 18px;
-      border-radius: 40px;
-      color: white;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    .page-btn.active {
-      background: #3b82f6;
-      border-color: #3b82f6;
-      box-shadow: 0 0 12px #3b82f6;
-    }
-    .page-btn:hover {
-      background: #3b82f6;
-      transform: translateY(-2px);
-    }
-
-    /* Тост */
-    .toast {
-      position: fixed;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #1e293b;
-      color: #3b82f6;
-      padding: 12px 28px;
-      border-radius: 60px;
-      font-weight: 500;
-      z-index: 9999;
-      opacity: 0;
-      transition: opacity 0.3s;
-      pointer-events: none;
-      backdrop-filter: blur(8px);
-      border: 1px solid #3b82f6;
-    }
-    .toast.show {
-      opacity: 1;
-    }
-
-    /* Футер */
-    footer {
-      text-align: center;
-      padding: 40px 0;
-      border-top: 1px solid #1e293b;
-      margin-top: 60px;
-      font-size: 0.85rem;
-      color: #64748b;
-    }
-
-    /* Адаптив */
-    @media (max-width: 900px) {
-      .games-layout { flex-direction: column; }
-      .sidebar { width: 100%; }
-      .hero h1 { font-size: 2.5rem; }
-      .hero-subtitle { font-size: 1rem; }
-    }
-    @media (max-width: 600px) {
-      .games-grid { grid-template-columns: 1fr; }
-      .search-filters input, .search-filters select { width: 100%; }
-    }
-  </style>
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-<div class="animated-bg"></div>
-<div class="particles" id="particlesContainer"></div>
-<header class="header" id="header">
+<div class="glass-bg"></div>
+<header class="header">
   <div class="container">
-    <div class="logo"><i class="fas fa-skull"></i> Steam<span>Fall</span></div>
+    <div class="logo"><i class="fas fa-skull"></i> SteamFall</div>
     <div class="nav-links">
       <a href="/">Главная</a>
       <a href="/top.html">Топ</a>
       <a href="/reviews.html">Отзывы</a>
+      <a href="/faq.html">FAQ</a>
     </div>
     <div class="auth-buttons" id="authButtons">
       <a href="/login.html" class="btn-outline">Войти</a>
@@ -519,106 +27,42 @@
     </div>
   </div>
 </header>
-
-<section class="hero">
-  <div class="container">
-    <h1>Скачивай игры <span class="neon">на максимальной скорости</span></h1>
-    <p class="hero-subtitle">Более 12 000 раздач. Неон, анимации, высокая скорость загрузки.</p>
-    <div class="search-filters">
-      <input type="text" id="searchInput" placeholder="🔍 Поиск игры...">
-      <select id="genreFilter">
+<main class="container">
+  <div style="margin: 40px 0;">
+    <div class="search-filters" style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+      <input type="text" id="searchInput" placeholder="Поиск игры..." style="flex:1; min-width:200px; background:rgba(22,26,35,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:60px; padding:12px 20px; color:white;">
+      <select id="genreFilter" style="background:rgba(22,26,35,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:60px; padding:12px 20px; color:white;">
         <option value="all">Все жанры</option>
         <option value="RPG">RPG</option>
         <option value="Action">Action</option>
-        <option value="Adventure">Adventure</option>
         <option value="Indie">Indie</option>
       </select>
-      <select id="sortSelect">
-        <option value="date">📅 Новые</option>
-        <option value="downloads">🔥 Популярные</option>
-        <option value="rating">⭐ По рейтингу</option>
+      <select id="sortSelect" style="background:rgba(22,26,35,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:60px; padding:12px 20px; color:white;">
+        <option value="date">Новые</option>
+        <option value="downloads">Популярные</option>
+        <option value="rating">По рейтингу</option>
       </select>
     </div>
   </div>
-</section>
-
-<main class="container">
   <div class="games-layout">
     <aside class="sidebar">
       <div class="widget">
-        <h3><i class="fas fa-fire"></i> Популярные игры</h3>
+        <h3>Популярные игры</h3>
         <ul class="popular-list" id="popularList"><li>Загрузка...</li></ul>
-      </div>
-      <div class="widget">
-        <h3><i class="fas fa-chart-line"></i> Статистика</h3>
-        <div id="statsContent">Загрузка...</div>
-      </div>
-      <div class="widget" id="sidebarAd">
-        <h3>📢 Реклама</h3>
-        <div>Место для вашей рекламы</div>
       </div>
     </aside>
     <div class="games-grid" id="gamesGrid">
-      <div class="skeleton-card"></div>
-      <div class="skeleton-card"></div>
-      <div class="skeleton-card"></div>
+      <div class="skeleton-card" style="background:rgba(22,26,35,0.5); border-radius:20px; height:340px;"></div>
+      <div class="skeleton-card" style="background:rgba(22,26,35,0.5); border-radius:20px; height:340px;"></div>
+      <div class="skeleton-card" style="background:rgba(22,26,35,0.5); border-radius:20px; height:340px;"></div>
     </div>
   </div>
   <div id="pagination" class="pagination"></div>
 </main>
-
 <footer>
-  <div class="container">
-    <p>© 2025 SteamFall — анимированный торрент-трекер. Все права защищены.</p>
-  </div>
+  <div class="container"><p>© 2025 SteamFall — торрент-трекер игр</p></div>
 </footer>
-
 <div id="toast" class="toast"></div>
-
 <script src="/js/main.js"></script>
-<script>
-  // Генерация плавающих частиц
-  function createParticles() {
-    const container = document.getElementById('particlesContainer');
-    if (!container) return;
-    for (let i = 0; i < 50; i++) {
-      const particle = document.createElement('div');
-      particle.classList.add('particle');
-      const size = Math.random() * 8 + 2;
-      particle.style.width = size + 'px';
-      particle.style.height = size + 'px';
-      particle.style.left = Math.random() * 100 + '%';
-      particle.style.animationDuration = Math.random() * 20 + 10 + 's';
-      particle.style.animationDelay = Math.random() * 20 + 's';
-      particle.style.opacity = Math.random() * 0.4;
-      container.appendChild(particle);
-    }
-  }
-  createParticles();
-
-  // Ripple эффект на кнопки
-  document.querySelectorAll('.btn-outline, .btn-primary, .download-btn, .page-btn').forEach(btn => {
-    btn.addEventListener('click', function(e) {
-      const rect = this.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const ripple = document.createElement('span');
-      ripple.className = 'ripple';
-      ripple.style.left = x + 'px';
-      ripple.style.top = y + 'px';
-      this.style.position = 'relative';
-      this.style.overflow = 'hidden';
-      this.appendChild(ripple);
-      setTimeout(() => ripple.remove(), 600);
-    });
-  });
-
-  // Анимация header при скролле
-  window.addEventListener('scroll', () => {
-    const header = document.getElementById('header');
-    if (window.scrollY > 50) header.classList.add('scrolled');
-    else header.classList.remove('scrolled');
-  });
-</script>
 </body>
 </html>
