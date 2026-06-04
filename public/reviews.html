@@ -4,20 +4,509 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Отзывы игроков | SteamFall</title>
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', 'Space Grotesk', sans-serif;
+      background: #0a0c10;
+      color: #e2e8f0;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+    /* Анимированный фон */
+    .animated-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -2;
+      background: radial-gradient(circle at 20% 30%, #0f172a, #020617);
+    }
+    .animated-bg::before {
+      content: '';
+      position: absolute;
+      width: 200%;
+      height: 200%;
+      top: -50%;
+      left: -50%;
+      background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, rgba(0,0,0,0) 70%);
+      animation: rotateBg 25s linear infinite;
+    }
+    @keyframes rotateBg {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    /* Частицы */
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      pointer-events: none;
+    }
+    .particle {
+      position: absolute;
+      background: rgba(59,130,246,0.3);
+      border-radius: 50%;
+      filter: blur(2px);
+      animation: floatParticle 15s infinite ease-in-out;
+    }
+    @keyframes floatParticle {
+      0% { transform: translateY(100vh) translateX(0) scale(0); opacity: 0; }
+      50% { opacity: 0.5; }
+      100% { transform: translateY(-20vh) translateX(100px) scale(1); opacity: 0; }
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 2;
+    }
+    /* Хедер */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 12, 16, 0.6);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(59,130,246,0.2);
+    }
+    .header .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .logo {
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #60a5fa, #c084fc, #f472b6);
+      background-size: 200% auto;
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      animation: gradientShift 6s ease infinite;
+    }
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+    }
+    .nav-links a {
+      color: #cbd5e1;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover {
+      color: #60a5fa;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid #3b82f6;
+      padding: 8px 20px;
+      border-radius: 40px;
+      color: #3b82f6;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+      text-decoration: none;
+    }
+    .btn-outline:hover {
+      background: rgba(59,130,246,0.1);
+      transform: translateY(-2px);
+    }
+    /* Основной контент */
+    .reviews-hero {
+      text-align: center;
+      margin: 40px 0 30px;
+      animation: fadeInUp 0.6s ease;
+    }
+    .reviews-hero h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff, #60a5fa);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+    .reviews-hero p {
+      color: #94a3b8;
+      margin-top: 12px;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* Фильтр */
+    .filter-bar {
+      background: rgba(17, 24, 39, 0.5);
+      backdrop-filter: blur(12px);
+      border-radius: 60px;
+      padding: 8px 20px;
+      margin-bottom: 40px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+    .filter-bar select {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid #1e293b;
+      border-radius: 40px;
+      padding: 8px 20px;
+      color: white;
+      outline: none;
+    }
+    /* Сетка отзывов */
+    .reviews-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 24px;
+      margin-bottom: 50px;
+    }
+    .review-card {
+      background: rgba(17, 24, 39, 0.5);
+      backdrop-filter: blur(12px);
+      border-radius: 28px;
+      padding: 20px;
+      border: 1px solid rgba(59,130,246,0.2);
+      transition: all 0.3s;
+    }
+    .review-card:hover {
+      transform: translateY(-5px);
+      border-color: #3b82f6;
+      box-shadow: 0 10px 25px -8px rgba(59,130,246,0.3);
+    }
+    .review-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .review-author {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .review-author img {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1px solid #3b82f6;
+    }
+    .review-author strong {
+      font-size: 1rem;
+    }
+    .review-rating {
+      color: #fbbf24;
+      letter-spacing: 2px;
+    }
+    .review-game {
+      display: inline-block;
+      background: rgba(59,130,246,0.2);
+      border-radius: 40px;
+      padding: 4px 12px;
+      font-size: 0.7rem;
+      color: #60a5fa;
+      margin-bottom: 12px;
+    }
+    .review-text {
+      margin: 12px 0;
+      line-height: 1.5;
+    }
+    .review-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+    .review-likes {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .review-likes i {
+      color: #ef4444;
+    }
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin: 40px 0;
+    }
+    .page-btn {
+      background: rgba(17, 24, 39, 0.7);
+      border: 1px solid #1e293b;
+      padding: 8px 16px;
+      border-radius: 40px;
+      color: white;
+      cursor: pointer;
+    }
+    .page-btn.active {
+      background: #3b82f6;
+    }
+    .loading {
+      text-align: center;
+      padding: 60px;
+      font-size: 1.2rem;
+      color: #94a3b8;
+    }
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      color: #3b82f6;
+      padding: 12px 28px;
+      border-radius: 60px;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast.show {
+      opacity: 1;
+    }
+    footer {
+      text-align: center;
+      padding: 30px;
+      border-top: 1px solid #1e293b;
+      margin-top: 50px;
+    }
+    @media (max-width: 700px) {
+      .reviews-grid { grid-template-columns: 1fr; }
+      .filter-bar { flex-direction: column; align-items: stretch; }
+    }
+  </style>
 </head>
 <body>
-<header class="header"><div class="container"><div class="logo"><a href="/">🎮 Steam<span>Fall</span></a></div><div class="nav-links"><a href="/">Главная</a><a href="/top.html">Топ игр</a><a href="/reviews.html">Отзывы</a></div><div class="auth-buttons"><a href="/login.html" class="btn-outline">Войти</a><a href="/login.html?register=1" class="btn-primary">Регистрация</a></div></div></header>
-<main class="container">
-  <h1>Отзывы игроков</h1>
-  <p>Реальные впечатления от реальных людей. Ты тоже можешь оставить отзыв под любой игрой.</p>
-  <div class="reviews-list" id="reviewsList">
-    <div class="review-card"><div class="review-header"><strong>Михаил</strong> <span>⭐⭐⭐⭐⭐</span></div><p>Cyberpunk 2077 — после патчей 2.0 игра стала шедевром. Торрент работает отлично.</p><small>2 дня назад</small></div>
-    <div class="review-card"><div class="review-header"><strong>Анна</strong> <span>⭐⭐⭐⭐</span></div><p>The Witcher 3 — лучшая RPG, которую я проходила. Скачала с SteamFall, без проблем.</p><small>5 дней назад</small></div>
-    <div class="review-card"><div class="review-header"><strong>Дмитрий</strong> <span>⭐⭐⭐⭐⭐</span></div><p>Red Dead Redemption 2 — графика, сюжет, мир. Всё на высоте. Сидеров много, скачал за час.</p><small>1 неделю назад</small></div>
+<div class="animated-bg"></div>
+<div class="particles" id="particles"></div>
+<header class="header">
+  <div class="container">
+    <div class="logo"><i class="fas fa-skull"></i> Steam<span>Fall</span></div>
+    <div class="nav-links">
+      <a href="/">Главная</a>
+      <a href="/top.html">Топ</a>
+      <a href="/reviews.html">Отзывы</a>
+    </div>
+    <div class="auth-buttons" id="authButtons">
+      <a href="/login.html" class="btn-outline">Войти</a>
+    </div>
   </div>
+</header>
+<main class="container">
+  <div class="reviews-hero">
+    <h1><i class="fas fa-star"></i> Отзывы игроков</h1>
+    <p>Честные мнения о играх. Ты тоже можешь оставить отзыв на странице любой игры.</p>
+  </div>
+  <div class="filter-bar">
+    <span><i class="fas fa-filter"></i> Фильтр:</span>
+    <select id="ratingFilter">
+      <option value="all">Все оценки</option>
+      <option value="5">5 ★</option>
+      <option value="4">4+ ★</option>
+      <option value="3">3+ ★</option>
+    </select>
+    <select id="sortFilter">
+      <option value="date">По дате (новые)</option>
+      <option value="likes">По полезности</option>
+      <option value="rating">По оценке</option>
+    </select>
+  </div>
+  <div id="reviewsContainer" class="reviews-grid">
+    <div class="loading">Загрузка отзывов...</div>
+  </div>
+  <div id="pagination" class="pagination"></div>
 </main>
-<footer><div class="container"><p>© 2025 SteamFall — бесплатные игры через торрент</p></div></footer>
+<footer>
+  <div class="container"><p>© 2025 SteamFall — торрент-трекер игр</p></div>
+</footer>
+<div id="toast" class="toast"></div>
+<script>
+  (function() {
+    // Генерация частиц
+    function createParticles() {
+      const container = document.getElementById('particles');
+      if (!container) return;
+      for (let i = 0; i < 40; i++) {
+        const p = document.createElement('div');
+        p.classList.add('particle');
+        const size = Math.random() * 6 + 2;
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.animationDuration = Math.random() * 20 + 10 + 's';
+        p.style.animationDelay = Math.random() * 20 + 's';
+        container.appendChild(p);
+      }
+    }
+    createParticles();
+
+    const toast = document.getElementById('toast');
+    function showToast(msg, isError = false) {
+      toast.textContent = msg;
+      toast.style.color = isError ? '#ef4444' : '#3b82f6';
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    let allReviews = [];
+    let filteredReviews = [];
+    let currentPage = 1;
+    const reviewsPerPage = 12;
+    const container = document.getElementById('reviewsContainer');
+    const paginationDiv = document.getElementById('pagination');
+    const ratingFilter = document.getElementById('ratingFilter');
+    const sortFilter = document.getElementById('sortFilter');
+
+    // Загрузка всех отзывов (обходим игры)
+    async function loadAllReviews() {
+      try {
+        // Сначала получаем список игр
+        const gamesRes = await fetch('/api/games?limit=100');
+        const gamesData = await gamesRes.json();
+        const games = gamesData.games;
+        let reviews = [];
+        for (const game of games) {
+          const revRes = await fetch(`/api/reviews/${game.id}`);
+          const gameReviews = await revRes.json();
+          gameReviews.forEach(rev => {
+            rev.gameTitle = game.title;
+            rev.gameId = game.id;
+            rev.gameCover = game.screenshots?.[0] || 'https://picsum.photos/id/0/100/100';
+          });
+          reviews.push(...gameReviews);
+        }
+        // Сортировка по дате (новые сверху)
+        reviews.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+        allReviews = reviews;
+        applyFiltersAndRender();
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = '<div class="loading">⚠️ Не удалось загрузить отзывы. Попробуйте позже.</div>';
+        showToast('Ошибка загрузки отзывов', true);
+      }
+    }
+
+    function applyFiltersAndRender() {
+      let filtered = [...allReviews];
+      // Фильтр по рейтингу
+      const ratingVal = ratingFilter.value;
+      if (ratingVal !== 'all') {
+        const min = parseInt(ratingVal);
+        filtered = filtered.filter(r => r.rating >= min);
+      }
+      // Сортировка
+      const sortVal = sortFilter.value;
+      if (sortVal === 'date') {
+        filtered.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+      } else if (sortVal === 'likes') {
+        filtered.sort((a,b) => (b.likes || 0) - (a.likes || 0));
+      } else if (sortVal === 'rating') {
+        filtered.sort((a,b) => b.rating - a.rating);
+      }
+      filteredReviews = filtered;
+      currentPage = 1;
+      renderReviews();
+      renderPagination();
+    }
+
+    function renderReviews() {
+      if (!filteredReviews.length) {
+        container.innerHTML = '<div class="loading">😢 Пока нет отзывов. Будьте первым!</div>';
+        return;
+      }
+      const start = (currentPage - 1) * reviewsPerPage;
+      const end = start + reviewsPerPage;
+      const pageReviews = filteredReviews.slice(start, end);
+      container.innerHTML = pageReviews.map(rev => `
+        <div class="review-card">
+          <div class="review-header">
+            <div class="review-author">
+              <img src="https://i.pravatar.cc/80?img=${(rev.userId || rev.id) % 70}" alt="avatar">
+              <strong>${escapeHtml(rev.author)}</strong>
+            </div>
+            <div class="review-rating">${'★'.repeat(rev.rating)}${'☆'.repeat(5-rev.rating)}</div>
+          </div>
+          <div class="review-game">
+            <a href="/game.html?id=${rev.gameId}" style="color:#60a5fa; text-decoration:none;">🎮 ${escapeHtml(rev.gameTitle)}</a>
+          </div>
+          <div class="review-text">${escapeHtml(rev.text)}</div>
+          <div class="review-footer">
+            <span>📅 ${new Date(rev.createdAt).toLocaleDateString('ru-RU')}</span>
+            <span class="review-likes"><i class="fas fa-thumbs-up"></i> ${rev.likes || 0}</span>
+          </div>
+        </div>
+      `).join('');
+      if (typeof anime !== 'undefined') {
+        anime({
+          targets: '.review-card',
+          opacity: [0, 1],
+          translateY: [20, 0],
+          delay: anime.stagger(60),
+          duration: 500,
+          easing: 'easeOutQuad'
+        });
+      }
+    }
+
+    function renderPagination() {
+      const totalPages = Math.ceil(filteredReviews.length / reviewsPerPage);
+      if (totalPages <= 1) {
+        paginationDiv.innerHTML = '';
+        return;
+      }
+      let html = '';
+      for (let i = 1; i <= totalPages; i++) {
+        html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+      }
+      paginationDiv.innerHTML = html;
+      document.querySelectorAll('.page-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentPage = parseInt(btn.dataset.page);
+          renderReviews();
+          renderPagination();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
+    }
+
+    ratingFilter.addEventListener('change', applyFiltersAndRender);
+    sortFilter.addEventListener('change', applyFiltersAndRender);
+    loadAllReviews();
+  })();
+</script>
 </body>
 </html>
