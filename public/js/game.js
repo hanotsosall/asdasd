@@ -1,14 +1,7 @@
-// ============================================================================
-// SteamFall ULTIMATE — страница игры (анимации, отзывы, чат, избранное)
-// Полная логика: загрузка игры, отзывы с лайками, комментарии, WebSocket чат,
-// избранное, похожие игры, анимации при загрузке
-// Объём: 850+ строк
-// ============================================================================
-
+// public/js/game.js - SteamFall PRO
 (function() {
   'use strict';
 
-  // ------------------------------ ПЕРЕМЕННЫЕ ------------------------------
   let game = null;
   let reviews = [];
   let currentUser = null;
@@ -20,45 +13,20 @@
   const container = document.getElementById('gameContainer');
   const toast = document.getElementById('toast');
 
-  // ------------------------------ ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ------------------------------
-  function showToast(message, isError = false) {
+  function showToast(msg, isError = false) {
     if (!toast) return;
-    toast.textContent = message;
-    toast.style.color = isError ? '#ef4444' : '#3b82f6';
+    toast.textContent = msg;
+    toast.style.color = isError ? '#ef4444' : '#a78bfa';
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 3000);
   }
 
   function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/[&<>]/g, m => {
-      if (m === '&') return '&amp;';
-      if (m === '<') return '&lt;';
-      if (m === '>') return '&gt;';
-      return m;
-    });
+    return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
   }
 
-  function formatNumber(num) {
-    return num?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") || '0';
-  }
-
-  // Анимация появления элементов
-  function animatePageElements() {
-    if (typeof anime !== 'undefined') {
-      anime({
-        targets: '.game-header, .screenshots-section, .chat-section, .reviews-section',
-        opacity: [0, 1],
-        translateY: [20, 0],
-        delay: anime.stagger(100),
-        duration: 600,
-        easing: 'easeOutCubic'
-      });
-    }
-  }
-
-  // ------------------------------ АВТОРИЗАЦИЯ (для шапки) ------------------------------
-  async function loadCurrentUser() {
+  async function loadUser() {
     if (!token) return;
     try {
       const res = await fetch('/api/me', {
@@ -66,58 +34,38 @@
       });
       if (res.ok) {
         currentUser = await res.json();
-        updateHeaderUI();
+        updateAuthUI();
         await checkFavorite();
       } else {
-        token = null;
         localStorage.removeItem('token');
+        token = null;
+        updateAuthUI();
       }
-    } catch (err) {}
+    } catch(e) {}
   }
 
-  function updateHeaderUI() {
-    const headerActions = document.querySelector('.nav-links');
-    if (!headerActions) return;
+  function updateAuthUI() {
+    const authDiv = document.getElementById('authButtons');
+    if (!authDiv) return;
     if (currentUser) {
-      // Добавляем ссылку на профиль и кнопку выхода
-      const existing = document.querySelector('.user-menu-header');
-      if (!existing) {
-        const userDiv = document.createElement('div');
-        userDiv.className = 'user-menu-header';
-        userDiv.style.display = 'flex';
-        userDiv.style.alignItems = 'center';
-        userDiv.style.gap = '12px';
-        userDiv.style.marginLeft = '20px';
-        userDiv.innerHTML = `
-          <img src="${currentUser.avatar || 'https://i.pravatar.cc/32'}" style="width:32px; height:32px; border-radius:50%;">
-          <span>${escapeHtml(currentUser.username)}</span>
-          <button id="logoutBtnGame" class="btn-outline" style="padding:4px 12px;">Выйти</button>
-        `;
-        headerActions.appendChild(userDiv);
-        document.getElementById('logoutBtnGame')?.addEventListener('click', logout);
-      }
+      authDiv.innerHTML = `<div class="user-menu" style="display:flex; align-items:center; gap:12px;">
+        <img src="${currentUser.avatar || 'https://i.pravatar.cc/32'}" style="width:32px; height:32px; border-radius:50%;">
+        <span>${escapeHtml(currentUser.username)}</span>
+        <button id="logoutBtnGame" class="btn-outline" style="padding:4px 12px;">Выйти</button>
+      </div>`;
+      document.getElementById('logoutBtnGame')?.addEventListener('click', () => {
+        localStorage.removeItem('token');
+        location.reload();
+      });
     } else {
-      const existing = document.querySelector('.user-menu-header');
-      if (existing) existing.remove();
+      authDiv.innerHTML = `<a href="/login.html" class="btn-outline">Войти</a><a href="/login.html?register=1" class="btn-primary">Регистрация</a>`;
     }
   }
 
-  async function logout() {
-    localStorage.removeItem('token');
-    token = null;
-    currentUser = null;
-    updateHeaderUI();
-    showToast('Вы вышли из аккаунта');
-    await loadGameData(); // перезагружаем страницу, чтобы убрать формы отзывов/чата
-  }
-
-  // ------------------------------ ИЗБРАННОЕ ------------------------------
   async function checkFavorite() {
-    if (!currentUser || !gameId) return false;
+    if (!currentUser || !gameId) return;
     try {
-      const res = await fetch('/api/favorites', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await fetch('/api/favorites', { headers: { 'Authorization': `Bearer ${token}` } });
       if (res.ok) {
         const favs = await res.json();
         isFavorite = favs.some(f => f.gameId == gameId);
@@ -126,17 +74,12 @@
           favBtn.innerHTML = isFavorite ? '<i class="fas fa-heart"></i> В избранном' : '<i class="far fa-heart"></i> В избранное';
           favBtn.classList.toggle('active', isFavorite);
         }
-        return isFavorite;
       }
-    } catch (err) {}
-    return false;
+    } catch(e) {}
   }
 
   async function toggleFavorite() {
-    if (!currentUser) {
-      showToast('Войдите, чтобы добавить в избранное', true);
-      return;
-    }
+    if (!currentUser) { showToast('Войдите, чтобы добавить в избранное', true); return; }
     try {
       const method = isFavorite ? 'DELETE' : 'POST';
       const res = await fetch(`/api/favorites/${gameId}`, {
@@ -153,19 +96,13 @@
         }
         showToast(isFavorite ? 'Добавлено в избранное' : 'Удалено из избранного');
       }
-    } catch (err) {
-      showToast('Ошибка', true);
-    }
+    } catch(e) {}
   }
 
-  // ------------------------------ ЗАГРУЗКА ДАННЫХ ИГРЫ ------------------------------
-  async function loadGameData() {
-    const urlParams = new URLSearchParams(window.location.search);
-    gameId = urlParams.get('id');
-    if (!gameId) {
-      container.innerHTML = '<div class="error">❌ ID игры не указан</div>';
-      return;
-    }
+  async function loadGame() {
+    const params = new URLSearchParams(window.location.search);
+    gameId = params.get('id');
+    if (!gameId) { container.innerHTML = '<div class="error">ID игры не указан</div>'; return; }
     try {
       const [gameRes, reviewsRes] = await Promise.all([
         fetch(`/api/games/${gameId}`),
@@ -174,314 +111,200 @@
       if (!gameRes.ok) throw new Error('Игра не найдена');
       game = await gameRes.json();
       reviews = await reviewsRes.json();
-      document.title = `${game.title} | SteamFall`;
-      renderGamePage();
+      renderGame();
       await checkFavorite();
       initSocket();
-      loadSimilarGames();
-      animatePageElements();
-    } catch (err) {
-      container.innerHTML = `<div class="error">⚠️ ${err.message}</div>`;
+      loadSimilar();
+    } catch(err) {
+      container.innerHTML = `<div class="error">${err.message}</div>`;
     }
   }
 
-  // ------------------------------ ОТРИСОВКА СТРАНИЦЫ ------------------------------
-  function renderGamePage() {
+  function renderGame() {
     const avgRating = reviews.length ? (reviews.reduce((s,r)=>s+r.rating,0)/reviews.length).toFixed(1) : game.rating || '—';
     const screenshotsHtml = game.screenshots && game.screenshots.length ?
-      `<div class="screenshots-grid">
-        ${game.screenshots.map(url => `<div class="screenshot-item" onclick="window.openModal('${url}')"><img src="${url}" alt="screenshot"></div>`).join('')}
+      `<div class="screenshots-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:16px; margin:20px 0;">
+        ${game.screenshots.map(url => `<div class="screenshot-item" style="border-radius:16px; overflow:hidden; cursor:pointer;"><img src="${url}" style="width:100%; height:140px; object-fit:cover;" onclick="window.openModal('${url}')"></div>`).join('')}
       </div>` : '<p>Нет скриншотов</p>';
 
-    const html = `
-      <div class="game-detail">
-        <div class="game-header">
-          <div class="game-cover">
-            <img src="${game.screenshots?.[0] || 'https://picsum.photos/id/0/400/300'}" alt="${escapeHtml(game.title)}">
+    container.innerHTML = `
+      <div class="game-detail" style="margin:40px 0;">
+        <div style="display:flex; gap:40px; flex-wrap:wrap; background:var(--color-surface); backdrop-filter:var(--blur-glass); border-radius:var(--radius-xl); padding:30px; border:1px solid var(--color-border);">
+          <div style="flex:1; min-width:200px;">
+            <img src="${game.screenshots?.[0] || 'https://picsum.photos/id/0/400/300'}" style="width:100%; border-radius:20px;">
           </div>
-          <div class="game-info">
-            <h1 class="game-title">${escapeHtml(game.title)}</h1>
-            <div class="game-meta">
-              <span><i class="fas fa-tag"></i> ${escapeHtml(game.genre)}</span>
-              <span><i class="fas fa-code-branch"></i> ${escapeHtml(game.developer || 'Unknown')}</span>
-              <span><i class="fas fa-calendar"></i> ${new Date(game.releaseDate).toLocaleDateString('ru-RU')}</span>
+          <div style="flex:2;">
+            <h1 style="font-size:2rem; margin-bottom:16px;">${escapeHtml(game.title)}</h1>
+            <div style="display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
+              <span style="background:rgba(109,40,217,0.15); padding:4px 12px; border-radius:40px;">${escapeHtml(game.genre)}</span>
+              <span style="background:rgba(109,40,217,0.15); padding:4px 12px; border-radius:40px;">${escapeHtml(game.developer || 'Unknown')}</span>
+              <span style="background:rgba(109,40,217,0.15); padding:4px 12px; border-radius:40px;">${new Date(game.releaseDate).toLocaleDateString('ru-RU')}</span>
             </div>
-            <div class="game-description">${escapeHtml(game.description)}</div>
-            <div class="game-stats">
-              <div class="stat-item"><div class="stat-value">${game.size}</div><span>Размер</span></div>
-              <div class="stat-item"><div class="stat-value" id="seedersValue">${game.seeders}</div><span>Сидеры</span></div>
-              <div class="stat-item"><div class="stat-value" id="leechersValue">${game.leechers}</div><span>Личеры</span></div>
-              <div class="stat-item"><div class="stat-value">${avgRating} / 5</div><span>Рейтинг</span></div>
-              <div class="stat-item"><div class="stat-value">${formatNumber(game.downloads || 0)}</div><span>Скачиваний</span></div>
+            <div style="line-height:1.6; margin:20px 0;">${escapeHtml(game.description)}</div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(120px,1fr)); gap:16px; background:rgba(0,0,0,0.2); padding:20px; border-radius:20px; margin:20px 0;">
+              <div><strong>Размер</strong><br>${game.size}</div>
+              <div><strong>Сидеры</strong><br><span id="seedersValue">${game.seeders}</span></div>
+              <div><strong>Личеры</strong><br><span id="leechersValue">${game.leechers}</span></div>
+              <div><strong>Рейтинг</strong><br>${avgRating} / 5</div>
+              <div><strong>Скачиваний</strong><br>${(game.downloads||0).toLocaleString()}</div>
             </div>
-            <div class="game-actions">
-              <button id="magnetBtn" class="download-btn"><i class="fas fa-download"></i> Скачать торрент</button>
-              <button id="favoriteBtn" class="favorite-btn">${isFavorite ? '<i class="fas fa-heart"></i> В избранном' : '<i class="far fa-heart"></i> В избранное'}</button>
+            <div style="display:flex; gap:16px; flex-wrap:wrap;">
+              <button id="magnetBtn" class="btn-primary" style="padding:12px 28px;"><i class="fas fa-download"></i> Скачать торрент</button>
+              <button id="favoriteBtn" class="btn-outline">${isFavorite ? '<i class="fas fa-heart"></i> В избранном' : '<i class="far fa-heart"></i> В избранное'}</button>
             </div>
-            ${game.tags && game.tags.length ? `<div class="game-tags">${game.tags.map(t => `<span class="tag">#${escapeHtml(t)}</span>`).join('')}</div>` : ''}
           </div>
         </div>
-        <div class="screenshots-section">
-          <h2><i class="fas fa-images"></i> Скриншоты</h2>
+        <div style="margin-top:40px;">
+          <h2>Скриншоты</h2>
           ${screenshotsHtml}
         </div>
-        <div class="chat-section">
-          <h2><i class="fas fa-comments"></i> Общий чат игры</h2>
-          <div class="chat-messages" id="chatMessages"></div>
-          ${currentUser ? `
-          <div class="chat-input-area">
-            <input type="text" id="chatInput" placeholder="Написать сообщение...">
-            <button id="sendChatBtn" class="download-btn" style="padding: 10px 24px;">Отправить</button>
-          </div>` : '<p><a href="/login.html">Войдите</a>, чтобы участвовать в чате</p>'}
+        <div style="margin-top:40px; background:var(--color-surface); backdrop-filter:var(--blur-glass); border-radius:var(--radius-xl); padding:24px;">
+          <h2>Чат игры</h2>
+          <div id="chatMessages" style="height:250px; overflow-y:auto; background:rgba(0,0,0,0.3); border-radius:16px; padding:16px; margin:16px 0;"></div>
+          ${currentUser ? `<div style="display:flex; gap:12px;"><input type="text" id="chatInput" placeholder="Сообщение..." style="flex:1; padding:12px; background:rgba(0,0,0,0.4); border:1px solid var(--color-border); border-radius:40px; color:white;"><button id="sendChatBtn" class="btn-primary">Отправить</button></div>` : '<p>Войдите, чтобы участвовать в чате</p>'}
         </div>
-        <div class="reviews-section">
-          <h2><i class="fas fa-star"></i> Отзывы игроков (${reviews.length})</h2>
+        <div style="margin-top:40px;">
+          <h2>Отзывы (${reviews.length})</h2>
           <div id="reviewsList"></div>
           ${currentUser ? `
-          <div class="add-review-form">
+          <div style="background:var(--color-surface); backdrop-filter:var(--blur-glass); border-radius:var(--radius-xl); padding:24px; margin-top:30px;">
             <h3>Оставить отзыв</h3>
-            <select id="reviewRating">
-              <option value="5">5 ★</option><option value="4">4 ★</option>
-              <option value="3">3 ★</option><option value="2">2 ★</option>
-              <option value="1">1 ★</option>
-            </select>
-            <textarea id="reviewText" rows="3" placeholder="Ваш отзыв..."></textarea>
-            <button id="submitReviewBtn" class="download-btn">Отправить отзыв</button>
-          </div>` : '<p><a href="/login.html">Войдите</a>, чтобы оставить отзыв</p>'}
+            <select id="reviewRating" style="margin:10px 0; padding:8px; background:rgba(0,0,0,0.4); border-radius:40px; color:white;"><option value="5">5 ★</option><option value="4">4 ★</option><option value="3">3 ★</option><option value="2">2 ★</option><option value="1">1 ★</option></select>
+            <textarea id="reviewText" rows="3" placeholder="Ваш отзыв..." style="width:100%; background:rgba(0,0,0,0.4); border:1px solid var(--color-border); border-radius:20px; padding:12px; color:white;"></textarea>
+            <button id="submitReviewBtn" class="btn-primary" style="margin-top:12px;">Отправить</button>
+          </div>` : '<p>Войдите, чтобы оставить отзыв</p>'}
         </div>
-        <div class="similar-games" id="similarGamesSection">
-          <h2><i class="fas fa-gamepad"></i> Похожие игры</h2>
-          <div id="similarGamesGrid" class="similar-grid">Загрузка...</div>
+        <div style="margin-top:40px;">
+          <h2>Похожие игры</h2>
+          <div id="similarGamesGrid" class="games-grid" style="grid-template-columns:repeat(auto-fill, minmax(180px,1fr));"></div>
         </div>
       </div>
     `;
-    container.innerHTML = html;
-
-    document.getElementById('magnetBtn')?.addEventListener('click', () => {
-      if (game.magnet) { window.open(game.magnet, '_blank'); showToast('Торрент запущен'); }
-      else showToast('Magnet-ссылка отсутствует', true);
-    });
+    document.getElementById('magnetBtn')?.addEventListener('click', () => { if(game.magnet) { window.open(game.magnet, '_blank'); showToast('Торрент запущен'); } else showToast('Ссылка отсутствует', true); });
     document.getElementById('favoriteBtn')?.addEventListener('click', toggleFavorite);
     document.getElementById('submitReviewBtn')?.addEventListener('click', submitReview);
-    if (currentUser) {
+    if(currentUser) {
       document.getElementById('sendChatBtn')?.addEventListener('click', sendChatMessage);
-      document.getElementById('chatInput')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendChatMessage(); });
+      document.getElementById('chatInput')?.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendChatMessage(); });
     }
     renderReviews();
   }
 
   function renderReviews() {
-    const reviewsContainer = document.getElementById('reviewsList');
-    if (!reviewsContainer) return;
-    if (!reviews.length) {
-      reviewsContainer.innerHTML = '<div class="no-reviews">Пока нет отзывов. Будьте первым!</div>';
-      return;
-    }
-    reviewsContainer.innerHTML = reviews.map(rev => `
-      <div class="review-card" data-review-id="${rev.id}">
-        <div class="review-header">
-          <div class="review-author">
-            <img src="https://i.pravatar.cc/40?img=${rev.userId % 70}" alt="avatar">
-            <strong>${escapeHtml(rev.author)}</strong>
-          </div>
-          <div class="review-rating">${'★'.repeat(rev.rating)}${'☆'.repeat(5-rev.rating)}</div>
+    const revDiv = document.getElementById('reviewsList');
+    if(!revDiv) return;
+    if(!reviews.length) { revDiv.innerHTML = '<p>Пока нет отзывов. Будьте первым!</p>'; return; }
+    revDiv.innerHTML = reviews.map(rev => `
+      <div class="review-card" style="background:var(--color-surface); backdrop-filter:var(--blur-glass); border-radius:var(--radius-lg); padding:16px; margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; flex-wrap:wrap; margin-bottom:8px;">
+          <div><strong>${escapeHtml(rev.author)}</strong></div>
+          <div>${'★'.repeat(rev.rating)}${'☆'.repeat(5-rev.rating)}</div>
         </div>
-        <div class="review-text">${escapeHtml(rev.text)}</div>
-        <div class="review-footer">
-          <span class="review-date">${new Date(rev.createdAt).toLocaleDateString()}</span>
-          <button class="like-btn" data-id="${rev.id}">👍 <span class="likes-count">${rev.likes || 0}</span></button>
-          <button class="comments-toggle" data-id="${rev.id}">💬 Комментарии</button>
+        <div>${escapeHtml(rev.text)}</div>
+        <div style="margin-top:12px; display:flex; gap:16px;">
+          <button class="like-btn" data-id="${rev.id}" style="background:none; border:none; color:var(--color-accent); cursor:pointer;">👍 ${rev.likes || 0}</button>
+          <button class="comments-toggle" data-id="${rev.id}" style="background:none; border:none; color:var(--color-text-muted); cursor:pointer;">💬 Комментарии</button>
         </div>
-        <div class="comments-section" id="comments-${rev.id}"></div>
+        <div class="comments-section" id="comments-${rev.id}" style="margin-top:12px; padding-left:16px; border-left:2px solid var(--color-accent); display:none;"></div>
       </div>
     `).join('');
-    document.querySelectorAll('.like-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => { e.stopPropagation(); likeReview(btn.dataset.id); });
-    });
-    document.querySelectorAll('.comments-toggle').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        const reviewId = btn.dataset.id;
-        const commentsDiv = document.getElementById(`comments-${reviewId}`);
-        if (commentsDiv.style.display === 'none' || !commentsDiv.style.display) {
-          commentsDiv.style.display = 'block';
-          await loadComments(reviewId);
-        } else {
-          commentsDiv.style.display = 'none';
-        }
-      });
-    });
+    document.querySelectorAll('.like-btn').forEach(btn => btn.addEventListener('click', () => likeReview(btn.dataset.id)));
+    document.querySelectorAll('.comments-toggle').forEach(btn => btn.addEventListener('click', () => loadComments(btn.dataset.id)));
   }
 
-  // ------------------------------ ОТЗЫВЫ И КОММЕНТАРИИ ------------------------------
   async function submitReview() {
     const rating = parseInt(document.getElementById('reviewRating').value);
     const text = document.getElementById('reviewText').value.trim();
-    if (!text) { showToast('Напишите текст отзыва', true); return; }
+    if(!text) { showToast('Введите текст', true); return; }
     try {
       const res = await fetch('/api/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ gameId: parseInt(gameId), text, rating })
       });
-      if (res.ok) {
-        showToast('Отзыв добавлен!');
-        document.getElementById('reviewText').value = '';
-        await loadGameData();
-      } else {
-        const err = await res.json();
-        showToast(err.error || 'Ошибка', true);
-      }
-    } catch (err) { showToast('Ошибка', true); }
+      if(res.ok) { showToast('Отзыв добавлен'); loadGame(); }
+      else showToast('Ошибка', true);
+    } catch(e) { showToast('Ошибка', true); }
   }
 
   async function likeReview(reviewId) {
-    if (!currentUser) { showToast('Войдите, чтобы оценивать', true); return; }
+    if(!currentUser) { showToast('Войдите', true); return; }
     try {
-      const res = await fetch(`/api/reviews/${reviewId}/like`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const likeSpan = document.querySelector(`.like-btn[data-id="${reviewId}"] .likes-count`);
-        if (likeSpan) likeSpan.innerText = data.likes;
-        showToast('Спасибо за оценку!');
-      }
-    } catch (err) {}
+      const res = await fetch(`/api/reviews/${reviewId}/like`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
+      if(res.ok) { const data = await res.json(); document.querySelector(`.like-btn[data-id="${reviewId}"]`).innerHTML = `👍 ${data.likes}`; }
+    } catch(e) {}
   }
 
   async function loadComments(reviewId) {
-    try {
+    const div = document.getElementById(`comments-${reviewId}`);
+    if(div.style.display === 'none' || !div.style.display) {
+      div.style.display = 'block';
       const res = await fetch(`/api/comments/${reviewId}`);
       const comments = await res.json();
-      const container = document.getElementById(`comments-${reviewId}`);
-      if (!container) return;
-      if (!comments.length) {
-        container.innerHTML = '<div class="no-comments">Нет комментариев</div>';
-      } else {
-        container.innerHTML = comments.map(c => `
-          <div class="comment">
-            <strong>${escapeHtml(c.author)}</strong>: ${escapeHtml(c.text)}
-            <small>${new Date(c.createdAt).toLocaleString()}</small>
-          </div>
-        `).join('');
+      div.innerHTML = comments.map(c => `<div style="margin:8px 0; padding:8px; background:rgba(0,0,0,0.3); border-radius:12px;"><strong>${escapeHtml(c.author)}</strong>: ${escapeHtml(c.text)}<br><small>${new Date(c.createdAt).toLocaleString()}</small></div>`).join('');
+      if(currentUser) {
+        div.innerHTML += `<div style="margin-top:12px;"><input type="text" id="newComment-${reviewId}" placeholder="Ваш комментарий" style="width:70%; padding:8px; background:rgba(0,0,0,0.4); border-radius:40px;"><button onclick="addComment(${reviewId})" class="btn-primary" style="padding:6px 16px;">→</button></div>`;
       }
-      if (currentUser) {
-        container.innerHTML += `
-          <div class="add-comment">
-            <input type="text" id="commentInput-${reviewId}" placeholder="Ваш комментарий...">
-            <button class="download-btn" onclick="window.addComment(${reviewId})">→</button>
-          </div>
-        `;
-      }
-    } catch (err) {}
+    } else {
+      div.style.display = 'none';
+    }
   }
-
   window.addComment = async function(reviewId) {
-    const input = document.getElementById(`commentInput-${reviewId}`);
+    const input = document.getElementById(`newComment-${reviewId}`);
     const text = input?.value.trim();
-    if (!text) return;
-    try {
-      const res = await fetch('/api/comments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ reviewId, text })
-      });
-      if (res.ok) {
-        input.value = '';
-        await loadComments(reviewId);
-        showToast('Комментарий добавлен');
-      }
-    } catch (err) { showToast('Ошибка', true); }
+    if(!text) return;
+    const res = await fetch('/api/comments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ reviewId, text })
+    });
+    if(res.ok) { input.value = ''; loadComments(reviewId); showToast('Комментарий добавлен'); }
   };
 
-  // ------------------------------ ЧАТ WEBSOCKET ------------------------------
   function initSocket() {
-    if (socket) socket.disconnect();
+    if(socket) socket.disconnect();
     socket = io();
     socket.on('connect', () => socket.emit('join-game', gameId));
     socket.on('chat-message', (data) => addChatMessage(data.author, data.text, data.timestamp));
     socket.on('peers-updated', (peers) => {
       const peer = peers.find(p => p.id == gameId);
-      if (peer) {
-        const seedersSpan = document.getElementById('seedersValue');
-        const leechersSpan = document.getElementById('leechersValue');
-        if (seedersSpan) seedersSpan.innerText = peer.seeders;
-        if (leechersSpan) leechersSpan.innerText = peer.leechers;
+      if(peer) {
+        document.getElementById('seedersValue').innerText = peer.seeders;
+        document.getElementById('leechersValue').innerText = peer.leechers;
       }
     });
   }
-
   function sendChatMessage() {
     const input = document.getElementById('chatInput');
     const text = input?.value.trim();
-    if (!text) return;
-    socket.emit('chat-message', {
-      gameId: gameId,
-      author: currentUser?.username || 'Гость',
-      text: text
-    });
+    if(!text) return;
+    socket.emit('chat-message', { gameId, author: currentUser?.username || 'Гость', text });
     input.value = '';
   }
-
   function addChatMessage(author, text, timestamp) {
-    const messagesDiv = document.getElementById('chatMessages');
-    if (!messagesDiv) return;
-    const msgDiv = document.createElement('div');
-    msgDiv.className = 'chat-message';
-    msgDiv.innerHTML = `<strong>${escapeHtml(author)}</strong> <small>${new Date(timestamp).toLocaleTimeString()}</small><br>${escapeHtml(text)}`;
-    messagesDiv.appendChild(msgDiv);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    const msgs = document.getElementById('chatMessages');
+    if(!msgs) return;
+    const div = document.createElement('div');
+    div.className = 'chat-message';
+    div.innerHTML = `<strong>${escapeHtml(author)}</strong> <small>${new Date(timestamp).toLocaleTimeString()}</small><br>${escapeHtml(text)}`;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
   }
-
-  // ------------------------------ ПОХОЖИЕ ИГРЫ ------------------------------
-  async function loadSimilarGames() {
-    try {
-      const res = await fetch(`/api/games?genre=${encodeURIComponent(game.genre)}&limit=6`);
-      const data = await res.json();
-      const similar = data.games.filter(g => g.id != gameId).slice(0, 4);
-      const grid = document.getElementById('similarGamesGrid');
-      if (!grid) return;
-      if (!similar.length) { grid.innerHTML = '<p>Нет похожих игр</p>'; return; }
-      grid.innerHTML = similar.map(g => `
-        <div class="similar-card">
-          <img src="${g.screenshots?.[0] || 'https://picsum.photos/id/0/200/120'}" alt="${escapeHtml(g.title)}">
-          <div class="info">
-            <a href="/game.html?id=${g.id}">${escapeHtml(g.title)}</a>
-            <div>⭐ ${g.rating || '—'}</div>
-          </div>
-        </div>
-      `).join('');
-    } catch (err) {}
+  async function loadSimilar() {
+    const res = await fetch(`/api/games?genre=${encodeURIComponent(game.genre)}&limit=4`);
+    const data = await res.json();
+    const similar = data.games.filter(g => g.id != gameId);
+    const grid = document.getElementById('similarGamesGrid');
+    if(!grid) return;
+    if(!similar.length) { grid.innerHTML = '<p>Нет похожих игр</p>'; return; }
+    grid.innerHTML = similar.map(g => `
+      <div style="background:var(--color-surface); border-radius:var(--radius-lg); overflow:hidden;">
+        <img src="${g.screenshots?.[0] || 'https://picsum.photos/id/0/300/160'}" style="width:100%; height:120px; object-fit:cover;">
+        <div style="padding:12px; text-align:center;"><a href="/game.html?id=${g.id}" style="color:var(--color-accent);">${escapeHtml(g.title)}</a><div>⭐ ${g.rating || '—'}</div></div>
+      </div>
+    `).join('');
   }
+  window.openModal = (url) => { const modal = document.createElement('div'); modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:10000;cursor:pointer;'; modal.innerHTML = `<img src="${url}" style="max-width:90vw; max-height:90vh;">`; modal.onclick = () => modal.remove(); document.body.appendChild(modal); };
 
-  // ------------------------------ МОДАЛКА ДЛЯ СКРИНШОТОВ ------------------------------
-  window.openModal = (url) => {
-    const modal = document.createElement('div');
-    modal.className = 'image-modal';
-    modal.style.position = 'fixed';
-    modal.style.top = 0;
-    modal.style.left = 0;
-    modal.style.width = '100%';
-    modal.style.height = '100%';
-    modal.style.background = 'rgba(0,0,0,0.9)';
-    modal.style.display = 'flex';
-    modal.style.alignItems = 'center';
-    modal.style.justifyContent = 'center';
-    modal.style.zIndex = 2000;
-    modal.innerHTML = `<div style="position:relative;"><img src="${url}" style="max-width:90vw; max-height:90vh; border-radius:20px;"><span style="position:absolute; top:10px; right:20px; font-size:30px; cursor:pointer; color:white;">&times;</span></div>`;
-    document.body.appendChild(modal);
-    modal.querySelector('span').onclick = () => modal.remove();
-    modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
-  };
-
-  // ------------------------------ ЗАПУСК ------------------------------
-  async function init() {
-    await loadCurrentUser();
-    await loadGameData();
-    setInterval(async () => {
-      try { await fetch('/api/update-peers', { method: 'POST' }); } catch(e) {}
-    }, 30000);
-  }
-  init();
+  loadUser().then(loadGame);
 })();
