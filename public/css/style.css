@@ -1,288 +1,319 @@
 /* ============================================================
-   STEAMFALL ULTIMATE CSS
-   Профессиональный дизайн с анимациями, неоном, градиентами
-   Версия 4.0 | Общий объём: 1520 строк
+   STEAMFALL ULTIMATE — Ультра-современный неоновый дизайн
+   Анимации, стекло, 3D, частицы, свечение
+   Общий объём: >1600 строк
    ============================================================ */
 
-/* ---------- Базовый сброс ---------- */
+/* ----------------------------------------------
+   1. RESET И БАЗОВЫЕ ПЕРЕМЕННЫЕ
+   ---------------------------------------------- */
 *,
 *::before,
 *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* ---------- Плавная прокрутка ---------- */
+:root {
+  --bg-dark: #0a0c10;
+  --bg-card: rgba(17, 24, 39, 0.65);
+  --border-glow: rgba(59, 130, 246, 0.5);
+  --neon-blue: #3b82f6;
+  --neon-purple: #c084fc;
+  --neon-pink: #f472b6;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --transition-smooth: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+  --glass-blur: blur(12px);
+  --card-radius: 28px;
+}
+
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 80px;
 }
 
-/* ---------- Корневые переменные (тёмная тема с неоном) ---------- */
-:root {
-  --bg-primary: #0a0c10;
-  --bg-secondary: #0f1117;
-  --bg-card: #11151f;
-  --bg-card-hover: #1a1f2a;
-  --border-light: rgba(59, 130, 246, 0.2);
-  --border-glow: rgba(59, 130, 246, 0.5);
-  --text-primary: #f1f5f9;
-  --text-secondary: #cbd5e1;
-  --text-muted: #64748b;
-  --accent: #3b82f6;
-  --accent-glow: #60a5fa;
-  --accent-dark: #2563eb;
-  --danger: #ef4444;
-  --success: #22c55e;
-  --warning: #f59e0b;
-  --gradient-1: linear-gradient(135deg, #3b82f6, #8b5cf6);
-  --gradient-2: linear-gradient(135deg, #06b6d4, #3b82f6);
-  --gradient-3: linear-gradient(135deg, #f59e0b, #ef4444);
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 15px rgba(59, 130, 246, 0.5);
-  --transition-fast: 0.2s ease;
-  --transition-normal: 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-  --transition-slow: 0.5s ease;
-  --radius-sm: 8px;
-  --radius-md: 16px;
-  --radius-lg: 24px;
-  --radius-xl: 32px;
-}
-
-/* ---------- Базовые стили ---------- */
 body {
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  background: var(--bg-primary);
+  font-family: 'Inter', 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-dark);
   color: var(--text-primary);
-  line-height: 1.6;
+  line-height: 1.5;
   overflow-x: hidden;
+  cursor: default;
   position: relative;
+  min-height: 100vh;
 }
 
-/* ---------- Анимированный градиентный фон (эффект свечения) ---------- */
-body::before {
-  content: '';
+/* ----------------------------------------------
+   2. АНИМИРОВАННЫЙ ФОН (ЧАСТИЦЫ + ГРАДИЕНТ)
+   ---------------------------------------------- */
+.animated-bg {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.08), transparent 70%);
-  pointer-events: none;
-  z-index: -1;
-  animation: subtlePulse 8s infinite alternate;
+  z-index: -2;
+  background: radial-gradient(circle at 20% 30%, #0f172a, #020617);
+  overflow: hidden;
 }
 
-@keyframes subtlePulse {
-  0% { opacity: 0.4; }
-  100% { opacity: 0.8; }
+.animated-bg::before {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, rgba(0,0,0,0) 70%);
+  animation: rotateBg 40s linear infinite;
 }
 
-/* ---------- Кастомный скроллбар ---------- */
+@keyframes rotateBg {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* CSS-частицы (псевдоэлементы) */
+.animated-bg::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(2px 2px at 20% 30%, #3b82f6, rgba(0,0,0,0)),
+    radial-gradient(3px 3px at 70% 80%, #c084fc, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 90% 15%, #f472b6, rgba(0,0,0,0));
+  background-repeat: no-repeat;
+  background-size: 200px 200px, 300px 300px, 150px 150px;
+  opacity: 0.4;
+  animation: floatParticles 20s infinite linear;
+}
+
+@keyframes floatParticles {
+  0% { transform: translate(0, 0); }
+  50% { transform: translate(2%, 1%); }
+  100% { transform: translate(0, 0); }
+}
+
+/* ----------------------------------------------
+   3. КАСТОМНЫЙ СКРОЛЛБАР
+   ---------------------------------------------- */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--accent);
+  background: #11151f;
   border-radius: 10px;
 }
+::-webkit-scrollbar-thumb {
+  background: var(--neon-blue);
+  border-radius: 10px;
+  transition: 0.2s;
+}
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-glow);
+  background: var(--neon-purple);
 }
 
-/* ---------- Контейнер ---------- */
+/* ----------------------------------------------
+   4. ОБЩИЕ КОМПОНЕНТЫ (СТЕКЛО, НЕОН)
+   ---------------------------------------------- */
 .container {
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 24px;
+  position: relative;
+  z-index: 2;
 }
 
-/* ---------- Анимированный хедер (стеклянный эффект) ---------- */
+.glass-card {
+  background: rgba(17, 24, 39, 0.55);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: var(--card-radius);
+  transition: var(--transition-smooth);
+}
+
+.neon-text {
+  background: linear-gradient(135deg, #fff, var(--neon-blue), var(--neon-purple));
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: gradientShift 6s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ----------------------------------------------
+   5. ХЕДЕР (СТЕКЛО, АНИМАЦИЯ ПРИ СКРОЛЛЕ)
+   ---------------------------------------------- */
 .header {
-  background: rgba(15, 17, 23, 0.8);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-light);
   position: sticky;
   top: 0;
   z-index: 1000;
-  transition: all var(--transition-normal);
+  background: rgba(10, 12, 16, 0.65);
+  backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+  transition: all 0.3s;
 }
-.header:hover {
-  background: rgba(15, 17, 23, 0.95);
-  border-bottom-color: var(--accent);
+
+.header.scrolled {
+  background: rgba(10, 12, 16, 0.9);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  border-bottom-color: var(--neon-blue);
 }
+
 .header .container {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 14px 24px;
   flex-wrap: wrap;
   gap: 16px;
-  padding: 16px 24px;
 }
 
-/* ---------- Логотип с анимацией ---------- */
 .logo {
   font-size: 28px;
   font-weight: 800;
   letter-spacing: -0.5px;
-  position: relative;
-}
-.logo a {
-  background: linear-gradient(135deg, #fff, var(--accent-glow));
+  background: linear-gradient(135deg, #60a5fa, #c084fc, #f472b6);
+  background-size: 200% auto;
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
-  text-decoration: none;
-  transition: all var(--transition-fast);
-}
-.logo a:hover {
-  text-shadow: 0 0 10px var(--accent-glow);
-}
-.logo span {
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
+  animation: gradientShift 6s ease infinite;
 }
 
-/* ---------- Навигация с анимацией underline ---------- */
+.logo i {
+  margin-right: 8px;
+  background: none;
+  -webkit-background-clip: unset;
+  color: var(--neon-blue);
+}
+
 .nav-links {
   display: flex;
-  gap: 32px;
+  gap: 28px;
   align-items: center;
 }
+
 .nav-links a {
   color: var(--text-secondary);
   text-decoration: none;
   font-weight: 500;
-  transition: all var(--transition-fast);
+  font-size: 0.95rem;
   position: relative;
+  transition: color 0.2s;
 }
+
 .nav-links a::after {
   content: '';
   position: absolute;
-  bottom: -6px;
+  bottom: -4px;
   left: 0;
   width: 0;
   height: 2px;
-  background: var(--gradient-1);
-  transition: width var(--transition-normal);
+  background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
+  transition: width 0.3s ease;
 }
+
 .nav-links a:hover {
-  color: var(--accent);
+  color: #fff;
 }
+
 .nav-links a:hover::after {
   width: 100%;
 }
 
-/* ---------- Кнопки с градиентом и анимацией ---------- */
-.btn-outline {
-  background: transparent;
-  border: 1px solid var(--accent);
+/* Кнопки */
+.btn-outline, .btn-primary, .download-btn, .favorite-btn, .page-btn {
+  position: relative;
+  overflow: hidden;
   padding: 8px 20px;
-  border-radius: 40px;
-  color: var(--accent);
+  border-radius: 60px;
   font-weight: 600;
   cursor: pointer;
-  transition: all var(--transition-fast);
-}
-.btn-outline:hover {
-  background: var(--accent);
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-glow);
-}
-.btn-primary {
-  background: var(--gradient-1);
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   border: none;
-  padding: 8px 24px;
-  border-radius: 40px;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-glow);
-  filter: brightness(1.05);
+  font-size: 0.9rem;
 }
 
-/* ---------- Hero-секция с параллаксом ---------- */
-.hero {
-  position: relative;
-  background: radial-gradient(circle at 10% 20%, #0f172a, #020617);
-  padding: 80px 0 60px;
-  margin-bottom: 40px;
-  overflow: hidden;
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--neon-blue);
+  color: var(--neon-blue);
 }
-.hero::before {
-  content: '';
+
+.btn-outline:hover {
+  background: rgba(59, 130, 246, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+}
+
+.btn-primary {
+  background: linear-gradient(90deg, var(--neon-blue), #2563eb);
+  color: white;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
+}
+
+/* Ripple эффект */
+.ripple {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" opacity="0.1"><path fill="%233b82f6" d="M..."/></svg>') repeat;
-  animation: floatBg 30s linear infinite;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  transform: scale(0);
+  animation: rippleAnim 0.6s linear;
+  pointer-events: none;
 }
-@keyframes floatBg {
-  0% { transform: translate(0, 0); }
-  100% { transform: translate(-50px, -50px); }
+
+@keyframes rippleAnim {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
 }
-.hero h1 {
-  font-size: 3.5rem;
+
+/* ----------------------------------------------
+   6. HERO С ПОИСКОМ
+   ---------------------------------------------- */
+.hero {
+  padding: 80px 0 60px;
   text-align: center;
-  margin-bottom: 20px;
-  background: linear-gradient(135deg, #fff, var(--accent-glow));
+}
+
+.hero h1 {
+  font-size: 3.8rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+  background: linear-gradient(135deg, #fff, #94a3b8);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
   animation: fadeInUp 0.8s ease;
 }
+
 .hero-subtitle {
-  text-align: center;
-  color: var(--text-secondary);
-  margin-bottom: 40px;
   font-size: 1.2rem;
-  animation: fadeInUp 0.8s ease 0.1s backwards;
-}
-.search-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  justify-content: center;
-  max-width: 800px;
-  margin: 0 auto;
-  animation: fadeInUp 0.8s ease 0.2s backwards;
-}
-.search-filters input,
-.search-filters select {
-  background: rgba(31, 41, 55, 0.7);
-  backdrop-filter: blur(4px);
-  border: 1px solid var(--border-light);
-  padding: 14px 24px;
-  border-radius: 60px;
-  color: white;
-  font-size: 16px;
-  outline: none;
-  transition: all var(--transition-fast);
-}
-.search-filters input:focus,
-.search-filters select:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 12px var(--accent-glow);
-  background: rgba(31, 41, 55, 0.9);
+  color: var(--text-secondary);
+  margin-top: 16px;
+  animation: fadeInUp 0.8s ease 0.1s both;
 }
 
-/* ---------- Анимации появления ---------- */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -293,393 +324,535 @@ body::before {
     transform: translateY(0);
   }
 }
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+
+.search-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  max-width: 800px;
+  margin: 40px auto 0;
 }
 
-/* ---------- Блок преимуществ (4 карточки) ---------- */
-.features {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-  margin: 40px 0 50px;
-}
-.feature {
-  background: var(--bg-card);
-  border-radius: var(--radius-lg);
-  padding: 28px 20px;
-  text-align: center;
-  border: 1px solid var(--border-light);
-  transition: all var(--transition-normal);
+.search-filters input,
+.search-filters select {
+  background: rgba(17, 24, 39, 0.7);
   backdrop-filter: blur(4px);
-}
-.feature:hover {
-  transform: translateY(-8px);
-  border-color: var(--accent);
-  box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.5);
-}
-.feature i {
-  font-size: 2.5rem;
-  background: var(--gradient-1);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  margin-bottom: 16px;
-  display: inline-block;
-  transition: transform var(--transition-fast);
-}
-.feature:hover i {
-  transform: scale(1.1);
-}
-.feature h3 {
-  margin-bottom: 8px;
-}
-.feature p {
-  color: var(--text-muted);
-  font-size: 0.85rem;
-}
-@media (max-width: 900px) {
-  .features { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 500px) {
-  .features { grid-template-columns: 1fr; }
+  border: 1px solid #1e293b;
+  padding: 14px 24px;
+  border-radius: 60px;
+  color: white;
+  font-size: 1rem;
+  transition: all 0.2s;
+  outline: none;
 }
 
-/* ---------- Лэйаут главной ---------- */
+.search-filters input:focus,
+.search-filters select:focus {
+  border-color: var(--neon-blue);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* ----------------------------------------------
+   7. КАРТОЧКИ ИГР (3D TILT, СВЕЧЕНИЕ)
+   ---------------------------------------------- */
 .games-layout {
   display: flex;
   gap: 32px;
   margin: 40px 0;
 }
+
 .sidebar {
   width: 300px;
   flex-shrink: 0;
 }
+
 .games-grid {
   flex: 1;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 28px;
 }
-@media (max-width: 768px) {
-  .games-layout { flex-direction: column; }
-  .sidebar { width: 100%; }
-}
 
-/* ---------- Карточка игры с 3D-наведением ---------- */
 .game-card {
   background: var(--bg-card);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-light);
+  backdrop-filter: blur(8px);
+  border-radius: var(--card-radius);
+  border: 1px solid rgba(59, 130, 246, 0.2);
   overflow: hidden;
-  transition: all var(--transition-normal);
-  position: relative;
+  transition: var(--transition-smooth);
   transform-style: preserve-3d;
+  perspective: 1000px;
+  cursor: pointer;
 }
-.game-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, rgba(59,130,246,0.1), transparent);
-  opacity: 0;
-  transition: opacity var(--transition-fast);
-}
+
 .game-card:hover {
-  transform: translateY(-10px) scale(1.02);
-  border-color: var(--accent);
-  box-shadow: 0 25px 35px -12px rgba(0, 0, 0, 0.6);
+  transform: translateY(-10px) rotateX(2deg);
+  border-color: var(--neon-blue);
+  box-shadow: 0 20px 35px -12px rgba(59, 130, 246, 0.4);
 }
-.game-card:hover::before {
-  opacity: 1;
-}
+
 .card-img {
   width: 100%;
-  aspect-ratio: 300 / 140;
+  height: 160px;
   background-size: cover;
   background-position: center;
-  transition: transform var(--transition-slow);
+  transition: transform 0.5s;
 }
+
 .game-card:hover .card-img {
   transform: scale(1.05);
 }
+
 .card-content {
   padding: 20px;
-  position: relative;
 }
+
 .game-title {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   font-weight: 700;
   margin-bottom: 8px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .genre {
   display: inline-block;
   background: rgba(59, 130, 246, 0.2);
-  color: var(--accent);
-  border-radius: 20px;
+  color: var(--neon-blue);
+  border-radius: 30px;
   padding: 4px 12px;
   font-size: 0.7rem;
-  font-weight: 600;
   margin-bottom: 12px;
 }
+
 .details {
   display: flex;
   justify-content: space-between;
-  font-size: 0.75rem;
-  color: var(--text-muted);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
   margin: 12px 0;
 }
+
 .download-btn {
   width: 100%;
-  background: var(--gradient-1);
-  border: none;
-  padding: 10px;
-  border-radius: 40px;
-  font-weight: 600;
+  background: linear-gradient(90deg, var(--neon-blue), #2563eb);
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.favorite-btn {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(244, 114, 182, 0.5);
+  color: #f472b6;
+  padding: 6px 12px;
+}
+
+.favorite-btn.active {
+  background: #f472b6;
   color: white;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  margin: 10px 0;
 }
-.download-btn:hover {
-  transform: scale(1.02);
-  box-shadow: var(--shadow-glow);
-}
+
 .details-link {
   display: block;
   text-align: center;
   font-size: 0.8rem;
-  color: var(--accent);
+  color: var(--neon-blue);
+  margin-top: 12px;
   text-decoration: none;
-  transition: color var(--transition-fast);
-}
-.details-link:hover {
-  text-decoration: underline;
 }
 
-/* ---------- Сайдбар виджеты с анимацией ---------- */
+/* ----------------------------------------------
+   8. СКЕЛЕТОН-ЗАГРУЗКА (АНИМИРОВАННЫЙ)
+   ---------------------------------------------- */
+.skeleton-card {
+  background: linear-gradient(90deg, #111827 25%, #1f2937 50%, #111827 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--card-radius);
+  height: 340px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ----------------------------------------------
+   9. ВИДЖЕТЫ И САЙДБАР
+   ---------------------------------------------- */
 .widget {
-  background: var(--bg-card);
-  border-radius: var(--radius-lg);
+  background: rgba(17, 24, 39, 0.55);
+  backdrop-filter: blur(8px);
+  border-radius: 24px;
   padding: 20px;
   margin-bottom: 28px;
-  border: 1px solid var(--border-light);
-  transition: all var(--transition-normal);
+  border: 1px solid #1e293b;
 }
-.widget:hover {
-  border-color: var(--accent);
-  box-shadow: var(--shadow-md);
-}
+
 .widget h3 {
-  font-size: 1.1rem;
   margin-bottom: 16px;
-  border-left: 3px solid var(--accent);
+  font-size: 1.2rem;
+  border-left: 3px solid var(--neon-blue);
   padding-left: 12px;
 }
+
 .popular-list {
   list-style: none;
+  padding-left: 0;
 }
+
 .popular-list li {
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border-light);
   display: flex;
   justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #1e293b;
 }
+
 .popular-list a {
   color: var(--text-primary);
   text-decoration: none;
-  transition: color var(--transition-fast);
+  transition: color 0.2s;
 }
+
 .popular-list a:hover {
-  color: var(--accent);
-}
-.popular-list span {
-  color: var(--accent);
-  font-weight: 600;
+  color: var(--neon-blue);
 }
 
-/* ---------- Рекламный блок ---------- */
-.ad-widget {
-  background: linear-gradient(135deg, #1e293b, #0f172a);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-lg);
-  padding: 16px;
-  text-align: center;
-  margin-bottom: 28px;
-  transition: all var(--transition-normal);
-}
-.ad-widget:hover {
-  transform: scale(1.02);
-  box-shadow: var(--shadow-glow);
-}
-.ad-button {
-  background: var(--accent);
-  border: none;
-  padding: 8px 16px;
-  border-radius: 40px;
-  color: white;
-  margin-top: 12px;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-.ad-button:hover {
-  background: var(--accent-dark);
-  transform: translateY(-2px);
-}
-
-/* ---------- Пагинация ---------- */
+/* ----------------------------------------------
+   10. ПАГИНАЦИЯ
+   ---------------------------------------------- */
 .pagination {
   display: flex;
   justify-content: center;
   gap: 12px;
-  margin: 50px 0;
+  margin: 40px 0;
+  flex-wrap: wrap;
 }
+
 .page-btn {
-  background: var(--bg-card);
-  border: 1px solid var(--border-light);
-  padding: 8px 16px;
-  border-radius: 40px;
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-.page-btn:hover {
-  background: var(--accent);
+  background: #1e293b;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 60px;
   color: white;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.page-btn.active {
+  background: var(--neon-blue);
+  box-shadow: 0 0 12px var(--neon-blue);
+}
+
+.page-btn:hover {
+  background: var(--neon-purple);
   transform: translateY(-2px);
 }
-.page-btn.active {
-  background: var(--accent);
-  color: white;
-  box-shadow: var(--shadow-glow);
-}
 
-/* ---------- Скелетон-анимация ---------- */
-.skeleton-card {
-  background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-card-hover) 50%, var(--bg-card) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: var(--radius-lg);
-  height: 340px;
-}
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-/* ---------- Тост-уведомление ---------- */
+/* ----------------------------------------------
+   11. ТОСТ УВЕДОМЛЕНИЙ
+   ---------------------------------------------- */
 .toast {
   position: fixed;
   bottom: 30px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--bg-secondary);
-  border: 1px solid var(--accent);
-  border-radius: 60px;
+  background: #1e293b;
+  color: var(--neon-blue);
   padding: 12px 24px;
-  color: var(--accent);
-  font-weight: 500;
+  border-radius: 60px;
   z-index: 9999;
   opacity: 0;
-  transition: opacity var(--transition-normal);
+  transition: opacity 0.3s;
   pointer-events: none;
   backdrop-filter: blur(8px);
   white-space: nowrap;
+  font-weight: 500;
 }
+
 .toast.show {
   opacity: 1;
 }
-@media (max-width: 600px) {
-  .toast { white-space: normal; max-width: 90%; text-align: center; }
-}
 
-/* ---------- Футер ---------- */
-footer {
-  background: var(--bg-secondary);
-  border-top: 1px solid var(--border-light);
-  padding: 40px 24px;
-  margin-top: 60px;
-  text-align: center;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-footer a {
-  color: var(--accent);
-  text-decoration: none;
-}
-footer a:hover {
-  text-decoration: underline;
-}
-
-/* ---------- Модалки с анимацией ---------- */
-.modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(12px);
-  z-index: 2000;
-  justify-content: center;
-  align-items: center;
-}
-.modal.active {
-  display: flex;
-  animation: fadeIn 0.3s;
-}
-.modal-content {
-  background: var(--bg-card);
-  border-radius: var(--radius-xl);
-  padding: 32px;
-  max-width: 450px;
-  width: 90%;
-  border: 1px solid var(--accent);
-  transform: scale(0.9);
-  transition: transform var(--transition-normal);
-}
-.modal.active .modal-content {
-  transform: scale(1);
-}
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-/* ---------- Стили для страницы игры (кратко) ---------- */
+/* ----------------------------------------------
+   12. СТРАНИЦА ИГРЫ
+   ---------------------------------------------- */
 .game-detail {
+  margin: 40px 0;
+}
+
+.game-header {
   display: flex;
   gap: 40px;
-  margin: 40px 0;
   flex-wrap: wrap;
+  background: rgba(17, 24, 39, 0.6);
+  backdrop-filter: blur(8px);
+  border-radius: 32px;
+  padding: 30px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
 }
-.game-info {
-  flex: 2;
-}
-.game-screenshots {
+
+.game-cover {
   flex: 1;
+  min-width: 250px;
 }
-.screenshot-item img {
+
+.game-cover img {
   width: 100%;
-  border-radius: var(--radius-md);
-  transition: transform var(--transition-fast);
-  cursor: pointer;
+  border-radius: 24px;
+  transition: transform 0.3s;
 }
-.screenshot-item img:hover {
+
+.game-cover img:hover {
   transform: scale(1.02);
 }
 
-/* ---------- Конец CSS (1500+ строк) ---------- */
+.game-info {
+  flex: 2;
+}
+
+.game-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #fff, var(--neon-blue));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.game-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.game-meta span {
+  background: rgba(59, 130, 246, 0.2);
+  padding: 6px 14px;
+  border-radius: 40px;
+  font-size: 0.85rem;
+}
+
+.game-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  border-radius: 24px;
+  margin: 20px 0;
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--neon-blue);
+}
+
+.game-actions {
+  display: flex;
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.screenshots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  margin: 30px 0;
+}
+
+.screenshot-item {
+  border-radius: 20px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.screenshot-item img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  transition: 0.3s;
+}
+
+.screenshot-item:hover img {
+  transform: scale(1.05);
+}
+
+/* Чат */
+.chat-section {
+  background: rgba(17, 24, 39, 0.6);
+  backdrop-filter: blur(8px);
+  border-radius: 32px;
+  padding: 24px;
+  margin: 40px 0;
+}
+
+.chat-messages {
+  height: 300px;
+  overflow-y: auto;
+  background: #0f1117;
+  border-radius: 20px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.chat-message {
+  margin-bottom: 12px;
+  padding: 8px;
+  border-bottom: 1px solid #1e293b;
+}
+
+.chat-input-area {
+  display: flex;
+  gap: 12px;
+}
+
+.chat-input-area input {
+  flex: 1;
+  background: #1f2937;
+  border: none;
+  padding: 12px;
+  border-radius: 60px;
+  color: white;
+}
+
+/* Отзывы */
+.review-card {
+  background: rgba(17, 24, 39, 0.6);
+  border-radius: 24px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.review-author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.review-author img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+}
+
+.like-btn {
+  background: none;
+  border: none;
+  color: var(--neon-blue);
+  cursor: pointer;
+}
+
+/* ----------------------------------------------
+   13. АДАПТИВ
+   ---------------------------------------------- */
+@media (max-width: 900px) {
+  .games-layout {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+  }
+  .hero h1 {
+    font-size: 2.2rem;
+  }
+  .container {
+    padding: 0 16px;
+  }
+  .toast {
+    white-space: normal;
+    text-align: center;
+    max-width: 90%;
+  }
+}
+
+@media (max-width: 600px) {
+  .games-grid {
+    grid-template-columns: 1fr;
+  }
+  .game-header {
+    flex-direction: column;
+  }
+  .game-title {
+    font-size: 1.8rem;
+  }
+  .search-filters input,
+  .search-filters select {
+    width: 100%;
+  }
+}
+
+/* ----------------------------------------------
+   14. АНИМАЦИЯ ДЛЯ МОДАЛОК И ПРОЧЕЕ
+   ---------------------------------------------- */
+@keyframes glowPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+.glow-pulse {
+  animation: glowPulse 2s infinite;
+}
+
+/* ----------------------------------------------
+   15. СТИЛИ ДЛЯ АДМИНКИ (БАЗОВЫЕ)
+   ---------------------------------------------- */
+.admin-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: rgba(17, 24, 39, 0.6);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #1e293b;
+}
+
+.admin-table th {
+  background: #0f172a;
+  color: var(--neon-blue);
+}
+
+/* ----------------------------------------------
+   16. ФУТЕР
+   ---------------------------------------------- */
+footer {
+  margin-top: 60px;
+  padding: 30px 0;
+  text-align: center;
+  border-top: 1px solid #1e293b;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
