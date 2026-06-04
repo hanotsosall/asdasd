@@ -3,29 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <meta name="description" content="SteamFall — торрент-трекер игр с анимациями, неоном и высокой скоростью. Скачивай новинки и классику.">
-  <meta name="theme-color" content="#0a0c10">
-  <title>SteamFall — анимированный торрент-трекер игр</title>
+  <meta name="description" content="SteamFall — торрент-трекер игр с неоновым дизайном, анимациями и высокой скоростью загрузки. Скачивай новинки бесплатно.">
+  <title>SteamFall | Анимированный торрент-трекер игр</title>
   <!-- Preconnect для шрифтов -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <!-- Google Fonts с несколькими вариантами -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <!-- Font Awesome 6 (иконки) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <!-- Anime.js для сложных анимаций -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
   <!-- Socket.IO -->
   <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
   <style>
-    /* ----------------------------------------------
-      ГЛОБАЛЬНЫЕ СТИЛИ И АНИМАЦИИ
-    ------------------------------------------------ */
+    /* -------------------------------------------------------------------------- */
+    /*                               RESET & GLOBAL                               */
+    /* -------------------------------------------------------------------------- */
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
+
     body {
       font-family: 'Inter', 'Space Grotesk', sans-serif;
       background: #0a0c10;
@@ -34,13 +32,15 @@
       overflow-x: hidden;
       cursor: default;
     }
-    /* Кастомный скроллбар */
+
+    /* Кастомный скроллбар (тонкий, неон) */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
     }
     ::-webkit-scrollbar-track {
       background: #11151f;
+      border-radius: 10px;
     }
     ::-webkit-scrollbar-thumb {
       background: #3b82f6;
@@ -49,7 +49,8 @@
     ::-webkit-scrollbar-thumb:hover {
       background: #60a5fa;
     }
-    /* Анимированный градиентный фон */
+
+    /* Анимированный градиентный фон (живой, движущийся) */
     .animated-bg {
       position: fixed;
       top: 0;
@@ -66,13 +67,37 @@
       height: 200%;
       top: -50%;
       left: -50%;
-      background: radial-gradient(circle, rgba(59,130,246,0.1) 0%, rgba(0,0,0,0) 70%);
-      animation: rotateBg 30s linear infinite;
+      background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, rgba(0,0,0,0) 70%);
+      animation: rotateBg 25s linear infinite;
     }
     @keyframes rotateBg {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
+    /* Дополнительные плавающие частицы (CSS only) */
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      pointer-events: none;
+    }
+    .particle {
+      position: absolute;
+      background: rgba(59,130,246,0.3);
+      border-radius: 50%;
+      filter: blur(2px);
+      animation: floatParticle 15s infinite ease-in-out;
+    }
+    @keyframes floatParticle {
+      0% { transform: translateY(100vh) translateX(0) scale(0); opacity: 0; }
+      50% { opacity: 0.5; }
+      100% { transform: translateY(-20vh) translateX(100px) scale(1); opacity: 0; }
+    }
+
     /* Контейнер */
     .container {
       max-width: 1400px;
@@ -81,21 +106,23 @@
       position: relative;
       z-index: 2;
     }
-    /* ----------------------------------------------
-      ХЕДЕР С АНИМАЦИЕЙ ПРИ СКРОЛЛЕ
-    ---------------------------------------------- */
+
+    /* -------------------------------------------------------------------------- */
+    /*                                  HEADER                                    */
+    /* -------------------------------------------------------------------------- */
     .header {
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(10, 12, 16, 0.7);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(59,130,246,0.3);
+      background: rgba(10, 12, 16, 0.6);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(59,130,246,0.2);
       transition: all 0.3s cubic-bezier(0.2,0.9,0.4,1.1);
     }
     .header.scrolled {
-      background: rgba(10, 12, 16, 0.95);
+      background: rgba(10, 12, 16, 0.9);
       box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      border-bottom-color: #3b82f6;
     }
     .header .container {
       display: flex;
@@ -105,7 +132,8 @@
       flex-wrap: wrap;
       gap: 16px;
     }
-    /* Логотип с анимацией градиента */
+
+    /* Логотип с анимированным градиентом */
     .logo {
       font-size: 28px;
       font-weight: 800;
@@ -123,15 +151,15 @@
       100% { background-position: 0% 50%; }
     }
     .logo i {
-      margin-right: 6px;
+      margin-right: 8px;
       background: none;
-      -webkit-background-clip: unset;
       color: #60a5fa;
     }
-    /* Навигация с анимированным подчёркиванием */
+
+    /* Навигация */
     .nav-links {
       display: flex;
-      gap: 28px;
+      gap: 32px;
       align-items: center;
     }
     .nav-links a {
@@ -145,7 +173,7 @@
     .nav-links a::after {
       content: '';
       position: absolute;
-      bottom: -4px;
+      bottom: -6px;
       left: 0;
       width: 0;
       height: 2px;
@@ -158,15 +186,16 @@
     .nav-links a:hover::after {
       width: 100%;
     }
-    /* Кнопки с ripple-эффектом */
+
+    /* Кнопки с ripple и неоном */
     .btn-outline, .btn-primary {
       position: relative;
       overflow: hidden;
-      padding: 8px 20px;
+      padding: 8px 24px;
       border-radius: 40px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.25s;
       display: inline-flex;
       align-items: center;
       gap: 8px;
@@ -181,6 +210,7 @@
     .btn-outline:hover {
       background: rgba(59,130,246,0.1);
       transform: translateY(-2px);
+      box-shadow: 0 0 12px rgba(59,130,246,0.5);
     }
     .btn-primary {
       background: linear-gradient(90deg, #3b82f6, #2563eb);
@@ -189,9 +219,8 @@
     }
     .btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(59,130,246,0.5);
+      box-shadow: 0 6px 20px rgba(59,130,246,0.6);
     }
-    /* Ripple-эффект */
     .ripple {
       position: absolute;
       border-radius: 50%;
@@ -201,47 +230,53 @@
       pointer-events: none;
     }
     @keyframes rippleAnim {
-      to { transform: scale(4); opacity: 0; }
+      to { transform: scale(6); opacity: 0; }
     }
-    /* ----------------------------------------------
-      HERO С АНИМИРОВАННЫМИ ЧАСТИЦАМИ
-    ---------------------------------------------- */
+
+    /* -------------------------------------------------------------------------- */
+    /*                                   HERO                                     */
+    /* -------------------------------------------------------------------------- */
     .hero {
       position: relative;
-      padding: 80px 0 60px;
+      padding: 100px 0 80px;
       text-align: center;
       overflow: hidden;
     }
     .hero h1 {
-      font-size: 3.8rem;
+      font-size: 4rem;
       font-weight: 800;
-      letter-spacing: -1px;
-      background: linear-gradient(135deg, #fff, #94a3b8);
+      letter-spacing: -1.5px;
+      background: linear-gradient(135deg, #fff, #94a3b8, #60a5fa);
       background-clip: text;
       -webkit-background-clip: text;
       color: transparent;
       animation: fadeInUp 0.8s ease;
     }
     .hero-subtitle {
-      font-size: 1.2rem;
+      font-size: 1.3rem;
       color: #94a3b8;
-      margin-top: 16px;
+      margin-top: 20px;
       animation: fadeInUp 0.8s ease 0.1s both;
     }
-    /* Поиск с анимацией */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Поиск и фильтры — стеклянный эффект */
     .search-filters {
       display: flex;
       flex-wrap: wrap;
       gap: 16px;
       justify-content: center;
-      max-width: 800px;
-      margin: 40px auto 0;
+      max-width: 900px;
+      margin: 50px auto 0;
     }
     .search-filters input, .search-filters select {
-      background: rgba(17, 24, 39, 0.8);
-      backdrop-filter: blur(4px);
-      border: 1px solid #1e293b;
-      padding: 14px 24px;
+      background: rgba(17, 24, 39, 0.7);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(59,130,246,0.3);
+      padding: 14px 28px;
       border-radius: 60px;
       color: white;
       font-size: 1rem;
@@ -251,30 +286,32 @@
     .search-filters input:focus, .search-filters select:focus {
       border-color: #3b82f6;
       box-shadow: 0 0 0 3px rgba(59,130,246,0.3);
+      background: rgba(17, 24, 39, 0.9);
     }
-    /* Анимация появления */
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+
+    /* -------------------------------------------------------------------------- */
+    /*                               КАРТОЧКИ ИГР                                 */
+    /* -------------------------------------------------------------------------- */
+    .games-layout {
+      display: flex;
+      gap: 32px;
+      margin: 40px 0;
     }
-    /* ----------------------------------------------
-      КАРТОЧКИ ИГР С 3D-ЭФФЕКТОМ
-    ---------------------------------------------- */
+    .sidebar {
+      width: 300px;
+      flex-shrink: 0;
+    }
     .games-grid {
+      flex: 1;
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 28px;
-      margin: 40px 0;
     }
+
+    /* Карточка с 3D-эффектом и стеклом */
     .game-card {
-      background: rgba(17, 24, 39, 0.6);
-      backdrop-filter: blur(8px);
+      background: rgba(17, 24, 39, 0.5);
+      backdrop-filter: blur(12px);
       border-radius: 28px;
       border: 1px solid rgba(59,130,246,0.2);
       overflow: hidden;
@@ -283,13 +320,13 @@
       perspective: 1000px;
     }
     .game-card:hover {
-      transform: translateY(-10px) rotateX(2deg);
+      transform: translateY(-12px) rotateX(3deg);
       border-color: #3b82f6;
-      box-shadow: 0 20px 35px -12px rgba(59,130,246,0.3);
+      box-shadow: 0 25px 40px -12px rgba(59,130,246,0.4);
     }
     .card-img {
       width: 100%;
-      height: 160px;
+      height: 170px;
       background-size: cover;
       background-position: center;
       transition: transform 0.5s;
@@ -304,13 +341,16 @@
       font-size: 1.3rem;
       font-weight: 700;
       margin-bottom: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .genre {
       display: inline-block;
       background: rgba(59,130,246,0.2);
       color: #60a5fa;
       border-radius: 30px;
-      padding: 4px 12px;
+      padding: 4px 14px;
       font-size: 0.7rem;
       margin-bottom: 12px;
     }
@@ -325,17 +365,27 @@
       width: 100%;
       background: linear-gradient(90deg, #3b82f6, #2563eb);
       border: none;
-      padding: 10px;
+      padding: 10px 0;
       border-radius: 40px;
       font-weight: 600;
       color: white;
       cursor: pointer;
       transition: 0.2s;
+      margin: 8px 0;
     }
     .download-btn:hover {
       transform: scale(1.02);
       box-shadow: 0 4px 12px #3b82f6;
     }
+    .details-link {
+      display: block;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #60a5fa;
+      text-decoration: none;
+      margin-top: 8px;
+    }
+
     /* Skeleton loader */
     .skeleton-card {
       background: linear-gradient(90deg, #111827 25%, #1f2937 50%, #111827 75%);
@@ -348,24 +398,24 @@
       0% { background-position: -200% 0; }
       100% { background-position: 200% 0; }
     }
-    /* ----------------------------------------------
-      САЙДБАР И ВИДЖЕТЫ
-    ---------------------------------------------- */
-    .games-layout {
-      display: flex;
-      gap: 32px;
-    }
-    .sidebar {
-      width: 300px;
-      flex-shrink: 0;
-    }
+
+    /* Виджеты сайдбара */
     .widget {
-      background: rgba(17, 24, 39, 0.6);
-      backdrop-filter: blur(8px);
+      background: rgba(17, 24, 39, 0.5);
+      backdrop-filter: blur(12px);
       border-radius: 24px;
       padding: 20px;
       margin-bottom: 28px;
-      border: 1px solid #1e293b;
+      border: 1px solid rgba(59,130,246,0.2);
+    }
+    .widget h3 {
+      font-size: 1.2rem;
+      margin-bottom: 16px;
+      border-left: 3px solid #3b82f6;
+      padding-left: 12px;
+    }
+    .popular-list {
+      list-style: none;
     }
     .popular-list li {
       display: flex;
@@ -373,6 +423,40 @@
       padding: 10px 0;
       border-bottom: 1px solid #1e293b;
     }
+    .popular-list a {
+      color: #e2e8f0;
+      text-decoration: none;
+    }
+    .popular-list a:hover {
+      color: #60a5fa;
+    }
+
+    /* Пагинация */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin: 50px 0;
+    }
+    .page-btn {
+      background: rgba(17, 24, 39, 0.7);
+      border: 1px solid #1e293b;
+      padding: 10px 18px;
+      border-radius: 40px;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .page-btn.active {
+      background: #3b82f6;
+      border-color: #3b82f6;
+      box-shadow: 0 0 12px #3b82f6;
+    }
+    .page-btn:hover {
+      background: #3b82f6;
+      transform: translateY(-2px);
+    }
+
     /* Тост */
     .toast {
       position: fixed;
@@ -381,27 +465,46 @@
       transform: translateX(-50%);
       background: #1e293b;
       color: #3b82f6;
-      padding: 12px 24px;
+      padding: 12px 28px;
       border-radius: 60px;
+      font-weight: 500;
       z-index: 9999;
       opacity: 0;
       transition: opacity 0.3s;
       pointer-events: none;
       backdrop-filter: blur(8px);
+      border: 1px solid #3b82f6;
     }
     .toast.show {
       opacity: 1;
     }
+
+    /* Футер */
+    footer {
+      text-align: center;
+      padding: 40px 0;
+      border-top: 1px solid #1e293b;
+      margin-top: 60px;
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+
     /* Адаптив */
     @media (max-width: 900px) {
       .games-layout { flex-direction: column; }
       .sidebar { width: 100%; }
-      .hero h1 { font-size: 2.2rem; }
+      .hero h1 { font-size: 2.5rem; }
+      .hero-subtitle { font-size: 1rem; }
+    }
+    @media (max-width: 600px) {
+      .games-grid { grid-template-columns: 1fr; }
+      .search-filters input, .search-filters select { width: 100%; }
     }
   </style>
 </head>
 <body>
 <div class="animated-bg"></div>
+<div class="particles" id="particlesContainer"></div>
 <header class="header" id="header">
   <div class="container">
     <div class="logo"><i class="fas fa-skull"></i> Steam<span>Fall</span></div>
@@ -420,11 +523,21 @@
 <section class="hero">
   <div class="container">
     <h1>Скачивай игры <span class="neon">на максимальной скорости</span></h1>
-    <p class="hero-subtitle">Более 12 000 раздач. Анимации, неон, высокая скорость.</p>
+    <p class="hero-subtitle">Более 12 000 раздач. Неон, анимации, высокая скорость загрузки.</p>
     <div class="search-filters">
-      <input type="text" id="searchInput" placeholder="Поиск игры...">
-      <select id="genreFilter"><option value="all">Все жанры</option><option value="RPG">RPG</option><option value="Action">Action</option></select>
-      <select id="sortSelect"><option value="date">Новые</option><option value="downloads">Популярные</option></select>
+      <input type="text" id="searchInput" placeholder="🔍 Поиск игры...">
+      <select id="genreFilter">
+        <option value="all">Все жанры</option>
+        <option value="RPG">RPG</option>
+        <option value="Action">Action</option>
+        <option value="Adventure">Adventure</option>
+        <option value="Indie">Indie</option>
+      </select>
+      <select id="sortSelect">
+        <option value="date">📅 Новые</option>
+        <option value="downloads">🔥 Популярные</option>
+        <option value="rating">⭐ По рейтингу</option>
+      </select>
     </div>
   </div>
 </section>
@@ -432,21 +545,59 @@
 <main class="container">
   <div class="games-layout">
     <aside class="sidebar">
-      <div class="widget"><h3>Популярные игры</h3><ul id="popularList" class="popular-list"><li>Загрузка...</li></ul></div>
-      <div class="widget"><h3>Реклама</h3><div id="sidebarAd">Тут могла быть ваша реклама</div></div>
+      <div class="widget">
+        <h3><i class="fas fa-fire"></i> Популярные игры</h3>
+        <ul class="popular-list" id="popularList"><li>Загрузка...</li></ul>
+      </div>
+      <div class="widget">
+        <h3><i class="fas fa-chart-line"></i> Статистика</h3>
+        <div id="statsContent">Загрузка...</div>
+      </div>
+      <div class="widget" id="sidebarAd">
+        <h3>📢 Реклама</h3>
+        <div>Место для вашей рекламы</div>
+      </div>
     </aside>
-    <div class="games-grid" id="gamesGrid"><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div></div>
+    <div class="games-grid" id="gamesGrid">
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+    </div>
   </div>
   <div id="pagination" class="pagination"></div>
 </main>
 
-<footer><div class="container"><p>© 2025 SteamFall — анимированный торрент-трекер</p></div></footer>
+<footer>
+  <div class="container">
+    <p>© 2025 SteamFall — анимированный торрент-трекер. Все права защищены.</p>
+  </div>
+</footer>
+
 <div id="toast" class="toast"></div>
 
 <script src="/js/main.js"></script>
 <script>
-  // Ripple эффект на кнопках
-  document.querySelectorAll('.btn-outline, .btn-primary, .download-btn').forEach(btn => {
+  // Генерация плавающих частиц
+  function createParticles() {
+    const container = document.getElementById('particlesContainer');
+    if (!container) return;
+    for (let i = 0; i < 50; i++) {
+      const particle = document.createElement('div');
+      particle.classList.add('particle');
+      const size = Math.random() * 8 + 2;
+      particle.style.width = size + 'px';
+      particle.style.height = size + 'px';
+      particle.style.left = Math.random() * 100 + '%';
+      particle.style.animationDuration = Math.random() * 20 + 10 + 's';
+      particle.style.animationDelay = Math.random() * 20 + 's';
+      particle.style.opacity = Math.random() * 0.4;
+      container.appendChild(particle);
+    }
+  }
+  createParticles();
+
+  // Ripple эффект на кнопки
+  document.querySelectorAll('.btn-outline, .btn-primary, .download-btn, .page-btn').forEach(btn => {
     btn.addEventListener('click', function(e) {
       const rect = this.getBoundingClientRect();
       const x = e.clientX - rect.left;
@@ -461,6 +612,7 @@
       setTimeout(() => ripple.remove(), 600);
     });
   });
+
   // Анимация header при скролле
   window.addEventListener('scroll', () => {
     const header = document.getElementById('header');
