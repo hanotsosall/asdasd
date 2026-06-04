@@ -2,19 +2,21 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SteamFall — торрент игры в стиле glassmorphism</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <meta name="description" content="SteamFall — торрент-трекер игр с современным дизайном, стеклянными карточками и высокой скоростью загрузки.">
+  <title>SteamFall — скачать игры торрентом</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
 </head>
 <body>
-<div class="glass-bg"></div>
-<header class="header">
+
+<header class="header" id="header">
   <div class="container">
-    <div class="logo"><i class="fas fa-skull"></i> SteamFall</div>
+    <div class="logo"><i class="fas fa-dragon"></i> Steam<span style="background: linear-gradient(135deg, #a78bfa, #6366f1); background-clip: text; -webkit-background-clip: text; color: transparent;">Fall</span></div>
     <div class="nav-links">
       <a href="/">Главная</a>
       <a href="/top.html">Топ</a>
@@ -27,42 +29,79 @@
     </div>
   </div>
 </header>
-<main class="container">
-  <div style="margin: 40px 0;">
-    <div class="search-filters" style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
-      <input type="text" id="searchInput" placeholder="Поиск игры..." style="flex:1; min-width:200px; background:rgba(22,26,35,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:60px; padding:12px 20px; color:white;">
-      <select id="genreFilter" style="background:rgba(22,26,35,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:60px; padding:12px 20px; color:white;">
-        <option value="all">Все жанры</option>
-        <option value="RPG">RPG</option>
-        <option value="Action">Action</option>
-        <option value="Indie">Indie</option>
-      </select>
-      <select id="sortSelect" style="background:rgba(22,26,35,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:60px; padding:12px 20px; color:white;">
-        <option value="date">Новые</option>
-        <option value="downloads">Популярные</option>
-        <option value="rating">По рейтингу</option>
-      </select>
-    </div>
+
+<!-- Блок преимуществ (стеклянные карточки) -->
+<div class="container">
+  <div class="features">
+    <div class="feature"><i class="fas fa-tachometer-alt"></i><h3>Высокая скорость</h3><p>Скачивай на максимальной скорости</p></div>
+    <div class="feature"><i class="fas fa-shield-alt"></i><h3>Безопасность</h3><p>Проверенные раздачи без вирусов</p></div>
+    <div class="feature"><i class="fas fa-sync-alt"></i><h3>Свежие версии</h3><p>Обновляем сразу после патчей</p></div>
+    <div class="feature"><i class="fas fa-star"></i><h3>Честные отзывы</h3><p>Реальные оценки игроков</p></div>
   </div>
+</div>
+
+<!-- Основной контент -->
+<main class="container">
   <div class="games-layout">
+    <!-- Левый сайдбар -->
     <aside class="sidebar">
       <div class="widget">
-        <h3>Популярные игры</h3>
-        <ul class="popular-list" id="popularList"><li>Загрузка...</li></ul>
+        <h3><i class="fas fa-search"></i> Поиск</h3>
+        <input type="text" id="searchInput" placeholder="Название игры..." style="width:100%; padding:10px; background:rgba(0,0,0,0.3); border:1px solid var(--color-border); border-radius:40px; color:white; margin-bottom:12px;">
+        <select id="genreFilter" style="width:100%; padding:10px; background:rgba(0,0,0,0.3); border:1px solid var(--color-border); border-radius:40px; color:white; margin-bottom:12px;">
+          <option value="all">Все жанры</option>
+          <option value="RPG">RPG</option>
+          <option value="Action">Action</option>
+          <option value="Adventure">Adventure</option>
+          <option value="Indie">Indie</option>
+          <option value="Survival">Survival</option>
+        </select>
+        <select id="sortSelect" style="width:100%; padding:10px; background:rgba(0,0,0,0.3); border:1px solid var(--color-border); border-radius:40px; color:white;">
+          <option value="date">Новые</option>
+          <option value="downloads">Популярные</option>
+          <option value="rating">По рейтингу</option>
+        </select>
+      </div>
+      <div class="widget">
+        <h3><i class="fas fa-fire"></i> Популярные игры</h3>
+        <ul class="popular-list" id="popularGamesList"><li>Загрузка...</li></ul>
+      </div>
+      <div class="widget" id="sidebarAd">
+        <h3><i class="fas fa-ad"></i> Реклама</h3>
+        <div style="text-align:center; padding:12px;">✨ Здесь может быть ваш баннер</div>
       </div>
     </aside>
+
+    <!-- Сетка игр -->
     <div class="games-grid" id="gamesGrid">
-      <div class="skeleton-card" style="background:rgba(22,26,35,0.5); border-radius:20px; height:340px;"></div>
-      <div class="skeleton-card" style="background:rgba(22,26,35,0.5); border-radius:20px; height:340px;"></div>
-      <div class="skeleton-card" style="background:rgba(22,26,35,0.5); border-radius:20px; height:340px;"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
     </div>
   </div>
+
   <div id="pagination" class="pagination"></div>
 </main>
+
 <footer>
-  <div class="container"><p>© 2025 SteamFall — торрент-трекер игр</p></div>
+  <div class="container">
+    <p>© 2025 SteamFall — торрент-трекер игр. Все права защищены.</p>
+  </div>
 </footer>
+
 <div id="toast" class="toast"></div>
+
 <script src="/js/main.js"></script>
+<script>
+  // Анимация хедера при скролле
+  window.addEventListener('scroll', function() {
+    const header = document.getElementById('header');
+    if (window.scrollY > 50) header.classList.add('scrolled');
+    else header.classList.remove('scrolled');
+  });
+</script>
 </body>
 </html>
