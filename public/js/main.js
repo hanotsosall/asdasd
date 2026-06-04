@@ -1,13 +1,13 @@
 // ============================================================================
-// SteamFall ULTIMATE — главная логика с анимациями, WebSocket, фильтрами, пагинацией
-// Анимированная загрузка карточек, ripple-эффекты, тосты, работа с API
-// Объём: 1100+ строк
+// SteamFall ULTIMATE — главная логика с анимациями, WebSocket, фильтрами
+// Адаптировано под ультра-современный дизайн (стекло, частицы, 3D-карточки)
+// Объём: 900+ строк
 // ============================================================================
 
 (function() {
   'use strict';
 
-  // ------------------------------ ПЕРЕМЕННЫЕ ------------------------------
+  // ------------------------------ ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ------------------------------
   let currentUser = null;
   let token = localStorage.getItem('token');
   let currentPage = 1;
@@ -28,13 +28,14 @@
   const genreFilter = document.getElementById('genreFilter');
   const sortSelect = document.getElementById('sortSelect');
   const popularList = document.getElementById('popularList');
+  const statsContent = document.getElementById('statsContent');
   const toast = document.getElementById('toast');
   const authButtons = document.getElementById('authButtons');
 
   // ------------------------------ ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ------------------------------
   function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/[&<>]/g, m => {
+    return str.replace(/[&<>]/g, function(m) {
       if (m === '&') return '&amp;';
       if (m === '<') return '&lt;';
       if (m === '>') return '&gt;';
@@ -43,7 +44,8 @@
   }
 
   function formatNumber(num) {
-    return num?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") || '0';
+    if (num === undefined || num === null) return '0';
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
   }
 
   function showToast(message, isError = false) {
@@ -61,33 +63,33 @@
         targets: '.game-card',
         opacity: [0, 1],
         translateY: [30, 0],
-        delay: anime.stagger(50),
+        delay: anime.stagger(60),
         duration: 600,
         easing: 'easeOutCubic'
       });
     }
   }
 
-  // Ripple-эффект для всех кнопок (глобально)
-  function addRippleEffectToButtons() {
-    document.querySelectorAll('.btn-outline, .btn-primary, .download-btn, .page-btn').forEach(btn => {
-      btn.removeEventListener('click', rippleHandler);
-      btn.addEventListener('click', rippleHandler);
+  // Ripple-эффект для кнопок (глобально)
+  function addRippleToNewButtons() {
+    document.querySelectorAll('.btn-outline, .btn-primary, .download-btn, .page-btn, .favorite-btn').forEach(btn => {
+      if (!btn.hasRippleListener) {
+        btn.addEventListener('click', function(e) {
+          const rect = this.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          const ripple = document.createElement('span');
+          ripple.className = 'ripple';
+          ripple.style.left = x + 'px';
+          ripple.style.top = y + 'px';
+          this.style.position = 'relative';
+          this.style.overflow = 'hidden';
+          this.appendChild(ripple);
+          setTimeout(() => ripple.remove(), 600);
+        });
+        btn.hasRippleListener = true;
+      }
     });
-  }
-
-  function rippleHandler(e) {
-    const rect = this.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const ripple = document.createElement('span');
-    ripple.className = 'ripple';
-    ripple.style.left = x + 'px';
-    ripple.style.top = y + 'px';
-    this.style.position = 'relative';
-    this.style.overflow = 'hidden';
-    this.appendChild(ripple);
-    setTimeout(() => ripple.remove(), 600);
   }
 
   // ------------------------------ АВТОРИЗАЦИЯ ------------------------------
@@ -109,7 +111,7 @@
         <a href="/login.html?register=1" class="btn-primary">Регистрация</a>
       `;
     }
-    addRippleEffectToButtons();
+    addRippleToNewButtons();
   }
 
   async function loadCurrentUser() {
@@ -125,7 +127,9 @@
       } else {
         logout();
       }
-    } catch (err) {}
+    } catch (err) {
+      console.error('Ошибка загрузки пользователя:', err);
+    }
   }
 
   async function login(username, password) {
@@ -170,6 +174,7 @@
         const favs = await res.json();
         favorites.clear();
         favs.forEach(f => favorites.add(f.gameId));
+        renderGames(gamesData);
       }
     } catch (err) {}
   }
@@ -203,7 +208,7 @@
     return false;
   }
 
-  // ------------------------------ ЗАГРУЗКА ИГР (С АНИМАЦИЕЙ) ------------------------------
+  // ------------------------------ ЗАГРУЗКА ИГР ------------------------------
   async function loadGames(page = 1) {
     if (isLoading) return;
     isLoading = true;
@@ -225,7 +230,7 @@
       totalPages = data.totalPages;
       renderGames(gamesData);
       renderPagination();
-      animateCards(); // Анимация появления карточек
+      animateCards();
     } catch (err) {
       if (err.name !== 'AbortError') {
         showToast('Ошибка загрузки игр', true);
@@ -238,12 +243,12 @@
   function renderGames(games) {
     if (!gamesGrid) return;
     if (!games.length) {
-      gamesGrid.innerHTML = '<div class="no-games">😢 Игры не найдены. Попробуйте изменить поиск.</div>';
+      gamesGrid.innerHTML = '<div class="no-games" style="grid-column:1/-1; text-align:center; padding:40px;">😢 Игры не найдены. Попробуйте изменить поиск.</div>';
       return;
     }
     gamesGrid.innerHTML = games.map(game => `
       <div class="game-card" data-id="${game.id}">
-        <div class="card-img" style="background-image: url('${game.screenshots?.[0] || 'https://picsum.photos/id/0/300/160'}');"></div>
+        <div class="card-img" style="background-image: url('${game.screenshots?.[0] || 'https://picsum.photos/id/0/300/170'}');"></div>
         <div class="card-content">
           <div class="game-title">${escapeHtml(game.title)}</div>
           <div class="genre">${escapeHtml(game.genre)}</div>
@@ -252,7 +257,7 @@
             <span><i class="fas fa-arrow-up"></i> ${game.seeders}</span>
             <span><i class="fas fa-star"></i> ${game.rating || '—'}</span>
           </div>
-          <p class="game-short-desc">${escapeHtml(game.description?.substring(0, 80))}…</p>
+          <p class="game-short-desc">${escapeHtml(game.description?.substring(0, 80) || '')}…</p>
           <button class="download-btn" data-magnet="${escapeHtml(game.magnet)}">
             <i class="fas fa-download"></i> Скачать торрент
           </button>
@@ -283,7 +288,7 @@
         await toggleFavorite(gameId, btn.querySelector('i'));
       });
     });
-    addRippleEffectToButtons();
+    addRippleToNewButtons();
   }
 
   function renderPagination() {
@@ -293,7 +298,11 @@
       return;
     }
     let html = '';
-    for (let i = 1; i <= totalPages; i++) {
+    const maxVisible = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    if (endPage - startPage + 1 < maxVisible) startPage = Math.max(1, endPage - maxVisible + 1);
+    for (let i = startPage; i <= endPage; i++) {
       html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
     }
     paginationDiv.innerHTML = html;
@@ -303,7 +312,7 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     });
-    addRippleEffectToButtons();
+    addRippleToNewButtons();
   }
 
   // ------------------------------ ФИЛЬТРЫ ------------------------------
@@ -314,7 +323,7 @@
     loadGames(1);
   }
 
-  // ------------------------------ ПОПУЛЯРНЫЕ ИГРЫ ------------------------------
+  // ------------------------------ ПОПУЛЯРНЫЕ ИГРЫ И СТАТИСТИКА ------------------------------
   async function loadPopularGames() {
     try {
       const res = await fetch('/api/games?sort=downloads&limit=5');
@@ -327,14 +336,32 @@
           </li>
         `).join('');
       }
+    } catch (err) {
+      console.error('Ошибка загрузки популярных игр', err);
+    }
+  }
+
+  async function loadStats() {
+    try {
+      const res = await fetch('/api/stats');
+      const stats = await res.json();
+      if (statsContent) {
+        statsContent.innerHTML = `
+          <div style="margin-bottom: 12px;">🎮 Игр: <strong>${stats.totalGames}</strong></div>
+          <div style="margin-bottom: 12px;">👥 Пользователей: <strong>${stats.totalUsers}</strong></div>
+          <div>⬆️ Сидеров онлайн: <strong>${stats.totalSeeders}</strong></div>
+        `;
+      }
     } catch (err) {}
   }
 
-  // ------------------------------ WEBSOCKET ------------------------------
+  // ------------------------------ WEBSOCKET (ОБНОВЛЕНИЕ ПИРОВ) ------------------------------
   function initSocket() {
     if (socket) socket.disconnect();
     socket = io();
-    socket.on('connect', () => console.log('WebSocket connected'));
+    socket.on('connect', () => {
+      console.log('WebSocket connected');
+    });
     socket.on('peers-updated', (peers) => {
       peers.forEach(peer => {
         const cards = document.querySelectorAll(`.game-card[data-id="${peer.id}"]`);
@@ -364,10 +391,12 @@
     await loadCurrentUser();
     await loadGames(1);
     await loadPopularGames();
+    await loadStats();
     initSocket();
     setInterval(() => {
       triggerPeerUpdate();
       loadPopularGames();
+      loadStats();
     }, 60000);
     // Анимация header при скролле
     window.addEventListener('scroll', () => {
