@@ -2,34 +2,404 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Мой профиль | SteamFall</title>
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', 'Space Grotesk', sans-serif;
+      background: #0a0c10;
+      color: #e2e8f0;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+    /* Анимированный фон */
+    .animated-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -2;
+      background: radial-gradient(circle at 20% 30%, #0f172a, #020617);
+    }
+    .animated-bg::before {
+      content: '';
+      position: absolute;
+      width: 200%;
+      height: 200%;
+      top: -50%;
+      left: -50%;
+      background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, rgba(0,0,0,0) 70%);
+      animation: rotateBg 25s linear infinite;
+    }
+    @keyframes rotateBg {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 2;
+    }
+    /* Хедер */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 12, 16, 0.6);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(59,130,246,0.2);
+    }
+    .header .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .logo {
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #60a5fa, #c084fc, #f472b6);
+      background-size: 200% auto;
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      animation: gradientShift 6s ease infinite;
+    }
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+    }
+    .nav-links a {
+      color: #cbd5e1;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover {
+      color: #60a5fa;
+    }
+    /* Профиль */
+    .profile-wrapper {
+      margin: 40px 0 60px;
+      animation: fadeInUp 0.6s ease;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .profile-card {
+      background: rgba(17, 24, 39, 0.5);
+      backdrop-filter: blur(12px);
+      border-radius: 32px;
+      padding: 32px;
+      border: 1px solid rgba(59,130,246,0.2);
+      margin-bottom: 30px;
+    }
+    .profile-header {
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+    .avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 2px solid #3b82f6;
+      object-fit: cover;
+    }
+    .profile-info h2 {
+      font-size: 1.8rem;
+      margin-bottom: 8px;
+    }
+    .profile-info p {
+      color: #94a3b8;
+      margin-bottom: 8px;
+    }
+    .profile-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 20px;
+      margin: 30px 0;
+    }
+    .stat-box {
+      background: rgba(0,0,0,0.3);
+      border-radius: 20px;
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #3b82f6;
+    }
+    .section-title {
+      font-size: 1.5rem;
+      margin: 30px 0 20px;
+      border-left: 4px solid #3b82f6;
+      padding-left: 16px;
+    }
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+    }
+    .game-card {
+      background: rgba(17, 24, 39, 0.5);
+      backdrop-filter: blur(8px);
+      border-radius: 20px;
+      overflow: hidden;
+      transition: 0.2s;
+    }
+    .game-card:hover {
+      transform: translateY(-5px);
+      border-color: #3b82f6;
+    }
+    .game-card img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+    }
+    .game-card .info {
+      padding: 12px;
+      text-align: center;
+    }
+    .game-card a {
+      color: #60a5fa;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .empty-message {
+      text-align: center;
+      padding: 40px;
+      color: #94a3b8;
+    }
+    .btn {
+      display: inline-block;
+      background: linear-gradient(90deg, #3b82f6, #2563eb);
+      border: none;
+      padding: 10px 24px;
+      border-radius: 40px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+      text-decoration: none;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid #3b82f6;
+      color: #3b82f6;
+    }
+    .btn-outline:hover {
+      background: rgba(59,130,246,0.1);
+    }
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      color: #3b82f6;
+      padding: 12px 28px;
+      border-radius: 60px;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast.show {
+      opacity: 1;
+    }
+    footer {
+      text-align: center;
+      padding: 30px;
+      border-top: 1px solid #1e293b;
+      margin-top: 50px;
+    }
+    @media (max-width: 700px) {
+      .profile-header { flex-direction: column; text-align: center; }
+      .games-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
-  <div class="container" style="max-width: 600px; margin-top: 50px;">
-    <h1>Профиль пользователя</h1>
-    <div id="profileInfo">Загрузка...</div>
-    <button id="logoutProfileBtn" class="btn-outline">Выйти</button>
-    <a href="/" class="btn-primary">На главную</a>
+<div class="animated-bg"></div>
+<header class="header">
+  <div class="container">
+    <div class="logo"><i class="fas fa-skull"></i> Steam<span>Fall</span></div>
+    <div class="nav-links">
+      <a href="/">Главная</a>
+      <a href="/top.html">Топ</a>
+      <a href="/reviews.html">Отзывы</a>
+    </div>
+    <div class="auth-buttons" id="authButtons"></div>
   </div>
-  <script>
+</header>
+<main class="container">
+  <div class="profile-wrapper" id="profileContent">
+    <div class="loading">Загрузка профиля...</div>
+  </div>
+</main>
+<footer>
+  <div class="container"><p>© 2025 SteamFall — ваш любимый торрент-трекер</p></div>
+</footer>
+<div id="toast" class="toast"></div>
+<script>
+  (function() {
     const token = localStorage.getItem('token');
-    if (!token) location.href = '/login.html';
-    fetch('/api/me', { headers: { Authorization: `Bearer ${token}` } })
-      .then(res => res.json())
-      .then(user => {
-        document.getElementById('profileInfo').innerHTML = `
-          <p><strong>Логин:</strong> ${user.username}</p>
-          <p><strong>Email:</strong> ${user.email}</p>
-          <p><strong>Роль:</strong> ${user.role}</p>
-          <p><strong>Зарегистрирован:</strong> ${new Date(user.createdAt).toLocaleDateString()}</p>
-        `;
-      })
-      .catch(() => { location.href = '/login.html'; });
-    document.getElementById('logoutProfileBtn').onclick = () => {
-      localStorage.removeItem('token');
-      location.href = '/';
-    };
-  </script>
+    const toast = document.getElementById('toast');
+    const profileContent = document.getElementById('profileContent');
+
+    function showToast(msg, isError = false) {
+      toast.textContent = msg;
+      toast.style.color = isError ? '#ef4444' : '#3b82f6';
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    if (!token) {
+      profileContent.innerHTML = '<div class="profile-card" style="text-align:center;"><p>Вы не авторизованы. <a href="/login.html" class="btn">Войти</a></p></div>';
+      return;
+    }
+
+    async function fetchUserData() {
+      try {
+        const res = await fetch('/api/me', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Сессия истекла');
+        const user = await res.json();
+        return user;
+      } catch (err) {
+        localStorage.removeItem('token');
+        showToast('Авторизация истекла, войдите снова', true);
+        setTimeout(() => window.location.href = '/login.html', 1500);
+        return null;
+      }
+    }
+
+    async function fetchFavorites() {
+      try {
+        const res = await fetch('/api/favorites', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) return await res.json();
+        return [];
+      } catch (err) {
+        return [];
+      }
+    }
+
+    async function fetchDownloadsHistory() {
+      // Если есть эндпоинт /api/downloads – использовать, иначе заглушка
+      // Пока просто возвращаем пустой массив, можно расширить
+      return [];
+    }
+
+    async function loadProfile() {
+      const user = await fetchUserData();
+      if (!user) return;
+      const favorites = await fetchFavorites();
+      const downloads = await fetchDownloadsHistory();
+
+      // Загружаем подробную информацию об избранных играх
+      let favoriteGames = [];
+      if (favorites.length) {
+        const gameIds = favorites.map(f => f.gameId).join(',');
+        const res = await fetch(`/api/games?limit=50`);
+        const data = await res.json();
+        favoriteGames = data.games.filter(g => favorites.some(f => f.gameId === g.id));
+      }
+
+      profileContent.innerHTML = `
+        <div class="profile-card">
+          <div class="profile-header">
+            <img class="avatar" src="${user.avatar || 'https://i.pravatar.cc/100'}" alt="avatar">
+            <div class="profile-info">
+              <h2>${escapeHtml(user.username)}</h2>
+              <p><i class="fas fa-envelope"></i> ${escapeHtml(user.email)}</p>
+              <p><i class="fas fa-user-tag"></i> Роль: ${user.role === 'admin' ? 'Администратор' : 'Пользователь'}</p>
+              <p><i class="fas fa-calendar-alt"></i> На сайте с: ${new Date(user.createdAt).toLocaleDateString('ru-RU')}</p>
+            </div>
+          </div>
+          <div class="profile-stats">
+            <div class="stat-box"><div class="stat-number">${favorites.length}</div><div>В избранном</div></div>
+            <div class="stat-box"><div class="stat-number">${downloads.length}</div><div>Скачиваний</div></div>
+            <div class="stat-box"><div class="stat-number">—</div><div>Комментариев</div></div>
+          </div>
+          <div style="display: flex; gap: 16px; justify-content: center; margin-top: 20px;">
+            <button id="logoutProfileBtn" class="btn btn-outline"><i class="fas fa-sign-out-alt"></i> Выйти</button>
+            <a href="/" class="btn">На главную</a>
+          </div>
+        </div>
+
+        <div class="section-title"><i class="fas fa-heart"></i> Избранные игры</div>
+        <div class="games-grid" id="favoritesGrid">
+          ${favoriteGames.length ? favoriteGames.map(game => `
+            <div class="game-card">
+              <img src="${game.screenshots?.[0] || 'https://picsum.photos/id/0/300/120'}" alt="${escapeHtml(game.title)}">
+              <div class="info">
+                <a href="/game.html?id=${game.id}">${escapeHtml(game.title)}</a>
+                <div style="font-size:0.8rem; color:#94a3b8;">⭐ ${game.rating || '—'}</div>
+              </div>
+            </div>
+          `).join('') : '<div class="empty-message">Нет игр в избранном. Добавьте их на главной!</div>'}
+        </div>
+
+        <div class="section-title"><i class="fas fa-history"></i> Недавние скачивания</div>
+        <div class="games-grid" id="downloadsGrid">
+          <div class="empty-message">История скачиваний появится после того, как вы воспользуетесь magnet-ссылками.</div>
+        </div>
+      `;
+
+      document.getElementById('logoutProfileBtn')?.addEventListener('click', () => {
+        localStorage.removeItem('token');
+        showToast('Вы вышли из аккаунта');
+        setTimeout(() => window.location.href = '/', 1000);
+      });
+
+      if (typeof anime !== 'undefined') {
+        anime({
+          targets: '.profile-card, .section-title, .game-card',
+          opacity: [0, 1],
+          translateY: [20, 0],
+          delay: anime.stagger(100),
+          duration: 600,
+          easing: 'easeOutQuad'
+        });
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
+    }
+
+    loadProfile();
+  })();
+</script>
 </body>
 </html>
