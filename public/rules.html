@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Правила сообщества | SteamFall</title>
+  <title>Правила сайта | SteamFall</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -22,7 +22,6 @@
       line-height: 1.5;
       overflow-x: hidden;
     }
-    /* Анимированный фон */
     .animated-bg {
       position: fixed;
       top: 0;
@@ -74,7 +73,6 @@
       position: relative;
       z-index: 2;
     }
-    /* Хедер */
     .header {
       position: sticky;
       top: 0;
@@ -134,7 +132,6 @@
       background: rgba(59,130,246,0.1);
       transform: translateY(-2px);
     }
-    /* Основной контент */
     .rules-hero {
       text-align: center;
       margin: 40px 0 30px;
@@ -143,7 +140,7 @@
     .rules-hero h1 {
       font-size: 2.5rem;
       font-weight: 800;
-      background: linear-gradient(135deg, #fff, #fbbf24);
+      background: linear-gradient(135deg, #fff, #60a5fa);
       background-clip: text;
       -webkit-background-clip: text;
       color: transparent;
@@ -156,8 +153,7 @@
       from { opacity: 0; transform: translateY(30px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    /* Список правил */
-    .rules-list {
+    .rules-grid {
       display: flex;
       flex-direction: column;
       gap: 24px;
@@ -173,8 +169,8 @@
     }
     .rule-card:hover {
       transform: translateX(8px);
-      border-color: #fbbf24;
-      box-shadow: 0 10px 25px -8px rgba(251,191,36,0.2);
+      border-color: #3b82f6;
+      box-shadow: 0 10px 20px -8px rgba(59,130,246,0.2);
     }
     .rule-header {
       display: flex;
@@ -183,38 +179,34 @@
       margin-bottom: 16px;
     }
     .rule-icon {
-      width: 48px;
-      height: 48px;
+      width: 50px;
+      height: 50px;
       background: rgba(59,130,246,0.2);
-      border-radius: 60px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 1.5rem;
-      color: #fbbf24;
+      color: #3b82f6;
     }
-    .rule-title {
+    .rule-header h2 {
       font-size: 1.3rem;
       font-weight: 700;
-      color: #e2e8f0;
     }
-    .rule-description {
+    .rule-content {
+      padding-left: 66px;
       color: #cbd5e1;
       line-height: 1.6;
-      margin-left: 64px;
     }
-    .warning-box {
-      background: rgba(239,68,68,0.1);
-      border-left: 4px solid #ef4444;
-      border-radius: 20px;
-      padding: 20px;
-      margin: 40px 0;
+    .rule-content ul {
+      margin: 12px 0 0 20px;
     }
-    .warning-box p {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      color: #f87171;
+    .rule-content li {
+      margin: 8px 0;
+    }
+    .warning-text {
+      color: #fbbf24;
+      font-weight: 500;
     }
     .toast {
       position: fixed;
@@ -240,8 +232,9 @@
       margin-top: 50px;
     }
     @media (max-width: 700px) {
-      .rule-description { margin-left: 0; }
-      .rule-header { flex-wrap: wrap; }
+      .rule-header { flex-direction: column; text-align: center; }
+      .rule-content { padding-left: 0; text-align: center; }
+      .rule-content ul { text-align: left; }
     }
   </style>
 </head>
@@ -266,63 +259,97 @@
 <main class="container">
   <div class="rules-hero">
     <h1><i class="fas fa-gavel"></i> Правила сообщества</h1>
-    <p>Чтобы SteamFall оставался дружелюбным и безопасным местом, просим соблюдать эти простые правила</p>
+    <p>Чтобы SteamFall оставался удобным и безопасным для всех, мы просим соблюдать эти правила</p>
   </div>
-  <div class="rules-list">
+  <div class="rules-grid">
     <div class="rule-card">
       <div class="rule-header">
-        <div class="rule-icon"><i class="fas fa-ban"></i></div>
-        <div class="rule-title">1. Запрещён спам и реклама</div>
+        <div class="rule-icon"><i class="fas fa-download"></i></div>
+        <h2>1. Правила скачивания</h2>
       </div>
-      <div class="rule-description">Не публикуйте ссылки на сторонние ресурсы, рекламные объявления или бессмысленные сообщения. Это касается комментариев, отзывов и чата.</div>
-    </div>
-    <div class="rule-card">
-      <div class="rule-header">
-        <div class="rule-icon"><i class="fas fa-smile"></i></div>
-        <div class="rule-title">2. Уважайте других пользователей</div>
+      <div class="rule-content">
+        <p>Скачивание игр через торрент на SteamFall бесплатно и не требует регистрации. Однако:</p>
+        <ul>
+          <li>Запрещено использовать материалы сайта в коммерческих целях.</li>
+          <li>Не распространяйте ссылки на сторонние ресурсы в комментариях к играм.</li>
+          <li>Не публикуйте вредоносные файлы под видом раздач — это приведёт к блокировке.</li>
+        </ul>
       </div>
-      <div class="rule-description">Оскорбления, провокации, разжигание ненависти и троллинг запрещены. Помните, что за экраном — живые люди.</div>
-    </div>
-    <div class="rule-card">
-      <div class="rule-header">
-        <div class="rule-icon"><i class="fas fa-virus"></i></div>
-        <div class="rule-title">3. Не распространяйте вредоносное ПО</div>
-      </div>
-      <div class="rule-description">Запрещено выкладывать ссылки на заражённые файлы, программы-шпионы или любой контент, способный навредить пользователям. Все раздачи проверяются модераторами.</div>
-    </div>
-    <div class="rule-card">
-      <div class="rule-header">
-        <div class="rule-icon"><i class="fas fa-copyright"></i></div>
-        <div class="rule-title">4. Уважайте авторские права</div>
-      </div>
-      <div class="rule-description">Мы удаляем материалы по первому требованию правообладателей. Если вы обнаружили нарушение — свяжитесь с нами через раздел DMCA.</div>
     </div>
     <div class="rule-card">
       <div class="rule-header">
         <div class="rule-icon"><i class="fas fa-comment-dots"></i></div>
-        <div class="rule-title">5. Пишите осмысленные отзывы</div>
+        <h2>2. Правила общения</h2>
       </div>
-      <div class="rule-description">Отзывы должны быть содержательными и помогать другим игрокам. «Спасибо», «Класс» и подобные короткие сообщения могут быть удалены. Оценка без объяснения не считается полезной.</div>
+      <div class="rule-content">
+        <ul>
+          <li>Будьте вежливы с другими пользователями. Оскорбления, угрозы и разжигание ненависти запрещены.</li>
+          <li>Не флудите, не спамьте, не публикуйте бессмысленные сообщения.</li>
+          <li>Не рекламируйте другие сайты, игры или услуги без согласия администрации.</li>
+          <li>Обсуждайте только игры и связанные с ними темы в отзывах и чатах.</li>
+        </ul>
+      </div>
     </div>
     <div class="rule-card">
       <div class="rule-header">
-        <div class="rule-icon"><i class="fas fa-flag"></i></div>
-        <div class="rule-title">6. Не злоупотребляйте жалобами</div>
+        <div class="rule-icon"><i class="fas fa-star"></i></div>
+        <h2>3. Правила отзывов</h2>
       </div>
-      <div class="rule-description">Функция жалобы создана для реальных нарушений. Не используйте её для личных конфликтов или если вам просто не нравится игра.</div>
+      <div class="rule-content">
+        <ul>
+          <li>Оставляйте честные и развёрнутые отзывы. Оценка должна соответствовать тексту.</li>
+          <li>Не ставьте завышенные или заниженные оценки без обоснования.</li>
+          <li>Запрещено использовать нецензурную лексику и оскорбления разработчиков.</li>
+          <li>Отзывы, содержащие ссылки на сторонние ресурсы, будут удалены.</li>
+        </ul>
+      </div>
     </div>
-  </div>
-  <div class="warning-box">
-    <p><i class="fas fa-exclamation-triangle"></i> Нарушение правил может привести к временной или постоянной блокировке аккаунта. Модераторы имеют право удалять любой контент без предупреждения. Спасибо за понимание!</p>
+    <div class="rule-card">
+      <div class="rule-header">
+        <div class="rule-icon"><i class="fas fa-user-shield"></i></div>
+        <h2>4. Аккаунты и безопасность</h2>
+      </div>
+      <div class="rule-content">
+        <ul>
+          <li>Вы несёте ответственность за свой аккаунт. Не передавайте пароль третьим лицам.</li>
+          <li>Запрещено создавать несколько аккаунтов для накрутки лайков или обхода бана.</li>
+          <li>Администрация блокирует пользователей за грубые нарушения без предупреждения.</li>
+          <li>Не пытайтесь взломать сайт или получить несанкционированный доступ к данным других пользователей.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-header">
+        <div class="rule-icon"><i class="fas fa-copyright"></i></div>
+        <h2>5. Авторские права</h2>
+      </div>
+      <div class="rule-content">
+        <p>SteamFall не хранит пиратский контент на своих серверах. Мы предоставляем только magnet-ссылки, которые находятся в открытом доступе. Если вы являетесь правообладателем и хотите удалить ссылку на вашу игру, свяжитесь с нами через <a href="/dmca.html">DMCA</a>.</p>
+        <p class="warning-text" style="margin-top:12px;">Мы не несём ответственности за использование материалов, защищённых авторским правом. Пользователи скачивают игры на свой страх и риск.</p>
+      </div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-header">
+        <div class="rule-icon"><i class="fas fa-ban"></i></div>
+        <h2>6. Нарушения и санкции</h2>
+      </div>
+      <div class="rule-content">
+        <ul>
+          <li><span class="warning-text">Предупреждение</span> — за мелкие нарушения (флуд, некорректные отзывы).</li>
+          <li><span class="warning-text">Временная блокировка (1–30 дней)</span> — за повторные нарушения или оскорбления.</li>
+          <li><span class="warning-text">Перманентный бан</span> — за распространение вирусов, угрозы, взлом, спам-рассылки.</li>
+        </ul>
+        <p>Блокировки применяются администрацией в одностороннем порядке. Обжалование — через почту <a href="mailto:support@steamfall.com">support@steamfall.com</a>.</p>
+      </div>
+    </div>
   </div>
 </main>
 <footer>
-  <div class="container"><p>© 2025 SteamFall — торрент-трекер игр. Соблюдайте правила, уважайте других.</p></div>
+  <div class="container"><p>© 2025 SteamFall — соблюдайте правила, уважайте других. Вместе мы сделаем комьюнити лучше.</p></div>
 </footer>
 <div id="toast" class="toast"></div>
 <script>
   (function() {
-    // Генерация частиц
     function createParticles() {
       const container = document.getElementById('particles');
       if (!container) return;
@@ -339,6 +366,16 @@
       }
     }
     createParticles();
+    if (typeof anime !== 'undefined') {
+      anime({
+        targets: '.rule-card',
+        opacity: [0, 1],
+        translateY: [20, 0],
+        delay: anime.stagger(100),
+        duration: 600,
+        easing: 'easeOutQuad'
+      });
+    }
   })();
 </script>
 </body>
