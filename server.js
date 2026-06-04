@@ -19,9 +19,7 @@ const io = new Server(server, { cors: { origin: '*' } });
 const PORT = process.env.PORT || 8080;
 const JWT_SECRET = process.env.JWT_SECRET || 'steamfall_super_secret_2025';
 
-// Доверие к прокси (убирает предупреждение rate-limit)
 app.set('trust proxy', 1);
-
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -53,29 +51,31 @@ function writeJSON(file, data) {
   fs.writeFileSync(file, JSON.stringify(data, null, 2));
 }
 
-// Инициализация данных
+// ========== ИНИЦИАЛИЗАЦИЯ ДАННЫХ ==========
 const adminHash = bcrypt.hashSync('admin123', 10);
 if (!fs.existsSync(USERS_FILE)) {
   writeJSON(USERS_FILE, [{ id: 1, username: 'admin', password: adminHash, role: 'admin', email: 'admin@steamfall.com', avatar: 'https://i.pravatar.cc/150', createdAt: new Date().toISOString(), lastSeen: new Date().toISOString(), banned: false }]);
 }
 if (!fs.existsSync(GAMES_FILE)) {
   writeJSON(GAMES_FILE, [
-    { id: 1, title: "Cyberpunk 2077", genre: "RPG", description: "Киберпанк будущего", size: "68 GB", magnet: "magnet:?xt=urn:btih:DEMO1", seeders: 1245, leechers: 342, rating: 4.2, releaseDate: "2020-12-10", developer: "CD Projekt Red", screenshots: ["https://picsum.photos/id/1/800/450"], downloads: 15800, addedAt: new Date().toISOString() },
-    { id: 2, title: "The Witcher 3", genre: "RPG", description: "Легендарная RPG", size: "50 GB", magnet: "magnet:?xt=urn:btih:DEMO2", seeders: 2890, leechers: 567, rating: 4.9, releaseDate: "2015-05-19", developer: "CD Projekt Red", screenshots: ["https://picsum.photos/id/2/800/450"], downloads: 42000, addedAt: new Date().toISOString() }
+    { id: 1, title: "Cyberpunk 2077", genre: "RPG", description: "Киберпанк будущего. Откройте для себя историю Ви — наёмника в мире будущего, где кибернетические импланты стали нормой.", size: "68 GB", magnet: "magnet:?xt=urn:btih:DEMO1", alternative_torrents: [{ label: "Repack от Xatab", magnet: "magnet:?xt=urn:btih:DEMO1_REPACK", size: "45 GB" }], seeders: 1245, leechers: 342, rating: 4.2, releaseDate: "2020-12-10", developer: "CD Projekt Red", publisher: "CD Projekt Red", screenshots: ["https://picsum.photos/id/1/800/450", "https://picsum.photos/id/10/800/450"], tags: ["киберпанк", "открытый мир"], downloads: 15800, views: 45200, updates_count: 12, addedAt: new Date().toISOString(), lastUpdate: new Date().toISOString(), systemRequirements: { os: "Windows 10 64-bit", cpu: "Intel Core i7-4790", ram: "12 GB", gpu: "NVIDIA GTX 1060 6GB", storage: "70 GB" } },
+    { id: 2, title: "The Witcher 3: Wild Hunt", genre: "RPG", description: "Легендарная RPG о ведьмаке Геральте из Ривии. Огромный открытый мир, глубокий сюжет, десятки часов геймплея.", size: "50 GB", magnet: "magnet:?xt=urn:btih:DEMO2", alternative_torrents: [], seeders: 2890, leechers: 567, rating: 4.9, releaseDate: "2015-05-19", developer: "CD Projekt Red", publisher: "CD Projekt Red", screenshots: ["https://picsum.photos/id/2/800/450", "https://picsum.photos/id/20/800/450"], tags: ["фэнтези", "сюжет"], downloads: 42000, views: 120000, updates_count: 18, addedAt: new Date().toISOString(), lastUpdate: new Date().toISOString(), systemRequirements: { os: "Windows 7 64-bit", cpu: "Intel Core i5-2500K", ram: "6 GB", gpu: "NVIDIA GTX 660", storage: "55 GB" } },
+    { id: 3, title: "Red Dead Redemption 2", genre: "Action", description: "Эпичная история о банде в эпоху Дикого Запада. Артур Морган и его путь.", size: "115 GB", magnet: "magnet:?xt=urn:btih:DEMO3", alternative_torrents: [{ label: "Repack от FitGirl", magnet: "magnet:?xt=urn:btih:DEMO3_FIT", size: "65 GB" }], seeders: 3341, leechers: 892, rating: 4.8, releaseDate: "2018-10-26", developer: "Rockstar Games", publisher: "Rockstar", screenshots: ["https://picsum.photos/id/3/800/450"], tags: ["вестерн", "открытый мир"], downloads: 38000, views: 89000, updates_count: 8, addedAt: new Date().toISOString(), lastUpdate: new Date().toISOString(), systemRequirements: { os: "Windows 10 64-bit", cpu: "Intel Core i7-4770K", ram: "12 GB", gpu: "NVIDIA GTX 1060 6GB", storage: "150 GB" } }
   ]);
 }
 if (!fs.existsSync(REVIEWS_FILE)) writeJSON(REVIEWS_FILE, []);
 if (!fs.existsSync(COMMENTS_FILE)) writeJSON(COMMENTS_FILE, []);
 if (!fs.existsSync(ADS_FILE)) {
   writeJSON(ADS_FILE, [
-    { id: 1, position: "header", code: '<div class="ad-banner">🔥 Premium доступ</div>', active: true },
-    { id: 2, position: "sidebar", code: '<div class="ad-banner">📢 Реклама</div>', active: true }
+    { id: 1, position: "header", code: '<div class="ad-banner">🔥 Premium доступ — скачай без ограничений</div>', active: true },
+    { id: 2, position: "sidebar", code: '<div class="ad-banner">📢 Реклама. Ваше место здесь</div>', active: true },
+    { id: 3, position: "infeed", code: '<div class="ad-banner">⭐ Лучший бустинг в играх – скидка 20%</div>', active: true }
   ]);
 }
 if (!fs.existsSync(DOWNLOADS_FILE)) writeJSON(DOWNLOADS_FILE, []);
 if (!fs.existsSync(FAVORITES_FILE)) writeJSON(FAVORITES_FILE, []);
 
-// ========== MIDDLEWARE ==========
+// ========== МИДЛВЕЙРЫ ==========
 function auth(req, res, next) {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'Нет токена' });
@@ -90,7 +90,7 @@ function adminOnly(req, res, next) {
   next();
 }
 
-// ========== AUTH ==========
+// ========== АВТОРИЗАЦИЯ ==========
 app.post('/api/register', async (req, res) => {
   const { username, password, email } = req.body;
   const users = readJSON(USERS_FILE);
@@ -120,15 +120,19 @@ app.get('/api/me', auth, (req, res) => {
   res.json({ id: user.id, username: user.username, email: user.email, role: user.role, avatar: user.avatar, createdAt: user.createdAt });
 });
 
-// ========== ИГРЫ ==========
+// ========== ИГРЫ – ОСНОВНЫЕ ==========
 app.get('/api/games', (req, res) => {
   let games = readJSON(GAMES_FILE);
-  const { search, genre, sort, page = 1, limit = 12 } = req.query;
+  const { search, genre, year, developer, tag, sort, page = 1, limit = 12 } = req.query;
   if (search) games = games.filter(g => g.title.toLowerCase().includes(search.toLowerCase()));
   if (genre && genre !== 'all') games = games.filter(g => g.genre === genre);
+  if (year) games = games.filter(g => new Date(g.releaseDate).getFullYear() == year);
+  if (developer) games = games.filter(g => g.developer?.toLowerCase().includes(developer.toLowerCase()));
+  if (tag) games = games.filter(g => g.tags && g.tags.includes(tag));
   if (sort === 'date') games.sort((a,b) => new Date(b.addedAt) - new Date(a.addedAt));
   if (sort === 'downloads') games.sort((a,b) => b.downloads - a.downloads);
   if (sort === 'rating') games.sort((a,b) => b.rating - a.rating);
+  if (sort === 'views') games.sort((a,b) => (b.views||0) - (a.views||0));
   const start = (page-1)*limit;
   const paginated = games.slice(start, start+limit);
   res.json({ games: paginated, total: games.length, page: +page, totalPages: Math.ceil(games.length/limit) });
@@ -143,10 +147,41 @@ app.get('/api/games/:id', (req, res) => {
 });
 app.post('/api/games', auth, adminOnly, (req, res) => {
   const games = readJSON(GAMES_FILE);
-  const newGame = { ...req.body, id: Date.now(), rating: 0, downloads: 0, addedAt: new Date().toISOString(), seeders: 0, leechers: 0 };
+  const newGame = {
+    ...req.body,
+    id: Date.now(),
+    rating: 0,
+    downloads: 0,
+    views: 0,
+    updates_count: 0,
+    alternative_torrents: req.body.alternative_torrents || [],
+    addedAt: new Date().toISOString(),
+    lastUpdate: new Date().toISOString(),
+    seeders: 0,
+    leechers: 0,
+    systemRequirements: req.body.systemRequirements || {}
+  };
   games.push(newGame);
   writeJSON(GAMES_FILE, games);
   res.json(newGame);
+});
+app.put('/api/games/:id', auth, adminOnly, (req, res) => {
+  let games = readJSON(GAMES_FILE);
+  const idx = games.findIndex(g => g.id == req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Игра не найдена' });
+  games[idx] = { ...games[idx], ...req.body, lastUpdate: new Date().toISOString() };
+  writeJSON(GAMES_FILE, games);
+  res.json(games[idx]);
+});
+app.put('/api/games/:id/update', auth, adminOnly, (req, res) => {
+  let games = readJSON(GAMES_FILE);
+  const idx = games.findIndex(g => g.id == req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Игра не найдена' });
+  games[idx].updates_count = (games[idx].updates_count || 0) + 1;
+  games[idx].lastUpdate = new Date().toISOString();
+  if (req.body.alternative_torrents) games[idx].alternative_torrents = req.body.alternative_torrents;
+  writeJSON(GAMES_FILE, games);
+  res.json(games[idx]);
 });
 app.delete('/api/games/:id', auth, adminOnly, (req, res) => {
   let games = readJSON(GAMES_FILE);
@@ -155,7 +190,30 @@ app.delete('/api/games/:id', auth, adminOnly, (req, res) => {
   res.json({ success: true });
 });
 
-// ========== ОТЗЫВЫ ==========
+// ========== СПЕЦИАЛЬНЫЕ СПИСКИ (как на byrutgame) ==========
+app.get('/api/games/released', (req, res) => {
+  let games = readJSON(GAMES_FILE);
+  const today = new Date().toISOString().slice(0,10);
+  const released = games.filter(g => g.releaseDate <= today)
+    .sort((a,b) => new Date(b.releaseDate) - new Date(a.releaseDate))
+    .slice(0, 12);
+  res.json(released);
+});
+app.get('/api/games/upcoming', (req, res) => {
+  let games = readJSON(GAMES_FILE);
+  const today = new Date().toISOString().slice(0,10);
+  const upcoming = games.filter(g => g.releaseDate > today)
+    .sort((a,b) => new Date(a.releaseDate) - new Date(b.releaseDate))
+    .slice(0, 12);
+  res.json(upcoming);
+});
+app.get('/api/games/popular', (req, res) => {
+  let games = readJSON(GAMES_FILE);
+  const popular = [...games].sort((a,b) => (b.downloads||0) - (a.downloads||0)).slice(0, 5);
+  res.json(popular);
+});
+
+// ========== ОТЗЫВЫ И КОММЕНТАРИИ ==========
 app.get('/api/reviews/:gameId', (req, res) => {
   const reviews = readJSON(REVIEWS_FILE);
   res.json(reviews.filter(r => r.gameId == req.params.gameId));
@@ -163,10 +221,10 @@ app.get('/api/reviews/:gameId', (req, res) => {
 app.post('/api/reviews', auth, (req, res) => {
   const { gameId, text, rating } = req.body;
   const reviews = readJSON(REVIEWS_FILE);
-  const newReview = { id: Date.now(), gameId, userId: req.user.id, author: req.user.username, text, rating, likes: 0, createdAt: new Date().toISOString() };
+  const newReview = { id: Date.now(), gameId: parseInt(gameId), userId: req.user.id, author: req.user.username, text, rating, likes: 0, createdAt: new Date().toISOString() };
   reviews.push(newReview);
   writeJSON(REVIEWS_FILE, reviews);
-  // обновление среднего рейтинга
+  // обновление среднего рейтинга игры
   const games = readJSON(GAMES_FILE);
   const game = games.find(g => g.id == gameId);
   if (game) {
@@ -180,7 +238,7 @@ app.post('/api/reviews', auth, (req, res) => {
 app.post('/api/reviews/:id/like', auth, (req, res) => {
   let reviews = readJSON(REVIEWS_FILE);
   const rev = reviews.find(r => r.id == req.params.id);
-  if (rev) { rev.likes += 1; writeJSON(REVIEWS_FILE, reviews); res.json({ likes: rev.likes }); }
+  if (rev) { rev.likes = (rev.likes||0) + 1; writeJSON(REVIEWS_FILE, reviews); res.json({ likes: rev.likes }); }
   else res.status(404).json({ error: 'Not found' });
 });
 app.get('/api/comments/:reviewId', (req, res) => {
@@ -190,13 +248,13 @@ app.get('/api/comments/:reviewId', (req, res) => {
 app.post('/api/comments', auth, (req, res) => {
   const { reviewId, text } = req.body;
   const comments = readJSON(COMMENTS_FILE);
-  const newComment = { id: Date.now(), reviewId, userId: req.user.id, author: req.user.username, text, createdAt: new Date().toISOString() };
+  const newComment = { id: Date.now(), reviewId: parseInt(reviewId), userId: req.user.id, author: req.user.username, text, createdAt: new Date().toISOString() };
   comments.push(newComment);
   writeJSON(COMMENTS_FILE, comments);
   res.json(newComment);
 });
 
-// ========== ИЗБРАННОЕ (ПРАВИЛЬНЫЕ МАРШРУТЫ) ==========
+// ========== ИЗБРАННОЕ ==========
 app.get('/api/favorites', auth, (req, res) => {
   let favs = readJSON(FAVORITES_FILE);
   favs = favs.filter(f => f.userId === req.user.id);
@@ -219,7 +277,7 @@ app.delete('/api/favorites/:gameId', auth, (req, res) => {
   res.json({ success: true });
 });
 
-// ========== АДМИН ==========
+// ========== АДМИНКА ==========
 app.get('/api/admin/users', auth, adminOnly, (req, res) => {
   const users = readJSON(USERS_FILE);
   res.json(users.map(u => ({ id: u.id, username: u.username, email: u.email, role: u.role, banned: u.banned, lastSeen: u.lastSeen })));
@@ -268,16 +326,29 @@ app.get('/api/logs', auth, adminOnly, (req, res) => {
   } else res.json({ logs: [] });
 });
 
-// ========== СТАТИСТИКА ==========
+// ========== СТАТИСТИКА (расширенная) ==========
 app.get('/api/stats', (req, res) => {
   const games = readJSON(GAMES_FILE);
   const users = readJSON(USERS_FILE);
+  const reviews = readJSON(REVIEWS_FILE);
   const totalDownloads = games.reduce((s,g) => s + (g.downloads||0), 0);
   const totalSeeders = games.reduce((s,g) => s + g.seeders, 0);
-  res.json({ totalGames: games.length, totalUsers: users.length, totalDownloads, totalSeeders });
+  let updatesLastWeek = 0;
+  const weekAgo = new Date(Date.now() - 7*24*60*60*1000);
+  games.forEach(g => {
+    if (g.lastUpdate && new Date(g.lastUpdate) > weekAgo) updatesLastWeek++;
+  });
+  res.json({
+    totalGames: games.length,
+    totalUsers: users.length,
+    totalDownloads,
+    totalSeeders,
+    totalComments: reviews.length,
+    updatesLastWeek
+  });
 });
 
-// ========== ПИРЫ ==========
+// ========== ОБНОВЛЕНИЕ ПИРОВ И WEBSOCKET ==========
 app.post('/api/update-peers', (req, res) => {
   let games = readJSON(GAMES_FILE);
   games = games.map(g => ({ ...g, seeders: Math.max(0, g.seeders + Math.floor(Math.random()*40)-20), leechers: Math.max(0, g.leechers + Math.floor(Math.random()*30)-15) }));
@@ -290,13 +361,31 @@ io.on('connection', (socket) => {
   socket.on('chat-message', (data) => io.to(`game_${data.gameId}`).emit('chat-message', { author: data.author, text: data.text, timestamp: new Date().toISOString() }));
 });
 
-// ========== ЗАГРУЗКА ТОРРЕНТА ==========
+// ========== ОТСЛЕЖИВАНИЕ СКАЧИВАНИЙ ==========
+app.post('/api/track-download', (req, res) => {
+  const { gameId } = req.body;
+  if (!gameId) return res.status(400).json({ error: 'gameId required' });
+  let games = readJSON(GAMES_FILE);
+  const game = games.find(g => g.id == gameId);
+  if (game) {
+    game.downloads = (game.downloads || 0) + 1;
+    writeJSON(GAMES_FILE, games);
+    // также записываем в историю, если нужна
+    const downloads = readJSON(DOWNLOADS_FILE);
+    downloads.push({ gameId, userId: req.user?.id || null, timestamp: new Date().toISOString() });
+    writeJSON(DOWNLOADS_FILE, downloads);
+  }
+  res.json({ success: true });
+});
+
+// ========== ЗАГРУЗКА ТОРРЕНТ-ФАЙЛА ==========
 const upload = multer({ dest: TORRENTS_DIR });
 app.post('/api/upload-torrent', auth, adminOnly, upload.single('torrent'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Нет файла' });
   res.json({ filename: req.file.filename });
 });
 
+// ========== ЗАПУСК ==========
 server.listen(PORT, () => {
   console.log(`✅ Сервер запущен на http://localhost:${PORT}`);
   console.log(`🔐 Админка: http://localhost:${PORT}/admin.html (логин admin, пароль admin123)`);
