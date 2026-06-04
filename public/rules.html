@@ -2,156 +2,26 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Правила сайта | SteamFall</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <meta name="description" content="Правила использования SteamFall: скачивание, общение, отзывы, авторские права, санкции.">
+  <title>Правила | SteamFall</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  <link rel="stylesheet" href="/css/style.css">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: 'Inter', 'Space Grotesk', sans-serif;
-      background: #0a0c10;
-      color: #e2e8f0;
-      line-height: 1.5;
-      overflow-x: hidden;
-    }
-    .animated-bg {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -2;
-      background: radial-gradient(circle at 20% 30%, #0f172a, #020617);
-    }
-    .animated-bg::before {
-      content: '';
-      position: absolute;
-      width: 200%;
-      height: 200%;
-      top: -50%;
-      left: -50%;
-      background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, rgba(0,0,0,0) 70%);
-      animation: rotateBg 25s linear infinite;
-    }
-    @keyframes rotateBg {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    .particles {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -1;
-      pointer-events: none;
-    }
-    .particle {
-      position: absolute;
-      background: rgba(59,130,246,0.3);
-      border-radius: 50%;
-      filter: blur(2px);
-      animation: floatParticle 15s infinite ease-in-out;
-    }
-    @keyframes floatParticle {
-      0% { transform: translateY(100vh) translateX(0) scale(0); opacity: 0; }
-      50% { opacity: 0.5; }
-      100% { transform: translateY(-20vh) translateX(100px) scale(1); opacity: 0; }
-    }
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 24px;
-      position: relative;
-      z-index: 2;
-    }
-    .header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: rgba(10, 12, 16, 0.6);
-      backdrop-filter: blur(16px);
-      border-bottom: 1px solid rgba(59,130,246,0.2);
-    }
-    .header .container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 24px;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-    .logo {
-      font-size: 28px;
-      font-weight: 800;
-      background: linear-gradient(135deg, #60a5fa, #c084fc, #f472b6);
-      background-size: 200% auto;
-      background-clip: text;
-      -webkit-background-clip: text;
-      color: transparent;
-      animation: gradientShift 6s ease infinite;
-    }
-    @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    .nav-links {
-      display: flex;
-      gap: 32px;
-      align-items: center;
-    }
-    .nav-links a {
-      color: #cbd5e1;
-      text-decoration: none;
-      font-weight: 500;
-      transition: color 0.2s;
-    }
-    .nav-links a:hover {
-      color: #60a5fa;
-    }
-    .btn-outline {
-      background: transparent;
-      border: 1px solid #3b82f6;
-      padding: 8px 20px;
-      border-radius: 40px;
-      color: #3b82f6;
-      font-weight: 600;
-      text-decoration: none;
-      transition: 0.2s;
-    }
-    .btn-outline:hover {
-      background: rgba(59,130,246,0.1);
-      transform: translateY(-2px);
-    }
     .rules-hero {
       text-align: center;
       margin: 40px 0 30px;
-      animation: fadeInUp 0.6s ease;
+      animation: fadeInUp 0.4s ease;
     }
     .rules-hero h1 {
-      font-size: 2.5rem;
-      font-weight: 800;
-      background: linear-gradient(135deg, #fff, #60a5fa);
+      font-size: 2.2rem;
+      background: linear-gradient(135deg, #fff, #a78bfa);
       background-clip: text;
       -webkit-background-clip: text;
       color: transparent;
-    }
-    .rules-hero p {
-      color: #94a3b8;
-      margin-top: 12px;
-    }
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
     }
     .rules-grid {
       display: flex;
@@ -160,17 +30,15 @@
       margin: 40px 0 60px;
     }
     .rule-card {
-      background: rgba(17, 24, 39, 0.5);
-      backdrop-filter: blur(12px);
-      border-radius: 28px;
+      background: var(--color-surface);
+      backdrop-filter: var(--blur-glass);
+      border-radius: var(--radius-xl);
       padding: 24px;
-      border: 1px solid rgba(59,130,246,0.2);
-      transition: all 0.3s;
+      border: 1px solid var(--color-border);
+      transition: 0.2s;
     }
     .rule-card:hover {
-      transform: translateX(8px);
-      border-color: #3b82f6;
-      box-shadow: 0 10px 20px -8px rgba(59,130,246,0.2);
+      border-color: var(--color-accent);
     }
     .rule-header {
       display: flex;
@@ -181,13 +49,13 @@
     .rule-icon {
       width: 50px;
       height: 50px;
-      background: rgba(59,130,246,0.2);
+      background: rgba(109,40,217,0.2);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.5rem;
-      color: #3b82f6;
+      font-size: 1.4rem;
+      color: #a78bfa;
     }
     .rule-header h2 {
       font-size: 1.3rem;
@@ -195,55 +63,30 @@
     }
     .rule-content {
       padding-left: 66px;
-      color: #cbd5e1;
+      color: var(--color-text-secondary);
       line-height: 1.6;
     }
     .rule-content ul {
       margin: 12px 0 0 20px;
     }
-    .rule-content li {
-      margin: 8px 0;
-    }
     .warning-text {
       color: #fbbf24;
-      font-weight: 500;
-    }
-    .toast {
-      position: fixed;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #1e293b;
-      color: #3b82f6;
-      padding: 12px 28px;
-      border-radius: 60px;
-      z-index: 9999;
-      opacity: 0;
-      transition: opacity 0.3s;
-      pointer-events: none;
-    }
-    .toast.show {
-      opacity: 1;
-    }
-    footer {
-      text-align: center;
-      padding: 30px;
-      border-top: 1px solid #1e293b;
-      margin-top: 50px;
     }
     @media (max-width: 700px) {
       .rule-header { flex-direction: column; text-align: center; }
-      .rule-content { padding-left: 0; text-align: center; }
-      .rule-content ul { text-align: left; }
+      .rule-content { padding-left: 0; }
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
-<div class="animated-bg"></div>
-<div class="particles" id="particles"></div>
-<header class="header">
+
+<header class="header" id="header">
   <div class="container">
-    <div class="logo"><i class="fas fa-skull"></i> Steam<span>Fall</span></div>
+    <div class="logo"><i class="fas fa-dragon"></i> Steam<span style="background: linear-gradient(135deg, #a78bfa, #6366f1); background-clip: text; -webkit-background-clip: text; color: transparent;">Fall</span></div>
     <div class="nav-links">
       <a href="/">Главная</a>
       <a href="/top.html">Топ</a>
@@ -253,130 +96,53 @@
     </div>
     <div class="auth-buttons">
       <a href="/login.html" class="btn-outline">Войти</a>
+      <a href="/login.html?register=1" class="btn-primary">Регистрация</a>
     </div>
   </div>
 </header>
+
 <main class="container">
   <div class="rules-hero">
     <h1><i class="fas fa-gavel"></i> Правила сообщества</h1>
-    <p>Чтобы SteamFall оставался удобным и безопасным для всех, мы просим соблюдать эти правила</p>
+    <p>Уважайте друг друга и правила — вместе мы делаем SteamFall лучше</p>
   </div>
   <div class="rules-grid">
     <div class="rule-card">
-      <div class="rule-header">
-        <div class="rule-icon"><i class="fas fa-download"></i></div>
-        <h2>1. Правила скачивания</h2>
-      </div>
-      <div class="rule-content">
-        <p>Скачивание игр через торрент на SteamFall бесплатно и не требует регистрации. Однако:</p>
-        <ul>
-          <li>Запрещено использовать материалы сайта в коммерческих целях.</li>
-          <li>Не распространяйте ссылки на сторонние ресурсы в комментариях к играм.</li>
-          <li>Не публикуйте вредоносные файлы под видом раздач — это приведёт к блокировке.</li>
-        </ul>
-      </div>
+      <div class="rule-header"><div class="rule-icon"><i class="fas fa-download"></i></div><h2>1. Скачивание и раздачи</h2></div>
+      <div class="rule-content"><ul><li>Запрещено использовать сайт в коммерческих целях.</li><li>Не распространяйте ссылки на сторонние ресурсы в комментариях.</li><li>Не публикуйте вредоносные файлы — это ведёт к блокировке.</li></ul></div>
     </div>
     <div class="rule-card">
-      <div class="rule-header">
-        <div class="rule-icon"><i class="fas fa-comment-dots"></i></div>
-        <h2>2. Правила общения</h2>
-      </div>
-      <div class="rule-content">
-        <ul>
-          <li>Будьте вежливы с другими пользователями. Оскорбления, угрозы и разжигание ненависти запрещены.</li>
-          <li>Не флудите, не спамьте, не публикуйте бессмысленные сообщения.</li>
-          <li>Не рекламируйте другие сайты, игры или услуги без согласия администрации.</li>
-          <li>Обсуждайте только игры и связанные с ними темы в отзывах и чатах.</li>
-        </ul>
-      </div>
+      <div class="rule-header"><div class="rule-icon"><i class="fas fa-comment-dots"></i></div><h2>2. Общение и комментарии</h2></div>
+      <div class="rule-content"><ul><li>Будьте вежливы, не оскорбляйте других пользователей.</li><li>Запрещён флуд, спам, реклама без согласия администрации.</li><li>Обсуждайте только игры и связанные темы.</li></ul></div>
     </div>
     <div class="rule-card">
-      <div class="rule-header">
-        <div class="rule-icon"><i class="fas fa-star"></i></div>
-        <h2>3. Правила отзывов</h2>
-      </div>
-      <div class="rule-content">
-        <ul>
-          <li>Оставляйте честные и развёрнутые отзывы. Оценка должна соответствовать тексту.</li>
-          <li>Не ставьте завышенные или заниженные оценки без обоснования.</li>
-          <li>Запрещено использовать нецензурную лексику и оскорбления разработчиков.</li>
-          <li>Отзывы, содержащие ссылки на сторонние ресурсы, будут удалены.</li>
-        </ul>
-      </div>
+      <div class="rule-header"><div class="rule-icon"><i class="fas fa-star"></i></div><h2>3. Отзывы и оценки</h2></div>
+      <div class="rule-content"><ul><li>Оставляйте честные отзывы, соответствующие оценке.</li><li>Не используйте нецензурную лексику, не оскорбляйте разработчиков.</li><li>Отзывы со сторонними ссылками будут удалены.</li></ul></div>
     </div>
     <div class="rule-card">
-      <div class="rule-header">
-        <div class="rule-icon"><i class="fas fa-user-shield"></i></div>
-        <h2>4. Аккаунты и безопасность</h2>
-      </div>
-      <div class="rule-content">
-        <ul>
-          <li>Вы несёте ответственность за свой аккаунт. Не передавайте пароль третьим лицам.</li>
-          <li>Запрещено создавать несколько аккаунтов для накрутки лайков или обхода бана.</li>
-          <li>Администрация блокирует пользователей за грубые нарушения без предупреждения.</li>
-          <li>Не пытайтесь взломать сайт или получить несанкционированный доступ к данным других пользователей.</li>
-        </ul>
-      </div>
+      <div class="rule-header"><div class="rule-icon"><i class="fas fa-user-shield"></i></div><h2>4. Аккаунты и безопасность</h2></div>
+      <div class="rule-content"><ul><li>Вы несёте ответственность за свой аккаунт.</li><li>Запрещено создавать несколько аккаунтов для накрутки.</li><li>Блокировка за грубые нарушения без предупреждения.</li></ul></div>
     </div>
     <div class="rule-card">
-      <div class="rule-header">
-        <div class="rule-icon"><i class="fas fa-copyright"></i></div>
-        <h2>5. Авторские права</h2>
-      </div>
-      <div class="rule-content">
-        <p>SteamFall не хранит пиратский контент на своих серверах. Мы предоставляем только magnet-ссылки, которые находятся в открытом доступе. Если вы являетесь правообладателем и хотите удалить ссылку на вашу игру, свяжитесь с нами через <a href="/dmca.html">DMCA</a>.</p>
-        <p class="warning-text" style="margin-top:12px;">Мы не несём ответственности за использование материалов, защищённых авторским правом. Пользователи скачивают игры на свой страх и риск.</p>
-      </div>
+      <div class="rule-header"><div class="rule-icon"><i class="fas fa-copyright"></i></div><h2>5. Авторские права (DMCA)</h2></div>
+      <div class="rule-content"><p>SteamFall предоставляет только magnet-ссылки. Если вы правообладатель, свяжитесь с нами через <a href="/dmca.html">DMCA</a>. Мы удалим материал в течение 48 часов.</p><p class="warning-text">Пользователи скачивают игры на свой страх и риск.</p></div>
     </div>
     <div class="rule-card">
-      <div class="rule-header">
-        <div class="rule-icon"><i class="fas fa-ban"></i></div>
-        <h2>6. Нарушения и санкции</h2>
-      </div>
-      <div class="rule-content">
-        <ul>
-          <li><span class="warning-text">Предупреждение</span> — за мелкие нарушения (флуд, некорректные отзывы).</li>
-          <li><span class="warning-text">Временная блокировка (1–30 дней)</span> — за повторные нарушения или оскорбления.</li>
-          <li><span class="warning-text">Перманентный бан</span> — за распространение вирусов, угрозы, взлом, спам-рассылки.</li>
-        </ul>
-        <p>Блокировки применяются администрацией в одностороннем порядке. Обжалование — через почту <a href="mailto:support@steamfall.com">support@steamfall.com</a>.</p>
-      </div>
+      <div class="rule-header"><div class="rule-icon"><i class="fas fa-ban"></i></div><h2>6. Санкции за нарушения</h2></div>
+      <div class="rule-content"><ul><li><span class="warning-text">Предупреждение</span> — за мелкие нарушения.</li><li><span class="warning-text">Временная блокировка (1–30 дней)</span> — за повторные нарушения или оскорбления.</li><li><span class="warning-text">Перманентный бан</span> — за вирусы, угрозы, спам-рассылки.</li></ul><p>Обжалование: <a href="mailto:support@steamfall.com">support@steamfall.com</a></p></div>
     </div>
   </div>
 </main>
 <footer>
-  <div class="container"><p>© 2025 SteamFall — соблюдайте правила, уважайте других. Вместе мы сделаем комьюнити лучше.</p></div>
+  <div class="container"><p>© 2025 SteamFall — соблюдайте правила, уважайте других. Вместе мы делаем сообщество лучше.</p></div>
 </footer>
 <div id="toast" class="toast"></div>
 <script>
-  (function() {
-    function createParticles() {
-      const container = document.getElementById('particles');
-      if (!container) return;
-      for (let i = 0; i < 40; i++) {
-        const p = document.createElement('div');
-        p.classList.add('particle');
-        const size = Math.random() * 6 + 2;
-        p.style.width = size + 'px';
-        p.style.height = size + 'px';
-        p.style.left = Math.random() * 100 + '%';
-        p.style.animationDuration = Math.random() * 20 + 10 + 's';
-        p.style.animationDelay = Math.random() * 20 + 's';
-        container.appendChild(p);
-      }
-    }
-    createParticles();
-    if (typeof anime !== 'undefined') {
-      anime({
-        targets: '.rule-card',
-        opacity: [0, 1],
-        translateY: [20, 0],
-        delay: anime.stagger(100),
-        duration: 600,
-        easing: 'easeOutQuad'
-      });
-    }
-  })();
+  window.addEventListener('scroll', function() {
+    const header = document.getElementById('header');
+    if (window.scrollY > 50) header.classList.add('scrolled');
+    else header.classList.remove('scrolled');
+  });
 </script>
 </body>
 </html>
